@@ -1,0 +1,34 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.logos {
+  display: flex;
+  gap: 24px;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  transition: filter 0.3s;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logoReact:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+}
