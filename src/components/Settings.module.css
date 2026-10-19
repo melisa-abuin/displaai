@@ -1,0 +1,46 @@
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 560px;
+  min-height: calc(100svh - 32px - 2.25rem - 16px);
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.about {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 0;
+}
+
+.about dt {
+  opacity: 0.7;
+}
+
+.about dd {
+  margin: 0;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.logout {
+  padding: 8px 20px;
+  cursor: pointer;
+}

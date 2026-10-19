@@ -1,34 +1,29 @@
-.app {
+.layout {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 48px 20px;
-  text-align: center;
+  min-height: 100svh;
 }
 
-.logos {
-  display: flex;
-  gap: 24px;
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  transition: filter 0.3s;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logoReact:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-.card {
+.signIn {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  padding: 24px;
+  padding: 96px 20px;
+  text-align: center;
+}
+
+.signIn button {
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.heading {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
 }
