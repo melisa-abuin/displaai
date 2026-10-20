@@ -1,0 +1,93 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px 28px;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  text-align: center;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: color-mix(in srgb, #d93025 20%, transparent);
+  color: #d93025;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+.description {
+  margin: 0 0 20px;
+  opacity: 0.75;
+  font-size: 0.95rem;
+}
+
+.description a {
+  color: #4285f4;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.actions button {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid #4285f4;
+  background: #4285f4;
+  color: #fff;
+}
+
+.primary:hover {
+  background: #3367d6;
+}
+
+.secondary {
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  background: none;
+  color: inherit;
+}
+
+.secondary:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.details {
+  margin: 20px 0 0;
+  padding: 12px;
+  max-height: 240px;
+  overflow: auto;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  font-size: 0.75rem;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
