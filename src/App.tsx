@@ -3,6 +3,7 @@ import styles from './App.module.css'
 import { useAuth } from './auth/context'
 import { FolderManager } from './components/FolderManager'
 import { Gallery } from './components/Gallery'
+import { PhotoMap } from './components/PhotoMap'
 import { Settings } from './components/Settings'
 import { Sidebar } from './components/Sidebar'
 import { useConnectedFolders } from './drive/connectedFolders'
@@ -71,6 +72,7 @@ function Viewer({ token }: { token: string }) {
       ? undefined
       : albums?.find((album) => album.folder.id === folderId)
   const isGalleryRoute = route.name === 'gallery' || route.name === 'album'
+  const needsFolders = isGalleryRoute || route.name === 'map'
   const foldersPath = route.name === 'folders' ? route.path : undefined
   const foldersUrl = foldersPath ? paths.foldersAt(foldersPath) : undefined
   const managerFolderId = foldersPath?.at(-1) ?? null
@@ -84,7 +86,7 @@ function Viewer({ token }: { token: string }) {
   // Nothing is set up yet, so send the user to pick folders; unknown URLs go home.
   useEffect(() => {
     if (route.name === 'notFound') navigate(paths.gallery, { replace: true })
-    else if (isGalleryRoute && !hasConnected)
+    else if (needsFolders && !hasConnected)
       navigate(paths.folders, { replace: true })
     else if (route.name === 'album' && albums && !activeAlbum)
       navigate(paths.gallery, { replace: true })
@@ -95,7 +97,7 @@ function Viewer({ token }: { token: string }) {
     }
   }, [
     route.name,
-    isGalleryRoute,
+    needsFolders,
     hasConnected,
     albums,
     activeAlbum,
@@ -121,11 +123,13 @@ function Viewer({ token }: { token: string }) {
   const title =
     route.name === 'settings'
       ? 'Settings'
-      : route.name === 'folders'
-        ? 'Manage folders'
-        : activeAlbum
-          ? activeAlbum.folder.path
-          : 'All photos'
+      : route.name === 'map'
+        ? 'Map'
+        : route.name === 'folders'
+          ? 'Manage folders'
+          : activeAlbum
+            ? activeAlbum.folder.path
+            : 'All photos'
 
   useEffect(() => {
     document.title = `${title} \u2013 Drive Photos`
@@ -146,6 +150,8 @@ function Viewer({ token }: { token: string }) {
         isGalleryActive={isGalleryRoute}
         isSettingsOpen={route.name === 'settings'}
         onOpenSettings={() => navigate(paths.settings)}
+        isMapActive={route.name === 'map'}
+        onOpenMap={() => navigate(paths.map)}
       />
       <main className={styles.content}>
         <h2 className={styles.heading}>{title}</h2>
@@ -167,6 +173,8 @@ function Viewer({ token }: { token: string }) {
             onClear={connected.clear}
             onDone={() => navigate(paths.gallery)}
           />
+        ) : albums && route.name === 'map' ? (
+          <PhotoMap token={token} folderIds={allIds} />
         ) : albums ? (
           <Gallery
             key={activeAlbum?.folder.id ?? 'all'}

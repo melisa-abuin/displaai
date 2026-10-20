@@ -13,6 +13,8 @@ interface SidebarProps {
   email: string | null | undefined
   isSettingsOpen: boolean
   onOpenSettings: () => void
+  isMapActive: boolean
+  onOpenMap: () => void
 }
 
 export function Sidebar({
@@ -26,6 +28,8 @@ export function Sidebar({
   email,
   isSettingsOpen,
   onOpenSettings,
+  isMapActive,
+  onOpenMap,
 }: SidebarProps) {
   return (
     <aside className={styles.sidebar} aria-label="Albums">
@@ -67,6 +71,14 @@ export function Sidebar({
             <span className={styles.count}>{formatNumber(album.photoCount)}</span>
           </button>
         ))}
+        <button
+          type="button"
+          className={styles.item}
+          aria-current={isMapActive ? 'true' : undefined}
+          onClick={onOpenMap}
+        >
+          <span className={styles.name}>Map</span>
+        </button>
       </nav>
       <div className={styles.account}>
         <span className={styles.email} title={email ?? undefined}>
