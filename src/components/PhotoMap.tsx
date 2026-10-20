@@ -2,14 +2,15 @@ import { latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
 import {
-  CircleMarker,
-  MapContainer,
-  TileLayer,
-  Tooltip,
-  useMap,
+    CircleMarker,
+    MapContainer,
+    Popup,
+    TileLayer,
+    useMap,
 } from 'react-leaflet'
-import type { PhotoLocation } from '../drive/api'
+import { thumbnailUrl, type DriveFolder, type PhotoLocation } from '../drive/api'
 import { usePhotoLocations } from '../drive/hooks'
+import { formatDate } from '../format'
 import './PhotoMap.css'
 import styles from './PhotoMap.module.css'
 
@@ -49,9 +50,11 @@ function FitBounds({ photos }: { photos: PhotoLocation[] }) {
 export function PhotoMap({
   token,
   folderIds,
+  folders,
 }: {
   token: string
   folderIds: readonly string[]
+  folders: ReadonlyMap<string, DriveFolder> | undefined
 }) {
   const { data, isLoading, error } = usePhotoLocations(token, folderIds)
 
@@ -94,8 +97,37 @@ export function PhotoMap({
             fillColor: '#aa85f8',
             fillOpacity: 0.9,
           }}
+          eventHandlers={{
+            // Anchor to the dot's center, not the exact click point.
+            popupopen: (e) =>
+              e.popup.setLatLng([photo.latitude, photo.longitude]),
+          }}
         >
-          <Tooltip>{photo.name}</Tooltip>
+          <Popup
+            className="photo-popup"
+            minWidth={240}
+            maxWidth={240}
+            offset={[0, -8]}
+          >
+            <div className={styles.card}>
+              {thumbnailUrl(photo) && (
+                <img
+                  src={thumbnailUrl(photo, 480)}
+                  alt={photo.name}
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <div className={styles.caption}>
+                <p className={styles.album}>
+                  {(photo.parentId && folders?.get(photo.parentId)?.name) ??
+                    'Unknown album'}
+                </p>
+                {formatDate(photo.date) && (
+                  <p className={styles.date}>{formatDate(photo.date)}</p>
+                )}
+              </div>
+            </div>
+          </Popup>
         </CircleMarker>
       ))}
     </MapContainer>

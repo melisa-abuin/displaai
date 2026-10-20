@@ -8,9 +8,9 @@ import { Settings } from './components/Settings'
 import { Sidebar } from './components/Sidebar'
 import { useConnectedFolders } from './drive/connectedFolders'
 import {
-  buildFolderIndex,
-  descendantIds,
-  folderChain,
+    buildFolderIndex,
+    descendantIds,
+    folderChain,
 } from './drive/folderTree'
 import { useFolders, useUserEmail } from './drive/hooks'
 import { parseRoute, paths, useNavigate, usePathname } from './router'
@@ -174,7 +174,7 @@ function Viewer({ token }: { token: string }) {
             onDone={() => navigate(paths.gallery)}
           />
         ) : albums && route.name === 'map' ? (
-          <PhotoMap token={token} folderIds={allIds} />
+          <PhotoMap token={token} folderIds={allIds} folders={index?.byId} />
         ) : albums ? (
           <Gallery
             key={activeAlbum?.folder.id ?? 'all'}

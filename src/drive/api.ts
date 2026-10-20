@@ -216,6 +216,11 @@ export interface PhotoLocation {
   name: string
   latitude: number
   longitude: number
+  thumbnailLink?: string
+  /** The folder (album) the photo is in. */
+  parentId?: string
+  /** EXIF capture time, falling back to when the file was added. */
+  date?: string
 }
 
 /** Every photo with GPS data in the given folders. */
@@ -229,18 +234,39 @@ export async function listPhotoLocations(
   }
   const results = await Promise.all(
     chunks.map((ids) =>
-      listAll<Pick<DrivePhoto, 'id' | 'name' | 'imageMediaMetadata'>>(token, {
+      listAll<
+        Pick<
+          DrivePhoto,
+          | 'id'
+          | 'name'
+          | 'thumbnailLink'
+          | 'createdTime'
+          | 'imageMediaMetadata'
+        > & { parents?: string[] }
+      >(token, {
         q: `${IMAGE_QUERY} and (${ids.map((id) => `'${id}' in parents`).join(' or ')})`,
-        fields: 'nextPageToken, files(id, name, imageMediaMetadata(location))',
+        fields:
+          'nextPageToken, files(id, name, parents, thumbnailLink, createdTime, imageMediaMetadata(location, time))',
       }),
     ),
   )
   const seen = new Set<string>()
-  return results.flat().flatMap(({ id, name, imageMediaMetadata }) => {
+  return results.flat().flatMap((file) => {
+    const { id, name, imageMediaMetadata } = file
     const location = imageMediaMetadata?.location
     if (!location || seen.has(id)) return []
     seen.add(id)
-    return [{ id, name, ...location }]
+    return [
+      {
+        id,
+        name,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        thumbnailLink: file.thumbnailLink,
+        parentId: file.parents?.[0],
+        date: imageMediaMetadata?.time ?? file.createdTime,
+      },
+    ]
   })
 }
 
@@ -253,7 +279,7 @@ export async function fetchPhotoBlob(
 }
 
 export function thumbnailUrl(
-  photo: DrivePhoto,
+  photo: Pick<DrivePhoto, 'thumbnailLink'>,
   size = 400,
 ): string | undefined {
   return photo.thumbnailLink?.replace(/=s\d+$/, `=s${size}`)
