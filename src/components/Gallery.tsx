@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { VirtuosoGrid } from 'react-virtuoso'
-import { thumbnailUrl, type DrivePhoto } from '../drive/api'
+import { thumbnailUrl } from '../drive/api'
 import { usePhotos } from '../drive/hooks'
 import { Lightbox } from './Lightbox'
 import styles from './Gallery.module.css'
@@ -20,7 +20,7 @@ export function Gallery({
     fetchNextPage,
     isFetchingNextPage,
   } = usePhotos(token, folderIds)
-  const [selected, setSelected] = useState<DrivePhoto | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
 
   if (isLoading) return <p className={styles.status}>Loading photos&hellip;</p>
   if (error)
@@ -31,6 +31,7 @@ export function Gallery({
     )
 
   const photos = data?.pages.flatMap((page) => page.files) ?? []
+  const selectedPhoto = photos.find((photo) => photo.id === selected)
   if (photos.length === 0)
     return <p className={styles.status}>No photos in the connected folders.</p>
 
@@ -49,7 +50,7 @@ export function Gallery({
           <button
             type="button"
             className={styles.tile}
-            onClick={() => setSelected(photo)}
+            onClick={() => setSelected(photo.id)}
             aria-label={photo.name}
           >
             {thumbnailUrl(photo) ? (
@@ -70,10 +71,10 @@ export function Gallery({
           Loading&hellip;
         </p>
       )}
-      {selected && (
+      {selectedPhoto && (
         <Lightbox
           token={token}
-          photo={selected}
+          photo={selectedPhoto}
           onClose={() => setSelected(null)}
         />
       )}

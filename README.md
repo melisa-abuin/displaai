@@ -13,9 +13,10 @@
 
 ## Features
 
-- Google OAuth sign-in (Google Identity Services, read-only Drive scope)
+- Google OAuth sign-in (Google Identity Services, read-only file access plus Drive metadata access to save tags)
 - Left sidebar listing your Drive folders ("All photos" + one entry per folder)
-- Thumbnail grid with pagination and a full-size lightbox
+- Thumbnail grid with pagination and a full-size lightbox with a details panel
+- Per-photo tags (add, remove, rename) stored in the file's private Drive app properties, with suggestions from every tag already in use
 
 ## Google OAuth setup
 

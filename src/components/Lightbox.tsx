@@ -6,6 +6,8 @@ import {
   thumbnailUrl,
   type DrivePhoto,
 } from '../drive/api'
+import { formatBytes, formatDate } from '../format'
+import { TagEditor } from './TagEditor'
 import styles from './Lightbox.module.css'
 
 export function Lightbox({
@@ -37,11 +39,19 @@ export function Lightbox({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape' && !e.defaultPrevented) onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  const meta = photo.imageMediaMetadata
+  const details = [
+    ['Taken', formatDate(meta?.time)],
+    ['Added', formatDate(photo.createdTime)],
+    ['Size', meta?.width && meta.height ? ` × ` : undefined],
+    ['File size', formatBytes(photo.size)],
+  ].filter((row): row is [string, string] => Boolean(row[1]))
 
   return (
     <div
@@ -49,28 +59,45 @@ export function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label={photo.name}
-      onClick={onClose}
     >
-      <button
-        type="button"
-        className={styles.close}
-        aria-label="Close"
-        onClick={onClose}
-      >
-        &times;
-      </button>
-      {error ? (
-        <p role="alert">Could not load image.</p>
-      ) : (renderedUrl ?? objectUrl) ? (
-        <img
-          src={renderedUrl ?? objectUrl}
-          alt={photo.name}
-          referrerPolicy="no-referrer"
-          className={styles.image}
-        />
-      ) : (
-        <p>Loading&hellip;</p>
-      )}
+      <div className={styles.stage} onClick={onClose}>
+        {error ? (
+          <p role="alert">Could not load image.</p>
+        ) : (renderedUrl ?? objectUrl) ? (
+          <img
+            src={renderedUrl ?? objectUrl}
+            alt={photo.name}
+            referrerPolicy="no-referrer"
+            className={styles.image}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <p>Loading&hellip;</p>
+        )}
+      </div>
+      <aside className={styles.info} aria-label="Photo info">
+        <button
+          type="button"
+          className={styles.close}
+          aria-label="Close"
+          onClick={onClose}
+        >
+          &times;
+        </button>
+        <h2 className={styles.name}>{photo.name}</h2>
+        {details.length > 0 && (
+          <dl className={styles.details}>
+            {details.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        <h3 className={styles.heading}>Tags</h3>
+        <TagEditor token={token} photo={photo} />
+      </aside>
     </div>
   )
 }

@@ -1,16 +1,86 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
-    getUserEmail,
-    listFolders,
-    listPhotoLocations,
-    listPhotos,
-    type PhotoPageParam,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from '@tanstack/react-query'
+import {
+  getUserEmail,
+  listLibrary,
+  listPhotoLocations,
+  listPhotos,
+  updatePhotoTags,
+  type Library,
+  type PhotoPage,
+  type PhotoPageParam,
 } from './api'
 
-export function useFolders(token: string) {
+const LIBRARY_KEY = ['drive', 'library']
+
+function useLibrary<T>(token: string, select: (library: Library) => T) {
   return useQuery({
-    queryKey: ['drive', 'folders'],
-    queryFn: () => listFolders(token),
+    queryKey: LIBRARY_KEY,
+    queryFn: () => listLibrary(token),
+    select,
+  })
+}
+
+const selectFolders = (library: Library) => library.folders
+const selectTags = (library: Library) => library.tags
+
+export function useFolders(token: string) {
+  return useLibrary(token, selectFolders)
+}
+
+/** Every distinct tag in the Drive, gathered during the library sync. */
+export function useTags(token: string) {
+  return useLibrary(token, selectTags)
+}
+
+export function useUpdateTags(token: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      photoId,
+      add,
+      remove,
+    }: {
+      photoId: string
+      add: string[]
+      remove: string[]
+    }) => updatePhotoTags(token, photoId, { add, remove }),
+    onSuccess: (appProperties, { photoId, add, remove }) => {
+      queryClient.setQueriesData<InfiniteData<PhotoPage, unknown>>(
+        { queryKey: ['drive', 'photos'] },
+        (data) =>
+          data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              files: page.files.map((file) =>
+                file.id === photoId ? { ...file, appProperties } : file,
+              ),
+            })),
+          },
+      )
+      queryClient.setQueryData<Library>(LIBRARY_KEY, (library) => {
+        if (!library) return library
+        const counts = new Map(library.tags.map((t) => [t.name, t.count]))
+        const bump = (name: string, by: number) =>
+          counts.set(name, (counts.get(name) ?? 0) + by)
+        // Callers pass only tags that really change on the photo.
+        for (const name of add) bump(name, 1)
+        for (const name of remove) bump(name, -1)
+        return {
+          ...library,
+          tags: [...counts]
+            .filter(([, count]) => count > 0)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        }
+      })
+    },
   })
 }
 

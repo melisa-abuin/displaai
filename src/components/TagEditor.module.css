@@ -1,0 +1,104 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.15);
+}
+
+.tag button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tag button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.tagName {
+  padding: 3px 4px 3px 12px;
+}
+
+.remove {
+  padding: 3px 10px 3px 4px;
+  opacity: 0.7;
+}
+
+.remove:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.editInput {
+  width: 9rem;
+  margin: 2px;
+  padding: 2px 10px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+}
+
+.empty {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+.combo {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.08);
+  color: inherit;
+  font: inherit;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 1;
+  inset: calc(100% + 4px) 0 auto;
+  margin: 0;
+  padding: 4px;
+  border-radius: 6px;
+  background: #24242c;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
+  list-style: none;
+}
+
+.suggestions li {
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.suggestions li:hover,
+.activeOption {
+  background: rgb(255 255 255 / 0.15);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}

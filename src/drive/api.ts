@@ -19,7 +19,26 @@ export interface DrivePhoto {
   /** Present only when the image has EXIF data (GPS may be missing). */
   imageMediaMetadata?: {
     location?: { latitude: number; longitude: number; altitude?: number }
+    time?: string
+    width?: number
+    height?: number
   }
+  createdTime?: string
+  /** Bytes, as a string (Drive's format). */
+  size?: string
+  /** Custom properties private to this app; tags are stored as 'tag.<hash>' keys holding the tag name. */
+  appProperties?: Record<string, string>
+}
+
+export interface TagCount {
+  name: string
+  count: number
+}
+
+export interface Library {
+  folders: DriveFolder[]
+  /** Every distinct tag used by any photo in the Drive. */
+  tags: TagCount[]
 }
 
 export interface PhotoPageParam {
@@ -42,10 +61,15 @@ async function driveFetch(
   token: string,
   path: string,
   params?: Record<string, string>,
+  init?: { method: string; body: string },
 ): Promise<Response> {
   const query = params ? `?${new URLSearchParams(params)}` : ''
   const res = await fetch(`${API}${path}${query}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(init && { 'Content-Type': 'application/json' }),
+    },
+    ...init,
   })
   if (res.status === 401) throw new UnauthorizedError()
   if (!res.ok) throw new Error(`Drive API error ${res.status}`)
@@ -81,12 +105,16 @@ async function listAll<T>(
   return items
 }
 
-/** Every folder in the Drive, with the number of images directly inside it. */
-export async function listFolders(token: string): Promise<DriveFolder[]> {
+/**
+ * Every folder in the Drive (with the number of images directly inside it) and
+ * every tag in use. Tags come from the same pass over all images, so the
+ * suggestion list costs no extra requests.
+ */
+export async function listLibrary(token: string): Promise<Library> {
   const [images, folders] = await Promise.all([
-    listAll<{ parents?: string[] }>(token, {
+    listAll<Pick<DrivePhoto, 'appProperties'> & { parents?: string[] }>(token, {
       q: IMAGE_QUERY,
-      fields: 'nextPageToken, files(parents)',
+      fields: 'nextPageToken, files(parents, appProperties)',
     }),
     listAll<{ id: string; name: string; parents?: string[] }>(token, {
       q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
@@ -95,7 +123,11 @@ export async function listFolders(token: string): Promise<DriveFolder[]> {
   ])
 
   const counts = new Map<string, number>()
+  const tagCounts = new Map<string, number>()
   for (const image of images) {
+    for (const tag of photoTags(image)) {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
+    }
     for (const parent of image.parents ?? []) {
       counts.set(parent, (counts.get(parent) ?? 0) + 1)
     }
@@ -125,16 +157,21 @@ export async function listFolders(token: string): Promise<DriveFolder[]> {
     }
   }
 
-  return folders
-    .map(({ id, name, parents }) => ({
-      id,
-      name,
-      parentId: parents?.[0],
-      path: pathOf({ name, parents }),
-      photoCount: counts.get(id) ?? 0,
-      totalCount: totals.get(id) ?? 0,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  return {
+    folders: folders
+      .map(({ id, name, parents }) => ({
+        id,
+        name,
+        parentId: parents?.[0],
+        path: pathOf({ name, parents }),
+        photoCount: counts.get(id) ?? 0,
+        totalCount: totals.get(id) ?? 0,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    tags: [...tagCounts]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }
 }
 
 // Keeps the `q` parameter at a safe length when many folders are connected.
@@ -156,7 +193,8 @@ export async function listPhotos(
   const parents = ids.map((id) => `'${id}' in parents`).join(' or ')
   const res = await driveFetch(token, '/files', {
     q: `${IMAGE_QUERY} and (${parents})`,
-    fields: 'nextPageToken, files(id, name, mimeType, thumbnailLink, imageMediaMetadata(location))',
+    fields:
+      'nextPageToken, files(id, name, mimeType, thumbnailLink, createdTime, size, appProperties, imageMediaMetadata(location, time, width, height))',
     orderBy: 'createdTime desc',
     pageSize: '60',
     ...(param.token && { pageToken: param.token }),
@@ -226,4 +264,69 @@ export function isHeic(photo: Pick<DrivePhoto, 'mimeType' | 'name'>): boolean {
   return (
     /^image\/hei[cf]/i.test(photo.mimeType) || /\.hei[cf]$/i.test(photo.name)
   )
+}
+
+// Drive only allows [a-zA-Z0-9.!@$%^&*()-_/] in property keys, so the tag's
+// name lives in the value and the key is a hash of its lowercased name.
+const TAG_PREFIX = 'tag.'
+const TAG_KEY_LENGTH = TAG_PREFIX.length + 14
+// Drive limits an app property's key + value to 124 bytes.
+const MAX_TAG_BYTES = 124 - TAG_KEY_LENGTH
+
+// cyrb53: a fast, well-distributed 53-bit string hash.
+function hashString(input: string): string {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < input.length; i++) {
+    const code = input.charCodeAt(i)
+    h1 = Math.imul(h1 ^ code, 2654435761)
+    h2 = Math.imul(h2 ^ code, 1597334677)
+  }
+  h1 =
+    Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^
+    Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 =
+    Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^
+    Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0))
+    .toString(16)
+    .padStart(14, '0')
+}
+
+function tagKey(tag: string): string {
+  return TAG_PREFIX + hashString(tag.toLowerCase())
+}
+
+export function photoTags(photo: Pick<DrivePhoto, 'appProperties'>): string[] {
+  return Object.entries(photo.appProperties ?? {})
+    .filter(([key]) => key.startsWith(TAG_PREFIX))
+    .map(([, name]) => name)
+    .sort((a, b) => a.localeCompare(b))
+}
+
+/** Tidies a typed tag; returns undefined if it is empty or too long to store. */
+export function normalizeTag(input: string): string | undefined {
+  const tag = input.trim().replace(/\s+/g, ' ')
+  if (!tag || new TextEncoder().encode(tag).length > MAX_TAG_BYTES) return
+  return tag
+}
+/** Adds and removes tags on a photo; resolves with the photo's resulting properties. */
+export async function updatePhotoTags(
+  token: string,
+  photoId: string,
+  change: { add?: string[]; remove?: string[] },
+): Promise<Record<string, string>> {
+  const appProperties: Record<string, string | null> = {}
+  for (const tag of change.remove ?? []) appProperties[tagKey(tag)] = null
+  for (const tag of change.add ?? []) appProperties[tagKey(tag)] = tag
+  const res = await driveFetch(
+    token,
+    `/files/${photoId}`,
+    { fields: 'appProperties' },
+    { method: 'PATCH', body: JSON.stringify({ appProperties }) },
+  )
+  const data = (await res.json()) as {
+    appProperties?: Record<string, string>
+  }
+  return data.appProperties ?? {}
 }
