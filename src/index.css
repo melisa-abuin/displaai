@@ -1,4 +1,6 @@
 :root {
+  --primary-black: #0d0d12;
+  --secondary-violet: #2a1f4d;
   color-scheme: light dark;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;

@@ -1,10 +1,11 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react';
 
 const NAVIGATE_EVENT = 'app:navigate'
 
 export type Route =
   | { name: 'gallery' }
   | { name: 'album'; folderId: string }
+  | { name: 'map' }
   | { name: 'settings' }
   | { name: 'folders'; path: string[] }
   | { name: 'notFound' }
@@ -15,6 +16,7 @@ export const paths = {
   gallery: '/',
   album: (folderId: string) => `/albums/${encodeURIComponent(folderId)}`,
   settings: '/settings',
+  map: '/map',
   folders: FOLDERS_PATH,
   /** The folder manager opened at the subfolder reached via these folder ids. */
   foldersAt: (folderIds: readonly string[]) =>
@@ -25,6 +27,7 @@ export function parseRoute(pathname: string): Route {
   const parts = pathname.split('/').filter(Boolean)
   if (parts.length === 0) return { name: 'gallery' }
   if (parts.length === 1 && parts[0] === 'settings') return { name: 'settings' }
+  if (parts.length === 1 && parts[0] === 'map') return { name: 'map' }
   if (parts[0] === 'settings' && parts[1] === 'folders') {
     try {
       return { name: 'folders', path: parts.slice(2).map(decodeURIComponent) }

@@ -16,6 +16,10 @@ export interface DrivePhoto {
   name: string
   mimeType: string
   thumbnailLink?: string
+  /** Present only when the image has EXIF data (GPS may be missing). */
+  imageMediaMetadata?: {
+    location?: { latitude: number; longitude: number; altitude?: number }
+  }
 }
 
 export interface PhotoPageParam {
@@ -152,7 +156,7 @@ export async function listPhotos(
   const parents = ids.map((id) => `'${id}' in parents`).join(' or ')
   const res = await driveFetch(token, '/files', {
     q: `${IMAGE_QUERY} and (${parents})`,
-    fields: 'nextPageToken, files(id, name, mimeType, thumbnailLink)',
+    fields: 'nextPageToken, files(id, name, mimeType, thumbnailLink, imageMediaMetadata(location))',
     orderBy: 'createdTime desc',
     pageSize: '60',
     ...(param.token && { pageToken: param.token }),
@@ -168,6 +172,40 @@ export async function listPhotos(
       : undefined
   return { files: data.files, nextParam }
 }
+
+export interface PhotoLocation {
+  id: string
+  name: string
+  latitude: number
+  longitude: number
+}
+
+/** Every photo with GPS data in the given folders. */
+export async function listPhotoLocations(
+  token: string,
+  folderIds: string[],
+): Promise<PhotoLocation[]> {
+  const chunks: string[][] = []
+  for (let i = 0; i < folderIds.length; i += FOLDERS_PER_QUERY) {
+    chunks.push(folderIds.slice(i, i + FOLDERS_PER_QUERY))
+  }
+  const results = await Promise.all(
+    chunks.map((ids) =>
+      listAll<Pick<DrivePhoto, 'id' | 'name' | 'imageMediaMetadata'>>(token, {
+        q: `${IMAGE_QUERY} and (${ids.map((id) => `'${id}' in parents`).join(' or ')})`,
+        fields: 'nextPageToken, files(id, name, imageMediaMetadata(location))',
+      }),
+    ),
+  )
+  const seen = new Set<string>()
+  return results.flat().flatMap(({ id, name, imageMediaMetadata }) => {
+    const location = imageMediaMetadata?.location
+    if (!location || seen.has(id)) return []
+    seen.add(id)
+    return [{ id, name, ...location }]
+  })
+}
+
 export async function fetchPhotoBlob(
   token: string,
   fileId: string,
