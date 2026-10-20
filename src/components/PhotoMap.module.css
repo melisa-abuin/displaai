@@ -8,3 +8,41 @@
   opacity: 0.7;
   text-align: center;
 }
+
+.card {
+  position: relative;
+  width: 240px;
+  min-height: 120px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--secondary-violet);
+}
+
+.card img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.card .caption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 28px 12px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  color: #ffffff;
+  white-space: normal;
+}
+
+.card .caption p {
+  margin: 0;
+}
+
+.album {
+  font-weight: 600;
+}
+
+.date {
+  opacity: 0.8;
+  font-size: 0.85em;
+}

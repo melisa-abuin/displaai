@@ -189,6 +189,26 @@
   outline: none;
 }
 
+/* The photo fills the whole popup; the caption is overlaid on it. */
+.photo-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  background: var(--secondary-violet);
+}
+
+.photo-popup .leaflet-popup-content {
+  margin: 0;
+}
+
+.photo-popup .leaflet-popup-tip {
+  background: var(--secondary-violet);
+}
+
+.photo-popup .leaflet-popup-close-button {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
 .leaflet-container .leaflet-control-zoom a,
 .leaflet-container .leaflet-bar a {
   align-items: center;

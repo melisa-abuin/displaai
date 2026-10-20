@@ -1,19 +1,19 @@
 import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type InfiniteData,
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+    type InfiniteData,
 } from '@tanstack/react-query'
 import {
-  getUserEmail,
-  listLibrary,
-  listPhotoLocations,
-  listPhotos,
-  updatePhotoTags,
-  type Library,
-  type PhotoPage,
-  type PhotoPageParam,
+    getUserEmail,
+    listLibrary,
+    listPhotoLocations,
+    listPhotos,
+    updatePhotoTags,
+    type Library,
+    type PhotoPage,
+    type PhotoPageParam,
 } from './api'
 
 const LIBRARY_KEY = ['drive', 'library']
@@ -97,7 +97,7 @@ export function usePhotos(token: string, folderIds: readonly string[]) {
 export function usePhotoLocations(token: string, folderIds: readonly string[]) {
   const sortedIds = [...folderIds].sort()
   return useQuery({
-    queryKey: ['drive', 'locations', sortedIds],
+    queryKey: ['drive', 'locations', 'v2', sortedIds],
     queryFn: () => listPhotoLocations(token, sortedIds),
   })
 }
