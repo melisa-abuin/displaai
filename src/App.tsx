@@ -19,8 +19,16 @@ function SignIn() {
   const { signIn, error, isConfigured } = useAuth()
   return (
     <main className={styles.signIn}>
-      <h1>Drive Photos</h1>
-      <p>Sign in with Google to browse the photos in your Drive.</p>
+      <img
+        className={styles.logo}
+        src={`${import.meta.env.BASE_URL}loog.png`}
+        alt=""
+      />
+      <h1>Drive Photos Visualizer</h1>
+      <p>
+        The app to browse your Google Drive pictures in a smooth way. Sign in
+        with Google to start browsing.
+      </p>
       <button type="button" onClick={() => void signIn()}>
         Sign in with Google
       </button>
