@@ -1,7 +1,7 @@
 .button {
   padding: 10px 24px;
-  border: none;
-  border-radius: 30px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
   background: var(--primary);
   color: #000;
   font: inherit;
@@ -10,6 +10,24 @@
 
 .button:hover:not(:disabled) {
   background: color-mix(in srgb, var(--primary), #000 12%);
+}
+
+.outline {
+  background: transparent;
+  color: var(--primary);
+}
+
+.button.outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.button.rounded {
+  border-radius: 30px;
+}
+
+.button.small {
+  padding: 6px 14px;
+  font-size: 0.875rem;
 }
 
 .button:disabled {

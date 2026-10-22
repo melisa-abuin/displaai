@@ -3,8 +3,8 @@ import type { DriveFolder } from '../drive/api'
 import type { ConnectedFolder } from '../drive/connectedFolders'
 import { folderChain, type FolderIndex } from '../drive/folderTree'
 import { formatNumber } from '../format'
-import styles from './FolderManager.module.css'
 import { Button } from './Button'
+import styles from './FolderManager.module.css'
 import { Switch } from './Switch'
 
 interface FolderManagerProps {
@@ -174,11 +174,17 @@ export function FolderManager({
       )}
 
       <div className={styles.toolbar}>
-        <Button disabled={entries.length === 0} onClick={onClear}>
+        <Button
+          small
+          variant="outline"
+          disabled={entries.length === 0}
+          onClick={onClear}
+        >
           Disconnect all
         </Button>
         <span className={styles.summary}>{entries.length} connected</span>
         <Button
+          small
           className={styles.done}
           disabled={entries.length === 0}
           onClick={onDone}

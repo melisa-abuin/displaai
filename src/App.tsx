@@ -30,7 +30,9 @@ function SignIn() {
         The app to browse your Google Drive pictures in a smooth way. Sign in
         with Google to start browsing.
       </p>
-      <Button className={styles.signInButton} onClick={() => void signIn()}>
+      <Button
+        rounded
+        className={styles.signInButton} onClick={() => void signIn()}>
         Sign in with Google
       </Button>
       {!isConfigured && (
