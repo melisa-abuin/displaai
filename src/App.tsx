@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import styles from './App.module.css'
 import { useAuth } from './auth/context'
+import { Button } from './components/Button'
 import { FolderManager } from './components/FolderManager'
 import { Gallery } from './components/Gallery'
 import { PhotoMap } from './components/PhotoMap'
@@ -29,9 +30,9 @@ function SignIn() {
         The app to browse your Google Drive pictures in a smooth way. Sign in
         with Google to start browsing.
       </p>
-      <button type="button" onClick={() => void signIn()}>
+      <Button className={styles.signInButton} onClick={() => void signIn()}>
         Sign in with Google
-      </button>
+      </Button>
       {!isConfigured && (
         <p role="alert">
           Set <code>VITE_GOOGLE_CLIENT_ID</code> in <code>.env.local</code>.
@@ -162,7 +163,11 @@ function Viewer({ token }: { token: string }) {
         onOpenMap={() => navigate(paths.map)}
       />
       <main className={styles.content}>
-        <h2 className={styles.heading}>{title}</h2>
+        <h2
+          className={`${styles.heading} ${route.name === 'folders' ? styles.headingPrimary : ''}`}
+        >
+          {title}
+        </h2>
         {route.name === 'settings' ? (
           <Settings
             onSignOut={() => void signOut()}

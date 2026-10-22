@@ -7,7 +7,6 @@
 
 .intro {
   margin: 0;
-  opacity: 0.8;
 }
 
 .toolbar {
@@ -15,15 +14,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-.toolbar button {
-  padding: 6px 12px;
-  cursor: pointer;
-}
-
-.toolbar button:disabled {
-  cursor: default;
 }
 
 .summary {
@@ -43,9 +33,13 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #4285f4;
+  color: var(--primary);
   font: inherit;
   cursor: pointer;
+}
+
+.chevron {
+  color: var(--primary);
 }
 
 .list {
@@ -54,25 +48,38 @@
   list-style: none;
 }
 
+.listHeader,
 .row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem 9.5rem 7.5rem;
   align-items: center;
   gap: 12px;
   padding: 4px 8px;
+}
+
+.listHeader {
+  color: var(--secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.countHeader {
+  text-align: right;
+}
+
+.row {
   border-radius: 6px;
+}
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .row:hover {
   background: color-mix(in srgb, currentColor 6%, transparent);
-}
-
-.check {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  font-size: 0.85rem;
-  cursor: pointer;
 }
 
 .open {
@@ -107,11 +114,7 @@ button.open {
 }
 
 .count {
-  flex-shrink: 0;
-  min-width: 2.5em;
   text-align: right;
-  opacity: 0.6;
-  font-size: 0.8rem;
 }
 
 .status {

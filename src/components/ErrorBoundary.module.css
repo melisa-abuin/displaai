@@ -52,33 +52,6 @@
   gap: 10px;
 }
 
-.actions button {
-  padding: 8px 18px;
-  border-radius: 6px;
-  font: inherit;
-  cursor: pointer;
-}
-
-.primary {
-  border: 1px solid #4285f4;
-  background: #4285f4;
-  color: #fff;
-}
-
-.primary:hover {
-  background: #3367d6;
-}
-
-.secondary {
-  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  background: none;
-  color: inherit;
-}
-
-.secondary:hover {
-  background: color-mix(in srgb, currentColor 8%, transparent);
-}
-
 .details {
   margin: 20px 0 0;
   padding: 12px;

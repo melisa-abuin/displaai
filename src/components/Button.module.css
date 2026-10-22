@@ -1,0 +1,18 @@
+.button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 30px;
+  background: var(--primary);
+  color: #000;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary), #000 12%);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
