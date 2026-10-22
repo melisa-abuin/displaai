@@ -3,7 +3,9 @@ import type { DriveFolder } from '../drive/api'
 import type { ConnectedFolder } from '../drive/connectedFolders'
 import { folderChain, type FolderIndex } from '../drive/folderTree'
 import { formatNumber } from '../format'
+import { Button } from './Button'
 import styles from './FolderManager.module.css'
+import { Switch } from './Switch'
 
 interface FolderManagerProps {
   index: FolderIndex | undefined
@@ -72,39 +74,26 @@ export function FolderManager({
         its subfolders, or tick &ldquo;Include subfolders&rdquo; to add
         everything inside it.
       </p>
-      <div className={styles.toolbar}>
-        <button type="button" disabled={entries.length === 0} onClick={onClear}>
-          Disconnect all
-        </button>
-        <span className={styles.summary}>{entries.length} connected</span>
-        <button
-          type="button"
-          className={styles.done}
-          disabled={entries.length === 0}
-          onClick={onDone}
-        >
-          Done
-        </button>
-      </div>
-
-      <nav aria-label="Folder path" className={styles.breadcrumbs}>
-        {trail.map((crumb, i) => (
-          <span key={crumb.folder?.id ?? 'root'}>
-            {i > 0 && <span aria-hidden="true"> / </span>}
-            {i === trail.length - 1 ? (
-              <span aria-current="location">{crumb.name}</span>
-            ) : (
-              <button
-                type="button"
-                className={styles.crumb}
-                onClick={() => open(crumb.folder)}
-              >
-                {crumb.name}
-              </button>
-            )}
-          </span>
-        ))}
-      </nav>
+      {trail.length > 1 && (
+        <nav aria-label="Folder path" className={styles.breadcrumbs}>
+          {trail.map((crumb, i) => (
+            <span key={crumb.folder?.id ?? 'root'}>
+              {i > 0 && <span aria-hidden="true"> / </span>}
+              {i === trail.length - 1 ? (
+                <span aria-current="location">{crumb.name}</span>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.crumb}
+                  onClick={() => open(crumb.folder)}
+                >
+                  {crumb.name}
+                </button>
+              )}
+            </span>
+          ))}
+        </nav>
+      )}
 
       {isLoading && <p className={styles.status}>Loading folders&hellip;</p>}
       {error && (
@@ -116,6 +105,14 @@ export function FolderManager({
         <p className={styles.status}>No folders with photos here.</p>
       )}
       {shown.length > 0 && (
+        <div className={styles.listHeader} aria-hidden="true">
+          <span>Folder name</span>
+          <span>Import folder</span>
+          <span>Include subfolders</span>
+          <span className={styles.countHeader}>Pictures found</span>
+        </div>
+      )}
+      {shown.length > 0 && (
         <ul className={styles.list}>
           {shown.map((folder) => {
             const entry = byFolder.get(folder.id)
@@ -123,34 +120,45 @@ export function FolderManager({
             const subfolders = index?.children.get(folder.id) ?? []
             return (
               <li key={folder.id} className={styles.row}>
-                <label className={styles.check}>
-                  <input
-                    type="checkbox"
-                    checked={!!entry || !!parent}
-                    disabled={!!parent}
-                    onChange={(e) =>
-                      onSetFolder(folder.id, e.target.checked ? false : null)
-                    }
-                  />
-                  <span>Add</span>
-                </label>
+                <div className={styles.nameCell}>
+                  {subfolders.length > 0 ? (
+                    <button
+                      type="button"
+                      className={styles.open}
+                      title={folder.path}
+                      onClick={() => open(folder)}
+                    >
+                      <span className={styles.name}>{folder.name}</span>
+                      <span aria-hidden="true" className={styles.chevron}>
+                        &rsaquo;
+                      </span>
+                    </button>
+                  ) : (
+                    <span className={styles.open} title={folder.path}>
+                      <span className={styles.name}>{folder.name}</span>
+                    </span>
+                  )}
+                  {parent && (
+                    <span className={styles.via}>via {parent.name}</span>
+                  )}
+                </div>
+                <Switch
+                  aria-label={`Import ${folder.name}`}
+                  checked={!!entry || !!parent}
+                  disabled={!!parent}
+                  onChange={(e) =>
+                    onSetFolder(folder.id, e.target.checked ? false : null)
+                  }
+                />
                 {subfolders.length > 0 ? (
-                  <button
-                    type="button"
-                    className={styles.open}
-                    title={folder.path}
-                    onClick={() => open(folder)}
-                  >
-                    <span className={styles.name}>{folder.name}</span>
-                    <span aria-hidden="true">&rsaquo;</span>
-                  </button>
+                  <Switch
+                    aria-label={`Include subfolders of ${folder.name}`}
+                    checked={!!entry?.recursive || !!parent}
+                    disabled={!entry || !!parent}
+                    onChange={(e) => onSetFolder(folder.id, e.target.checked)}
+                  />
                 ) : (
-                  <span className={styles.open} title={folder.path}>
-                    <span className={styles.name}>{folder.name}</span>
-                  </span>
-                )}
-                {parent && (
-                  <span className={styles.via}>via {parent.name}</span>
+                  <span />
                 )}
                 <span className={styles.count}>
                   {formatNumber(
@@ -159,22 +167,31 @@ export function FolderManager({
                       : folder.photoCount,
                   )}
                 </span>
-                {subfolders.length > 0 && (
-                  <label className={styles.check}>
-                    <input
-                      type="checkbox"
-                      checked={!!entry?.recursive || !!parent}
-                      disabled={!entry || !!parent}
-                      onChange={(e) => onSetFolder(folder.id, e.target.checked)}
-                    />
-                    <span>Include subfolders</span>
-                  </label>
-                )}
               </li>
             )
           })}
         </ul>
       )}
+
+      <div className={styles.toolbar}>
+        <Button
+          small
+          variant="outline"
+          disabled={entries.length === 0}
+          onClick={onClear}
+        >
+          Disconnect all
+        </Button>
+        <span className={styles.summary}>{entries.length} connected</span>
+        <Button
+          small
+          className={styles.done}
+          disabled={entries.length === 0}
+          onClick={onDone}
+        >
+          Done
+        </Button>
+      </div>
     </div>
   )
 }

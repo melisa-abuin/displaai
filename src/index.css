@@ -1,14 +1,29 @@
 :root {
   --primary: #aa85f8;
   --primary-black: #0d0d12;
+  --secondary: #f6a655;
   --secondary-violet: #2a1f4d;
   color-scheme: light dark;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter Variable',
+    system-ui,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 body {

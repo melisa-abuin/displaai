@@ -1,4 +1,5 @@
 import { formatNumber } from '../format'
+import { Button } from './Button'
 import styles from './Settings.module.css'
 
 interface SettingsProps {
@@ -21,9 +22,7 @@ export function Settings({
         </h3>
         <div className={styles.row}>
           <span>{formatNumber(connectedCount)} connected</span>
-          <button type="button" onClick={onManageFolders}>
-            Manage folders
-          </button>
+          <Button onClick={onManageFolders}>Manage folders</Button>
         </div>
       </section>
 
@@ -74,9 +73,7 @@ export function Settings({
       </section>
 
       <div className={styles.footer}>
-        <button type="button" className={styles.logout} onClick={onSignOut}>
-          Log out
-        </button>
+        <Button onClick={onSignOut}>Log out</Button>
       </div>
     </div>
   )

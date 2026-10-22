@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { persister, queryClient } from '../queryClient.ts'
+import { Button } from './Button'
 import styles from './ErrorBoundary.module.css'
 
 interface Props {
@@ -76,20 +77,10 @@ export class ErrorBoundary extends Component<Props, State> {
             . Consider removing sensitive info before sharing.
           </p>
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.secondary}
-              onClick={this.toggleDetails}
-            >
+            <Button onClick={this.toggleDetails}>
               {showDetails ? 'Hide details' : 'Show error'}
-            </button>
-            <button
-              type="button"
-              className={styles.primary}
-              onClick={this.reloadPage}
-            >
-              Clear &amp; refresh
-            </button>
+            </Button>
+            <Button onClick={this.reloadPage}>Clear &amp; refresh</Button>
           </div>
           {showDetails && error && (
             <pre className={styles.details}>

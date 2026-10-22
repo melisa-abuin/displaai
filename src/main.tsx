@@ -1,3 +1,4 @@
+import '@fontsource-variable/inter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { StrictMode } from 'react'

@@ -35,21 +35,15 @@
   max-width: 480px;
 }
 
-.signIn button {
+.signInButton {
   margin-top: 20px;
-  padding: 10px 24px;
-  border: none;
-  border-radius: 30px;
-  background: var(--primary);
-  color: #000;
-  cursor: pointer;
-}
-
-.signIn button:hover {
-  background: color-mix(in srgb, var(--primary), #000 12%);
 }
 
 .heading {
   margin: 0 0 16px;
   font-size: 1.5rem;
+}
+
+.headingPrimary {
+  color: var(--primary);
 }

@@ -33,7 +33,16 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <aside className={styles.sidebar} aria-label="Albums">
-      <h1 className={styles.title}>Drive Photos</h1>
+      <div className={styles.brand}>
+        <img
+          className={styles.logo}
+          src={`${import.meta.env.BASE_URL}loog.png`}
+          alt=""
+        />
+        <h1 className={styles.title} title="Drive Photos Visualizer">
+          DPV
+        </h1>
+      </div>
       <nav className={styles.nav}>
         <button
           type="button"
