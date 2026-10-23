@@ -47,6 +47,8 @@ export interface PhotoPageParam {
 }
 
 export interface PhotoPage {
+  /** The folder all the photos of this page are in. */
+  folderId?: string
   files: DrivePhoto[]
   nextParam?: PhotoPageParam
 }
@@ -177,15 +179,21 @@ export async function listLibrary(token: string): Promise<Library> {
 // Keeps the `q` parameter at a safe length when many folders are connected.
 const FOLDERS_PER_QUERY = 40
 
-/** Lists photos of the given folders, walking through them chunk by chunk. */
+/**
+ * Lists photos of the given folders. Mixed (the default) walks through the
+ * folders in batches, newest first within each batch; grouped lists one folder
+ * at a time, in the order given, so the photos of a folder come together.
+ */
 export async function listPhotos(
   token: string,
   folderIds: string[],
   param: PhotoPageParam = { chunk: 0 },
+  grouped = false,
 ): Promise<PhotoPage> {
+  const size = grouped ? 1 : FOLDERS_PER_QUERY
   const chunks: string[][] = []
-  for (let i = 0; i < folderIds.length; i += FOLDERS_PER_QUERY) {
-    chunks.push(folderIds.slice(i, i + FOLDERS_PER_QUERY))
+  for (let i = 0; i < folderIds.length; i += size) {
+    chunks.push(folderIds.slice(i, i + size))
   }
   const ids = chunks[param.chunk]
   if (!ids) return { files: [] }
@@ -208,7 +216,7 @@ export async function listPhotos(
     : param.chunk + 1 < chunks.length
       ? { chunk: param.chunk + 1 }
       : undefined
-  return { files: data.files, nextParam }
+  return { folderId: grouped ? ids[0] : undefined, files: data.files, nextParam }
 }
 
 export interface PhotoLocation {

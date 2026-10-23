@@ -1,9 +1,15 @@
-.grid {
+.row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 8px;
-  margin: 0;
-  padding: 0;
+  padding-bottom: 8px;
+}
+
+.headerRow {
+  padding: 16px 0 8px;
+}
+
+.headerRow:first-child {
+  padding-top: 0;
 }
 
 .tile {
@@ -24,6 +30,29 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.folderHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 1.05rem;
+}
+
+.folderName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folderCount {
+  flex-shrink: 0;
+  opacity: 0.6;
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 .noThumb {

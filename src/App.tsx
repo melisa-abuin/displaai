@@ -14,6 +14,7 @@ import {
     folderChain,
 } from './drive/folderTree'
 import { useFolders, useUserEmail } from './drive/hooks'
+import type { DriveFolder } from './drive/api'
 import { parseRoute, paths, useNavigate, usePathname } from './router'
 
 function SignIn() {
@@ -78,10 +79,40 @@ function Viewer({ token }: { token: string }) {
 
   const hasConnected = albums ? albums.length > 0 : connected.entries.length > 0
   const folderId = route.name === 'album' ? route.folderId : null
+
+  // The sidebar entries: connected folders, with the subfolders of recursive ones beneath them.
+  const navItems = useMemo(() => {
+    if (!index || !albums) return undefined
+    const topLevel = new Set(albums.map((album) => album.folder.id))
+    const seen = new Set<string>()
+    const items: { folder: DriveFolder; ids: string[]; depth: number }[] = []
+    const addSubfolders = (parentId: string, depth: number) => {
+      for (const child of index.children.get(parentId) ?? []) {
+        if (topLevel.has(child.id) || seen.has(child.id)) continue
+        seen.add(child.id)
+        items.push({
+          folder: { ...child, photoCount: child.totalCount },
+          ids: descendantIds(index, child.id),
+          depth,
+        })
+        addSubfolders(child.id, depth + 1)
+      }
+    }
+    const recursive = new Set(
+      connected.entries.filter((e) => e.recursive).map((e) => e.id),
+    )
+    for (const album of albums) {
+      seen.add(album.folder.id)
+      items.push({ ...album, depth: 0 })
+      if (recursive.has(album.folder.id)) addSubfolders(album.folder.id, 1)
+    }
+    return items
+  }, [index, albums, connected.entries])
+
   const activeAlbum =
     folderId === null
       ? undefined
-      : albums?.find((album) => album.folder.id === folderId)
+      : navItems?.find((item) => item.folder.id === folderId)
   const isGalleryRoute = route.name === 'gallery' || route.name === 'album'
   const needsFolders = isGalleryRoute || route.name === 'map'
   const foldersPath = route.name === 'folders' ? route.path : undefined
@@ -99,7 +130,7 @@ function Viewer({ token }: { token: string }) {
     if (route.name === 'notFound') navigate(paths.gallery, { replace: true })
     else if (needsFolders && !hasConnected)
       navigate(paths.folders, { replace: true })
-    else if (route.name === 'album' && albums && !activeAlbum)
+    else if (route.name === 'album' && navItems && !activeAlbum)
       navigate(paths.gallery, { replace: true })
     else if (foldersUrl && index && managerFolderId !== null) {
       // Fix stale or hand-edited folder paths.
@@ -110,7 +141,7 @@ function Viewer({ token }: { token: string }) {
     route.name,
     needsFolders,
     hasConnected,
-    albums,
+    navItems,
     activeAlbum,
     foldersUrl,
     index,
@@ -122,7 +153,15 @@ function Viewer({ token }: { token: string }) {
     () => [...new Set((albums ?? []).flatMap((album) => album.ids))],
     [albums],
   )
-  const galleryIds = activeAlbum ? activeAlbum.ids : allIds
+  const galleryIds = useMemo(() => {
+    if (!index) return []
+    // Only folders that directly hold photos get a section, ordered by path.
+    return (activeAlbum ? activeAlbum.ids : allIds)
+      .filter((id) => (index.byId.get(id)?.photoCount ?? 0) > 0)
+      .sort((a, b) =>
+        index.byId.get(a)!.path.localeCompare(index.byId.get(b)!.path),
+      )
+  }, [index, activeAlbum, allIds])
   const allPhotosCount = useMemo(() => {
     if (!index || !albums) return undefined
     return allIds.reduce(
@@ -149,7 +188,7 @@ function Viewer({ token }: { token: string }) {
   return (
     <div className={styles.layout}>
       <Sidebar
-        albums={albums?.map((album) => album.folder)}
+        albums={navItems}
         allPhotosCount={allPhotosCount}
         isLoading={folders.isLoading}
         error={folders.error}
@@ -195,6 +234,8 @@ function Viewer({ token }: { token: string }) {
             key={activeAlbum?.folder.id ?? 'all'}
             token={token}
             folderIds={galleryIds}
+            grouped={activeAlbum !== undefined}
+            folders={index?.byId}
           />
         ) : (
           <p>Loading&hellip;</p>

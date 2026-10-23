@@ -84,11 +84,20 @@ export function useUpdateTags(token: string) {
   })
 }
 
-export function usePhotos(token: string, folderIds: readonly string[]) {
-  const sortedIds = [...folderIds].sort()
+/**
+ * Mixed by default (sorted by date); when `grouped`, photos are listed folder by
+ * folder in the order of `folderIds`.
+ */
+export function usePhotos(
+  token: string,
+  folderIds: readonly string[],
+  grouped: boolean,
+) {
+  // Mixed listing doesn't depend on the order of the folders.
+  const ids = grouped ? folderIds : [...folderIds].sort()
   return useInfiniteQuery({
-    queryKey: ['drive', 'photos', sortedIds],
-    queryFn: ({ pageParam }) => listPhotos(token, sortedIds, pageParam),
+    queryKey: ['drive', 'photos', grouped, ids],
+    queryFn: ({ pageParam }) => listPhotos(token, [...ids], pageParam, grouped),
     initialPageParam: undefined as PhotoPageParam | undefined,
     getNextPageParam: (last) => last.nextParam,
   })

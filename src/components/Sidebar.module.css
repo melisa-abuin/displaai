@@ -107,16 +107,60 @@
 
 .item {
   display: flex;
+  min-width: 0;
   gap: 8px;
   justify-content: space-between;
 }
 
+.nav > .item {
+  flex-shrink: 0;
+}
+
+.row > .item {
+  flex: 1;
+}
+
 .name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .count {
+  flex-shrink: 0;
   opacity: 0.6;
   font-size: 0.8rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.toggle:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.toggle svg {
+  transition: transform 0.15s;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
 }

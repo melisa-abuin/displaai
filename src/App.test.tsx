@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { VirtuosoGridMockContext } from 'react-virtuoso'
+import { VirtuosoMockContext } from 'react-virtuoso'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { AuthContext, type AuthState } from './auth/context'
@@ -19,16 +19,11 @@ function renderApp(auth: Partial<AuthState>) {
   return render(
     <QueryClientProvider client={queryClient}>
       <AuthContext.Provider value={value}>
-        <VirtuosoGridMockContext.Provider
-          value={{
-            viewportHeight: 800,
-            viewportWidth: 800,
-            itemHeight: 180,
-            itemWidth: 180,
-          }}
+        <VirtuosoMockContext.Provider
+          value={{ viewportHeight: 800, itemHeight: 180 }}
         >
           <App />
-        </VirtuosoGridMockContext.Provider>
+        </VirtuosoMockContext.Provider>
       </AuthContext.Provider>
     </QueryClientProvider>,
   )
