@@ -1,9 +1,45 @@
+import { useState } from 'react'
 import type { DriveFolder } from '../drive/api'
 import { formatNumber } from '../format'
 import styles from './Sidebar.module.css'
 
+export interface SidebarAlbum {
+  folder: DriveFolder
+  /** 0 for connected folders; subfolders are nested beneath them. */
+  depth: number
+}
+
+/** The ids of the folders containing `id`, from the nearest outwards. */
+function ancestorIds(albums: SidebarAlbum[], id: string): string[] {
+  const index = albums.findIndex((album) => album.folder.id === id)
+  if (index < 0) return []
+  const ids: string[] = []
+  let depth = albums[index].depth
+  for (let i = index - 1; i >= 0 && depth > 0; i--) {
+    if (albums[i].depth < depth) {
+      depth = albums[i].depth
+      ids.push(albums[i].folder.id)
+    }
+  }
+  return ids
+}
+
+/** The albums not hidden inside a collapsed folder. */
+function visibleAlbums(albums: SidebarAlbum[], expanded: ReadonlySet<string>) {
+  const result: { album: SidebarAlbum; hasChildren: boolean }[] = []
+  let hiddenBelow = Infinity
+  albums.forEach((album, i) => {
+    if (album.depth > hiddenBelow) return
+    hiddenBelow = Infinity
+    const hasChildren = (albums[i + 1]?.depth ?? 0) > album.depth
+    result.push({ album, hasChildren })
+    if (hasChildren && !expanded.has(album.folder.id)) hiddenBelow = album.depth
+  })
+  return result
+}
+
 interface SidebarProps {
-  albums: DriveFolder[] | undefined
+  albums: SidebarAlbum[] | undefined
   allPhotosCount: number | undefined
   isGalleryActive: boolean
   isLoading: boolean
@@ -31,6 +67,25 @@ export function Sidebar({
   isMapActive,
   onOpenMap,
 }: SidebarProps) {
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
+  const [revealedId, setRevealedId] = useState<string | null>(null)
+
+  // Open the parents of the selected folder so it is never hidden.
+  if (selectedId !== revealedId && albums) {
+    setRevealedId(selectedId)
+    if (selectedId !== null) {
+      const parents = ancestorIds(albums, selectedId)
+      if (parents.some((id) => !expanded.has(id)))
+        setExpanded(new Set([...expanded, ...parents]))
+    }
+  }
+
+  const toggle = (id: string) => {
+    const next = new Set(expanded)
+    if (!next.delete(id)) next.add(id)
+    setExpanded(next)
+  }
+
   return (
     <aside className={styles.sidebar} aria-label="Albums">
       <div className={styles.brand}>
@@ -66,20 +121,61 @@ export function Sidebar({
             Could not load albums.
           </p>
         )}
-        {albums?.map((album) => (
-          <button
-            key={album.id}
-            type="button"
-            className={styles.item}
-            aria-current={
-              isGalleryActive && selectedId === album.id ? 'true' : undefined
-            }
-            onClick={() => onSelect(album.id)}
-          >
-            <span className={styles.name}>{album.name}</span>{' '}
-            <span className={styles.count}>{formatNumber(album.photoCount)}</span>
-          </button>
-        ))}
+        {albums &&
+          visibleAlbums(albums, expanded).map(({ album, hasChildren }) => {
+            const { folder, depth } = album
+            const isOpen = expanded.has(folder.id)
+            return (
+              <div
+                key={folder.id}
+                className={styles.row}
+                style={{ paddingLeft: `${depth * 14}px` }}
+              >
+                {hasChildren ? (
+                  <button
+                    type="button"
+                    className={styles.toggle}
+                    aria-expanded={isOpen}
+                    aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${folder.name}`}
+                    onClick={() => toggle(folder.id)}
+                  >
+                    <svg
+                      className={isOpen ? styles.chevronOpen : undefined}
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                ) : (
+                  <span className={styles.toggle} aria-hidden="true" />
+                )}
+                <button
+                  type="button"
+                  className={styles.item}
+                  title={folder.path}
+                  aria-current={
+                    isGalleryActive && selectedId === folder.id
+                      ? 'true'
+                      : undefined
+                  }
+                  onClick={() => onSelect(folder.id)}
+                >
+                  <span className={styles.name}>{folder.name}</span>{' '}
+                  <span className={styles.count}>
+                    {formatNumber(folder.photoCount)}
+                  </span>
+                </button>
+              </div>
+            )
+          })}
         <button
           type="button"
           className={styles.item}
