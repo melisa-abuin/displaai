@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
-import { persister, queryClient } from '../queryClient.ts'
+import { reloadApp } from '../queryClient.ts'
 import { Button } from './Button'
 import styles from './ErrorBoundary.module.css'
 
@@ -32,25 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState(({ showDetails }) => ({ showDetails: !showDetails }))
   }
 
-  reloadPage = async () => {
-    queryClient.clear()
-    await persister.removeClient()
-
-    if (navigator.onLine) {
-      await Promise.all(
-        ((await navigator.serviceWorker?.getRegistrations()) || []).map((r) =>
-          r.unregister(),
-        ),
-      )
-      await Promise.all(
-        ((await window.caches?.keys()) || []).map((c) =>
-          window.caches.delete(c),
-        ),
-      )
-    }
-
-    window.location.reload()
-  }
+  reloadPage = () => reloadApp()
 
   render() {
     const { hasError, error, showDetails } = this.state

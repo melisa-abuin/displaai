@@ -36,6 +36,8 @@
 }
 
 .footer {
+  display: flex;
+  gap: 8px;
   margin-top: auto;
   padding-top: 24px;
 }
