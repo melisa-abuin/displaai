@@ -1,16 +1,10 @@
 import { latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
-import {
-    CircleMarker,
-    MapContainer,
-    Popup,
-    TileLayer,
-    useMap,
-} from 'react-leaflet'
-import { thumbnailUrl, type DriveFolder, type PhotoLocation } from '../drive/api'
+import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import { type DriveFolder, type PhotoLocation } from '../drive/api'
 import { usePhotoLocations } from '../drive/hooks'
-import { formatDate } from '../format'
+import { PhotoClusters } from './PhotoClusters'
 import './PhotoMap.css'
 import styles from './PhotoMap.module.css'
 
@@ -86,50 +80,7 @@ export function PhotoMap({
       />
       <LockToWorld />
       <FitBounds photos={photos} />
-      {photos.map((photo) => (
-        <CircleMarker
-          key={photo.id}
-          center={[photo.latitude, photo.longitude]}
-          radius={5}
-          pathOptions={{
-            color: '#ffffff',
-            weight: 1,
-            fillColor: '#aa85f8',
-            fillOpacity: 0.9,
-          }}
-          eventHandlers={{
-            // Anchor to the dot's center, not the exact click point.
-            popupopen: (e) =>
-              e.popup.setLatLng([photo.latitude, photo.longitude]),
-          }}
-        >
-          <Popup
-            className="photo-popup"
-            minWidth={240}
-            maxWidth={240}
-            offset={[0, -8]}
-          >
-            <div className={styles.card}>
-              {thumbnailUrl(photo) && (
-                <img
-                  src={thumbnailUrl(photo, 480)}
-                  alt={photo.name}
-                  referrerPolicy="no-referrer"
-                />
-              )}
-              <div className={styles.caption}>
-                <p className={styles.album}>
-                  {(photo.parentId && folders?.get(photo.parentId)?.name) ??
-                    'Unknown album'}
-                </p>
-                {formatDate(photo.date) && (
-                  <p className={styles.date}>{formatDate(photo.date)}</p>
-                )}
-              </div>
-            </div>
-          </Popup>
-        </CircleMarker>
-      ))}
+      <PhotoClusters photos={photos} folders={folders} />
     </MapContainer>
   )
 }

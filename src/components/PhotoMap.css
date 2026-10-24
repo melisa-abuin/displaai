@@ -197,6 +197,8 @@
 }
 
 .photo-popup .leaflet-popup-content {
+  /* Leaflet sizes the popup from its content when it opens; keep it constant. */
+  width: 240px !important;
   margin: 0;
 }
 

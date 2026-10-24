@@ -46,3 +46,73 @@
   opacity: 0.8;
   font-size: 0.85em;
 }
+
+.cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 90%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 35%, transparent);
+  color: var(--primary-black);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.carousel {
+  position: relative;
+}
+
+/* A fixed frame, so the popup doesn't change size (and the arrows don't jump) between photos. */
+.carousel .card {
+  height: 240px;
+}
+
+.carousel .card img {
+  height: 100%;
+  max-height: none;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0 0 3px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.arrow:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.arrowPrev {
+  left: 6px;
+}
+
+.arrowNext {
+  right: 6px;
+}
+
+.counter {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 0.75rem;
+}
