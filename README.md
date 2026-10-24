@@ -16,6 +16,7 @@
 - Google OAuth sign-in (Google Identity Services, read-only file access plus Drive metadata access to save tags)
 - Left sidebar listing your Drive folders ("All photos" + one entry per folder)
 - Thumbnail grid with pagination and a full-size lightbox with a details panel
+- On-device [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector) analysis (`@mediapipe/tasks-vision`, loaded on demand): the lightbox can overlay face boxes and object boxes on the open photo and suggest tags from image classification (only the open photo is analysed, and only when a switch is on). Models are fetched from Google's model storage on first use.
 - Per-photo tags (add, remove, rename) stored in the file's private Drive app properties, with suggestions from every tag already in use
 
 ## Google OAuth setup

@@ -1,15 +1,48 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchPhotoBlob,
   isHeic,
+  normalizeTag,
+  photoTags,
   thumbnailUrl,
   type DrivePhoto,
 } from '../drive/api'
-import { useHeicTransform } from '../drive/hooks'
+import { useHeicTransform, useUpdateTags } from '../drive/hooks'
 import { formatBytes, formatDate } from '../format'
+import { useFaces, useScene } from '../vision/hooks'
 import styles from './Lightbox.module.css'
+import { RegionBoxes } from './RegionBoxes'
+import { Switch } from './Switch'
 import { TagEditor } from './TagEditor'
+
+/** Where an element sits inside its parent, including any transform, kept current on resize. */
+function useRectInParent() {
+  const [rect, setRect] = useState<DOMRect>()
+  const observer = useRef<ResizeObserver | null>(null)
+  const ref = useCallback((element: HTMLElement | null) => {
+    observer.current?.disconnect()
+    observer.current = null
+    if (!element || typeof ResizeObserver === 'undefined') return
+    const update = () => {
+      const box = element.getBoundingClientRect()
+      const parent = element.parentElement?.getBoundingClientRect()
+      setRect(
+        new DOMRect(
+          box.left - (parent?.left ?? 0),
+          box.top - (parent?.top ?? 0),
+          box.width,
+          box.height,
+        ),
+      )
+    }
+    update()
+    observer.current = new ResizeObserver(update)
+    observer.current.observe(element)
+    if (element.parentElement) observer.current.observe(element.parentElement)
+  }, [])
+  return [ref, rect] as const
+}
 
 export function Lightbox({
   token,
@@ -51,6 +84,12 @@ export function Lightbox({
     meta: { persist: false },
   })
   const [objectUrl, setObjectUrl] = useState<string>()
+  const [showFaces, setShowFaces] = useState(false)
+  const [showObjects, setShowObjects] = useState(false)
+  const [imageRef, imageRect] = useRectInParent()
+  const updateTags = useUpdateTags(token)
+  const faces = useFaces(token, photo.id, showFaces)
+  const scene = useScene(token, photo.id, showObjects)
 
   useEffect(() => {
     if (!thumbUrl) return
@@ -98,6 +137,7 @@ export function Lightbox({
           <>
             {(renderedUrl ?? objectUrl) && (
               <img
+                ref={imageRef}
                 src={renderedUrl ?? objectUrl}
                 alt={photo.name}
                 referrerPolicy="no-referrer"
@@ -116,6 +156,24 @@ export function Lightbox({
             )}
             {!((renderedUrl ?? objectUrl) && ready) && <p>Loading&hellip;</p>}
           </>
+        )}
+        {ready && imageRect && (showFaces || showObjects) && (
+          <div
+            className={styles.overlay}
+            style={{
+              left: imageRect.x,
+              top: imageRect.y,
+              width: imageRect.width,
+              height: imageRect.height,
+            }}
+          >
+            {showObjects && scene.data && (
+              <RegionBoxes kind="object" regions={scene.data.objects} />
+            )}
+            {showFaces && faces.data && (
+              <RegionBoxes kind="face" regions={faces.data.faces} />
+            )}
+          </div>
         )}
       </div>
       <aside className={styles.info} aria-label="Photo info">
@@ -138,7 +196,79 @@ export function Lightbox({
             ))}
           </dl>
         )}
-        <h3 className={styles.heading}>Tags</h3>
+        <h3 className={styles.heading}>Smart analysis</h3>
+        <div className={styles.option}>
+          <span>Face boxes</span>
+          <Switch
+            aria-label="Face boxes"
+            checked={showFaces}
+            onChange={(e) => setShowFaces(e.target.checked)}
+          />
+        </div>
+        {showFaces && (
+          <p className={styles.note} role="status">
+            {faces.error
+              ? `Face detection failed: ${faces.error.message}`
+              : faces.data
+                ? `${faces.data.faces.length} ${faces.data.faces.length === 1 ? 'face' : 'faces'} found`
+                : 'Detecting faces…'}
+          </p>
+        )}
+        <div className={styles.option}>
+          <span>Objects &amp; labels</span>
+          <Switch
+            aria-label="Objects and labels"
+            checked={showObjects}
+            onChange={(e) => setShowObjects(e.target.checked)}
+          />
+        </div>
+        {showObjects && (
+          <div className={styles.note} role="status">
+            {scene.error ? (
+              `Analysis failed: ${scene.error.message}`
+            ) : !scene.data ? (
+              'Analysing…'
+            ) : (
+              <>
+                <p>
+                  {scene.data.objects.length}{' '}
+                  {scene.data.objects.length === 1 ? 'object' : 'objects'} found
+                </p>
+                {scene.data.labels.length > 0 && (
+                  <ul className={styles.labels} aria-label="Suggested tags">
+                    {scene.data.labels.map((label) => {
+                      const tag = normalizeTag(label.name)
+                      return (
+                        <li key={label.name}>
+                          <button
+                            type="button"
+                            title={`${Math.round(label.score * 100)}% - add as tag`}
+                            disabled={
+                              !tag ||
+                              photoTags(photo).includes(tag) ||
+                              updateTags.isPending
+                            }
+                            onClick={() =>
+                              tag &&
+                              updateTags.mutate({
+                                photoId: photo.id,
+                                add: [tag],
+                                remove: [],
+                              })
+                            }
+                          >
+                            + {label.name}
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        <h3 className={styles.heading}>Tags</h3>{' '}
         <TagEditor token={token} photo={photo} />
       </aside>
     </div>
