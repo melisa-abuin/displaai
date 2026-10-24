@@ -16,7 +16,7 @@ import {
     type PhotoPageParam,
 } from './api'
 
-const LIBRARY_KEY = ['drive', 'library']
+const LIBRARY_KEY = ['drive', 'library', 'v3']
 
 function useLibrary<T>(token: string, select: (library: Library) => T) {
   return useQuery({
