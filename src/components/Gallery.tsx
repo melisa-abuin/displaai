@@ -15,9 +15,100 @@ interface PhotoEntry {
   photo: DrivePhoto
 }
 
-type Row =
-  | { kind: 'header'; key: string; folderId: string }
-  | { kind: 'photos'; key: string; entries: PhotoEntry[] }
+/** The photos of one folder; `folderId` is unset when listing everything mixed. */
+interface Section {
+  folderId?: string
+  photos: PhotoEntry[]
+}
+
+// The virtualized list is flat: a section is its header followed by its rows of tiles.
+type ListItem =
+  | { kind: 'header'; key: string; folderId: string; isFirst: boolean }
+  | { kind: 'row'; key: string; entries: PhotoEntry[] }
+
+function SectionHeader({
+  title,
+  path,
+  count,
+  isCollapsed,
+  isFirst,
+  onToggle,
+}: {
+  title: string
+  path?: string
+  count?: number
+  isCollapsed: boolean
+  isFirst: boolean
+  onToggle: () => void
+}) {
+  const split = title.lastIndexOf(' / ')
+  const parents = split === -1 ? '' : title.slice(0, split + 3)
+  const name = title.slice(parents.length)
+  return (
+    <div
+      className={`${styles.headerRow} ${isFirst ? styles.firstHeaderRow : ''}`}
+    >
+      <h3 className={styles.folderHeader} title={path}>
+        <button
+          type="button"
+          className={styles.folderToggle}
+          aria-expanded={!isCollapsed}
+          onClick={onToggle}
+        >
+          <span
+            className={`${styles.chevron} ${isCollapsed ? styles.chevronCollapsed : ''}`}
+            aria-hidden="true"
+          />
+          <span className={styles.folderName}>
+            {parents}
+            <span className={styles.folderLeaf}>{name}</span>
+          </span>
+          {count !== undefined && (
+            <span className={styles.folderCount}>{formatNumber(count)}</span>
+          )}
+        </button>
+      </h3>
+    </div>
+  )
+}
+
+function PhotoRow({
+  entries,
+  columns,
+  onSelect,
+}: {
+  entries: PhotoEntry[]
+  columns: number
+  onSelect: (photoId: string) => void
+}) {
+  return (
+    <div
+      className={styles.row}
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
+      {entries.map(({ key, photo }) => (
+        <button
+          key={key}
+          type="button"
+          className={styles.tile}
+          onClick={() => onSelect(photo.id)}
+          aria-label={photo.name}
+        >
+          {thumbnailUrl(photo) ? (
+            <img
+              src={thumbnailUrl(photo)}
+              alt=""
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span className={styles.noThumb}>{photo.name}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 /** How many tiles of at least MIN_TILE fit across the element, kept up to date on resize. */
 function useColumns() {
@@ -44,12 +135,15 @@ export function Gallery({
   folderIds,
   grouped,
   folders,
+  rootPath,
 }: {
   token: string
   folderIds: readonly string[]
   /** Show one section per folder, with its name, instead of one mixed list. */
   grouped: boolean
   folders?: ReadonlyMap<string, DriveFolder>
+  /** Path of the opened folder; section titles show the path below it. */
+  rootPath?: string
 }) {
   const {
     data,
@@ -60,35 +154,53 @@ export function Gallery({
     isFetchingNextPage,
   } = usePhotos(token, folderIds, grouped)
   const [selected, setSelected] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const [containerRef, columns] = useColumns()
 
   const showHeaders = grouped && folderIds.length > 1
-  // Rows rather than single tiles: a grid can't mix full-width folder headers with tiles.
-  const rows = useMemo(() => {
-    const result: Row[] = []
-    let buffer: PhotoEntry[] = []
-    const flush = () => {
-      if (buffer.length > 0)
-        result.push({ kind: 'photos', key: buffer[0].key, entries: buffer })
-      buffer = []
-    }
-    let currentFolder: string | undefined
+  const sections = useMemo(() => {
+    const result: Section[] = []
     for (const page of data?.pages ?? []) {
       if (page.files.length === 0) continue
-      const folderId = page.folderId
-      if (showHeaders && folderId && folderId !== currentFolder) {
-        flush()
-        result.push({ kind: 'header', key: `header:${folderId}`, folderId })
+      const folderId = showHeaders ? page.folderId : undefined
+      let section = result.at(-1)
+      if (!section || section.folderId !== folderId) {
+        section = { folderId, photos: [] }
+        result.push(section)
       }
-      currentFolder = folderId
-      for (const photo of page.files) {
-        buffer.push({ key: `${folderId ?? ''}:${photo.id}`, photo })
-        if (buffer.length === columns) flush()
+      for (const photo of page.files)
+        section.photos.push({ key: `${page.folderId ?? ''}:${photo.id}`, photo })
+    }
+    return result
+  }, [data, showHeaders])
+
+  // Rows rather than single tiles: a grid can't mix full-width section headers with tiles.
+  const items = useMemo(() => {
+    const result: ListItem[] = []
+    for (const section of sections) {
+      const { folderId } = section
+      if (folderId)
+        result.push({
+          kind: 'header',
+          key: `header:${folderId}`,
+          folderId,
+          isFirst: result.length === 0,
+        })
+      if (folderId && collapsed.has(folderId)) continue
+      for (let i = 0; i < section.photos.length; i += columns) {
+        const entries = section.photos.slice(i, i + columns)
+        result.push({ kind: 'row', key: entries[0].key, entries })
       }
     }
-    flush()
     return result
-  }, [data, showHeaders, columns])
+  }, [sections, collapsed, columns])
+  const toggle = useCallback((folderId: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current)
+      if (!next.delete(folderId)) next.add(folderId)
+      return next
+    })
+  }, [])
 
   if (isLoading) return <p className={styles.status}>Loading photos&hellip;</p>
   if (error)
@@ -101,63 +213,43 @@ export function Gallery({
   const selectedPhoto = data?.pages
     .flatMap((page) => page.files)
     .find((photo) => photo.id === selected)
-  if (rows.length === 0)
+  if (sections.length === 0)
     return <p className={styles.status}>No photos in the connected folders.</p>
 
   return (
     <div ref={containerRef}>
       <Virtuoso
         useWindowScroll
-        data={rows}
+        data={items}
         increaseViewportBy={800}
-        computeItemKey={(_, row) => row.key}
+        computeItemKey={(_, item) => item.key}
         endReached={() => {
           if (hasNextPage && !isFetchingNextPage) void fetchNextPage()
         }}
-        itemContent={(_, row) => {
-          if (row.kind === 'header') {
-            const folder = folders?.get(row.folderId)
+        itemContent={(_, item) => {
+          if (item.kind === 'row')
             return (
-              <div className={styles.headerRow}>
-                <h3 className={styles.folderHeader} title={folder?.path}>
-                  <span className={styles.folderName}>
-                    {folder?.name ?? 'Unknown folder'}
-                  </span>
-                  {folder && (
-                    <span className={styles.folderCount}>
-                      {formatNumber(folder.photoCount)}
-                    </span>
-                  )}
-                </h3>
-              </div>
+              <PhotoRow
+                entries={item.entries}
+                columns={columns}
+                onSelect={setSelected}
+              />
             )
-          }
+          const folder = folders?.get(item.folderId)
+          const prefix = rootPath ? `${rootPath} / ` : undefined
+          const title =
+            prefix && folder?.path.startsWith(prefix)
+              ? folder.path.slice(prefix.length)
+              : folder?.name
           return (
-            <div
-              className={styles.row}
-              style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-            >
-              {row.entries.map(({ key, photo }) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={styles.tile}
-                  onClick={() => setSelected(photo.id)}
-                  aria-label={photo.name}
-                >
-                  {thumbnailUrl(photo) ? (
-                    <img
-                      src={thumbnailUrl(photo)}
-                      alt=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <span className={styles.noThumb}>{photo.name}</span>
-                  )}
-                </button>
-              ))}
-            </div>
+            <SectionHeader
+              title={title ?? 'Unknown folder'}
+              path={folder?.path}
+              count={folder?.photoCount}
+              isCollapsed={collapsed.has(item.folderId)}
+              isFirst={item.isFirst}
+              onToggle={() => toggle(item.folderId)}
+            />
           )
         }}
       />

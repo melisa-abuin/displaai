@@ -236,6 +236,7 @@ function Viewer({ token }: { token: string }) {
             folderIds={galleryIds}
             grouped={activeAlbum !== undefined}
             folders={index?.byId}
+            rootPath={activeAlbum?.folder.path}
           />
         ) : (
           <p>Loading&hellip;</p>
