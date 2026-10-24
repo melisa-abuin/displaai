@@ -1,19 +1,20 @@
 import {
-    useInfiniteQuery,
-    useMutation,
-    useQuery,
-    useQueryClient,
-    type InfiniteData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
 } from '@tanstack/react-query'
 import {
-    getUserEmail,
-    listLibrary,
-    listPhotoLocations,
-    listPhotos,
-    updatePhotoTags,
-    type Library,
-    type PhotoPage,
-    type PhotoPageParam,
+  fetchHeicTransform,
+  getUserEmail,
+  listLibrary,
+  listPhotoLocations,
+  listPhotos,
+  updatePhotoTags,
+  type Library,
+  type PhotoPage,
+  type PhotoPageParam,
 } from './api'
 
 const LIBRARY_KEY = ['drive', 'library']
@@ -100,6 +101,18 @@ export function usePhotos(
     queryFn: ({ pageParam }) => listPhotos(token, [...ids], pageParam, grouped),
     initialPageParam: undefined as PhotoPageParam | undefined,
     getNextPageParam: (last) => last.nextParam,
+  })
+}
+
+export function useHeicTransform(
+  token: string,
+  photoId: string,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ['drive', 'heic-transform', 'v2', photoId],
+    queryFn: () => fetchHeicTransform(token, photoId),
+    enabled,
   })
 }
 

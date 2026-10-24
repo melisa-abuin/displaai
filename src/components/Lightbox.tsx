@@ -6,9 +6,10 @@ import {
   thumbnailUrl,
   type DrivePhoto,
 } from '../drive/api'
+import { useHeicTransform } from '../drive/hooks'
 import { formatBytes, formatDate } from '../format'
-import { TagEditor } from './TagEditor'
 import styles from './Lightbox.module.css'
+import { TagEditor } from './TagEditor'
 
 export function Lightbox({
   token,
@@ -21,6 +22,27 @@ export function Lightbox({
 }) {
   // size 0 asks Drive for the full-resolution rendering
   const renderedUrl = isHeic(photo) ? thumbnailUrl(photo, 0) : undefined
+  // Drive's thumbnails up to 512px are upright; the default size is already in the browser cache from the gallery.
+  const thumbUrl = renderedUrl && thumbnailUrl(photo)
+  // null means the image failed to load
+  const [thumbPortrait, setThumbPortrait] = useState<boolean | null>()
+  const [renderedPortrait, setRenderedPortrait] = useState<boolean | null>()
+  const mismatch =
+    typeof thumbPortrait === 'boolean' &&
+    typeof renderedPortrait === 'boolean' &&
+    thumbPortrait !== renderedPortrait
+  const { data: heic, isPending: heicPending } = useHeicTransform(
+    token,
+    photo.id,
+    mismatch,
+  )
+  const transform = mismatch && heic?.sideways ? heic.css : undefined
+  // The raw render is sideways for some HEICs, so it stays hidden until its fix is known.
+  const ready =
+    !renderedUrl ||
+    (thumbPortrait !== undefined &&
+      renderedPortrait !== undefined &&
+      (!mismatch || !heicPending))
   const { data: blob, error } = useQuery({
     queryKey: ['drive', 'photo-blob', photo.id],
     queryFn: () => fetchPhotoBlob(token, photo.id),
@@ -29,6 +51,15 @@ export function Lightbox({
     meta: { persist: false },
   })
   const [objectUrl, setObjectUrl] = useState<string>()
+
+  useEffect(() => {
+    if (!thumbUrl) return
+    const img = new Image()
+    img.referrerPolicy = 'no-referrer'
+    img.onload = () => setThumbPortrait(img.naturalHeight > img.naturalWidth)
+    img.onerror = () => setThumbPortrait(null)
+    img.src = thumbUrl
+  }, [thumbUrl])
 
   useEffect(() => {
     if (!blob) return
@@ -63,16 +94,28 @@ export function Lightbox({
       <div className={styles.stage} onClick={onClose}>
         {error ? (
           <p role="alert">Could not load image.</p>
-        ) : (renderedUrl ?? objectUrl) ? (
-          <img
-            src={renderedUrl ?? objectUrl}
-            alt={photo.name}
-            referrerPolicy="no-referrer"
-            className={styles.image}
-            onClick={(e) => e.stopPropagation()}
-          />
         ) : (
-          <p>Loading&hellip;</p>
+          <>
+            {(renderedUrl ?? objectUrl) && (
+              <img
+                src={renderedUrl ?? objectUrl}
+                alt={photo.name}
+                referrerPolicy="no-referrer"
+                hidden={!ready}
+                className={`${styles.image} ${transform ? styles.sideways : ''}`}
+                style={transform ? { transform } : undefined}
+                onLoad={(e) =>
+                  setRenderedPortrait(
+                    e.currentTarget.naturalHeight >
+                      e.currentTarget.naturalWidth,
+                  )
+                }
+                onError={() => setRenderedPortrait(null)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            {!((renderedUrl ?? objectUrl) && ready) && <p>Loading&hellip;</p>}
+          </>
         )}
       </div>
       <aside className={styles.info} aria-label="Photo info">

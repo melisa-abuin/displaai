@@ -63,15 +63,17 @@ async function driveFetch(
   token: string,
   path: string,
   params?: Record<string, string>,
-  init?: { method: string; body: string },
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
 ): Promise<Response> {
   const query = params ? `?${new URLSearchParams(params)}` : ''
   const res = await fetch(`${API}${path}${query}`, {
+    method: init?.method,
+    body: init?.body,
     headers: {
       Authorization: `Bearer ${token}`,
-      ...(init && { 'Content-Type': 'application/json' }),
+      ...(init?.body && { 'Content-Type': 'application/json' }),
+      ...init?.headers,
     },
-    ...init,
   })
   if (res.status === 401) throw new UnauthorizedError()
   if (!res.ok) throw new Error(`Drive API error ${res.status}`)
@@ -216,7 +218,11 @@ export async function listPhotos(
     : param.chunk + 1 < chunks.length
       ? { chunk: param.chunk + 1 }
       : undefined
-  return { folderId: grouped ? ids[0] : undefined, files: data.files, nextParam }
+  return {
+    folderId: grouped ? ids[0] : undefined,
+    files: data.files,
+    nextParam,
+  }
 }
 
 export interface PhotoLocation {
@@ -245,11 +251,7 @@ export async function listPhotoLocations(
       listAll<
         Pick<
           DrivePhoto,
-          | 'id'
-          | 'name'
-          | 'thumbnailLink'
-          | 'createdTime'
-          | 'imageMediaMetadata'
+          'id' | 'name' | 'thumbnailLink' | 'createdTime' | 'imageMediaMetadata'
         > & { parents?: string[] }
       >(token, {
         q: `${IMAGE_QUERY} and (${ids.map((id) => `'${id}' in parents`).join(' or ')})`,
@@ -284,6 +286,108 @@ export async function fetchPhotoBlob(
 ): Promise<Blob> {
   const res = await driveFetch(token, `/files/${fileId}`, { alt: 'media' })
   return res.blob()
+}
+
+interface Box {
+  type: string
+  start: number
+  end: number
+}
+
+function* boxes(v: DataView, start: number, end: number): Generator<Box> {
+  let at = start
+  while (at + 8 <= end) {
+    let size = v.getUint32(at)
+    const type = String.fromCharCode(
+      ...[4, 5, 6, 7].map((i) => v.getUint8(at + i)),
+    )
+    let header = 8
+    if (size === 1) {
+      size = v.getUint32(at + 12) // low half of the 64-bit size
+      header = 16
+    } else if (size === 0) {
+      size = end - at
+    }
+    if (size < header) return
+    yield { type, start: at + header, end: Math.min(at + size, end) }
+    at += size
+  }
+}
+
+interface HeicTransform {
+  /** CSS transform that turns the stored pixels upright. */
+  css: string
+  /** Whether width and height end up swapped. */
+  sideways: boolean
+}
+
+/** The rotation and mirroring of the primary image, found via pitm and ipma. */
+function parseHeicTransform(buf: ArrayBuffer): HeicTransform | undefined {
+  const v = new DataView(buf)
+  const find = (type: string, start: number, end: number) => {
+    for (const box of boxes(v, start, end)) if (box.type === type) return box
+  }
+  try {
+    const meta = find('meta', 0, v.byteLength)
+    if (!meta) return
+    const inner = meta.start + 4 // meta is a full box
+    const pitm = find('pitm', inner, meta.end)
+    const iprp = find('iprp', inner, meta.end)
+    if (!pitm || !iprp) return
+    const primary =
+      v.getUint8(pitm.start) === 0
+        ? v.getUint16(pitm.start + 4)
+        : v.getUint32(pitm.start + 4)
+    const ipco = find('ipco', iprp.start, iprp.end)
+    const ipma = find('ipma', iprp.start, iprp.end)
+    if (!ipco || !ipma) return
+    const props = [...boxes(v, ipco.start, ipco.end)]
+    const version = v.getUint8(ipma.start)
+    const wide = v.getUint8(ipma.start + 3) & 1
+    let at = ipma.start + 8
+    let css = ''
+    let sideways = false
+    for (let n = v.getUint32(ipma.start + 4); n > 0; n--) {
+      const id = version < 1 ? v.getUint16(at) : v.getUint32(at)
+      at += version < 1 ? 2 : 4
+      for (let count = v.getUint8(at++); count > 0; count--) {
+        const raw = wide ? v.getUint16(at) : v.getUint8(at)
+        at += wide ? 2 : 1
+        const prop = props[(wide ? raw & 0x7fff : raw & 0x7f) - 1]
+        if (id !== primary) continue
+        // Transforms apply in the order listed, so later ones go to the left.
+        if (prop?.type === 'irot') {
+          const turns = v.getUint8(prop.start) & 3
+          css = `rotate(${-turns * 90}deg) ${css}`
+          if (turns % 2) sideways = !sideways
+        } else if (prop?.type === 'imir') {
+          // Mode 0 swaps top and bottom, 1 swaps left and right.
+          const mode = v.getUint8(prop.start) & 1
+          css = `${mode ? 'scaleX' : 'scaleY'}(-1) ${css}`
+        }
+      }
+    }
+    return css ? { css: css.trim(), sideways } : undefined
+  } catch {
+    // header cut off by the range request
+  }
+}
+
+/**
+ * The 'irot' and 'imir' transforms of a HEIC. Drive's rendering above 512px
+ * ignores them, so the lightbox has to apply them.
+ */
+export async function fetchHeicTransform(
+  token: string,
+  fileId: string,
+): Promise<HeicTransform | null> {
+  const res = await driveFetch(
+    token,
+    `/files/${fileId}`,
+    { alt: 'media' },
+    { headers: { Range: 'bytes=0-65535' } },
+  )
+  return parseHeicTransform(await res.arrayBuffer()) ?? null
 }
 
 export function thumbnailUrl(
