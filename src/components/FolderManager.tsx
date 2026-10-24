@@ -107,6 +107,7 @@ export function FolderManager({
       {shown.length > 0 && (
         <div className={styles.listHeader} aria-hidden="true">
           <span>Folder name</span>
+          <span>Source</span>
           <span>Import folder</span>
           <span>Include subfolders</span>
           <span className={styles.countHeader}>Pictures found</span>
@@ -142,6 +143,9 @@ export function FolderManager({
                     <span className={styles.via}>via {parent.name}</span>
                   )}
                 </div>
+                <span className={styles.source}>
+                  {folder.ownedByMe ? 'Own drive' : 'Shared with me'}
+                </span>
                 <Switch
                   aria-label={`Import ${folder.name}`}
                   checked={!!entry || !!parent}
@@ -180,9 +184,9 @@ export function FolderManager({
           disabled={entries.length === 0}
           onClick={onClear}
         >
-          Disconnect all
+          Reset selection
         </Button>
-        <span className={styles.summary}>{entries.length} connected</span>
+        <span className={styles.summary}>{entries.length} selected</span>
         <Button
           small
           className={styles.done}

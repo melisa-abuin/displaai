@@ -5,6 +5,8 @@ export interface DriveFolder {
   name: string
   parentId?: string
   path: string
+  /** False for folders other people shared with you. */
+  ownedByMe: boolean
   /** Images directly inside this folder (not in subfolders). */
   photoCount: number
   /** Images in this folder and all of its subfolders. */
@@ -120,9 +122,14 @@ export async function listLibrary(token: string): Promise<Library> {
       q: IMAGE_QUERY,
       fields: 'nextPageToken, files(parents, appProperties)',
     }),
-    listAll<{ id: string; name: string; parents?: string[] }>(token, {
+    listAll<{
+      id: string
+      name: string
+      parents?: string[]
+      ownedByMe?: boolean
+    }>(token, {
       q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-      fields: 'nextPageToken, files(id, name, parents)',
+      fields: 'nextPageToken, files(id, name, parents, ownedByMe)',
     }),
   ])
 
@@ -163,11 +170,12 @@ export async function listLibrary(token: string): Promise<Library> {
 
   return {
     folders: folders
-      .map(({ id, name, parents }) => ({
+      .map(({ id, name, parents, ownedByMe }) => ({
         id,
         name,
         parentId: parents?.[0],
         path: pathOf({ name, parents }),
+        ownedByMe: ownedByMe !== false,
         photoCount: counts.get(id) ?? 0,
         totalCount: totals.get(id) ?? 0,
       }))

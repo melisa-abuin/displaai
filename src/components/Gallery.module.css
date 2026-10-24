@@ -5,10 +5,10 @@
 }
 
 .headerRow {
-  padding: 16px 0 8px;
+  padding: 24px 0 12px;
 }
 
-.headerRow:first-child {
+.firstHeaderRow {
   padding-top: 0;
 }
 
@@ -33,19 +33,49 @@
 }
 
 .folderHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
   margin: 0;
   padding-bottom: 6px;
   border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
   font-size: 1.05rem;
 }
 
+.folderToggle {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 0.45em;
+  height: 0.45em;
+  margin-right: 2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.15em) rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.chevronCollapsed {
+  transform: translateY(-0.05em) rotate(-45deg);
+}
+
 .folderName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.folderLeaf {
+  color: var(--secondary);
 }
 
 .folderCount {

@@ -51,7 +51,7 @@
 .listHeader,
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 7rem 9.5rem 7.5rem;
+  grid-template-columns: minmax(0, 1fr) 8rem 7rem 9.5rem 7.5rem;
   align-items: center;
   gap: 12px;
   padding: 4px 8px;
@@ -111,6 +111,11 @@ button.open {
   flex-shrink: 0;
   font-size: 0.8rem;
   opacity: 0.6;
+}
+
+.source {
+  font-size: 0.85rem;
+  opacity: 0.7;
 }
 
 .count {
