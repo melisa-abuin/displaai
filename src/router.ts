@@ -11,6 +11,7 @@ export type Route =
   | { name: 'map' }
   | { name: 'settings' }
   | { name: 'folders'; path: string[] }
+  | { name: 'peek'; folderId: string }
   | { name: 'notFound' }
 
 const FOLDERS_PATH = '/settings/folders'
@@ -25,6 +26,8 @@ export const paths = {
   views: VIEWS_PATH,
   editView: (viewId: string) => `/settings/views/${encodeURIComponent(viewId)}`,
   folders: FOLDERS_PATH,
+  /** A look at one folder's photos, whether or not it is imported. */
+  peek: (folderId: string) => `/peek/${encodeURIComponent(folderId)}`,
   /** The folder manager opened at the subfolder reached via these folder ids. */
   foldersAt: (folderIds: readonly string[]) =>
     [FOLDERS_PATH, ...folderIds.map(encodeURIComponent)].join('/'),
@@ -52,6 +55,13 @@ export function parseRoute(pathname: string): Route {
   if (parts.length === 2 && parts[0] === 'views') {
     try {
       return { name: 'view', viewId: decodeURIComponent(parts[1]) }
+    } catch {
+      return { name: 'notFound' }
+    }
+  }
+  if (parts.length === 2 && parts[0] === 'peek') {
+    try {
+      return { name: 'peek', folderId: decodeURIComponent(parts[1]) }
     } catch {
       return { name: 'notFound' }
     }

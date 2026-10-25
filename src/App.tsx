@@ -114,6 +114,8 @@ function Viewer({ token }: { token: string }) {
 
   const hasConnected = albums ? albums.length > 0 : connected.entries.length > 0
   const folderId = route.name === 'album' ? route.folderId : null
+  const peekFolder =
+    route.name === 'peek' ? index?.byId.get(route.folderId) : undefined
 
   // The sidebar entries: connected folders, with the subfolders of recursive ones beneath them.
   const navItems = useMemo(() => {
@@ -155,6 +157,7 @@ function Viewer({ token }: { token: string }) {
   const isGalleryRoute =
     route.name === 'gallery' || route.name === 'album' || route.name === 'view'
   const needsFolders = isGalleryRoute || route.name === 'map'
+  const peekMissing = route.name === 'peek' && !!index && !peekFolder
   const foldersPath = route.name === 'folders' ? route.path : undefined
   const foldersUrl = foldersPath ? paths.foldersAt(foldersPath) : undefined
   const managerFolderId = foldersPath?.at(-1) ?? null
@@ -174,6 +177,7 @@ function Viewer({ token }: { token: string }) {
       navigate(paths.gallery, { replace: true })
     else if (route.name === 'view' && !activeView)
       navigate(paths.gallery, { replace: true })
+    else if (peekMissing) navigate(paths.folders, { replace: true })
     else if (foldersUrl && index && managerFolderId !== null) {
       // Fix stale or hand-edited folder paths.
       const target = canonicalFoldersUrl ?? paths.folders
@@ -186,6 +190,7 @@ function Viewer({ token }: { token: string }) {
     navItems,
     activeAlbum,
     activeView,
+    peekMissing,
     foldersUrl,
     index,
     managerFolderId,
@@ -196,6 +201,12 @@ function Viewer({ token }: { token: string }) {
     () => [...new Set((albums ?? []).flatMap((album) => album.ids))],
     [albums],
   )
+  const peekIds = useMemo(() => {
+    if (!index || !peekFolder) return []
+    return descendantIds(index, peekFolder.id).filter(
+      (id) => (index.byId.get(id)?.photoCount ?? 0) > 0,
+    )
+  }, [index, peekFolder])
   const galleryIds = useMemo(() => {
     if (!index) return []
     // Only folders that directly hold photos get a section, ordered by path.
@@ -263,13 +274,15 @@ function Viewer({ token }: { token: string }) {
         ? 'Map'
         : route.name === 'folders'
           ? 'Manage folders'
-          : route.name === 'views'
-            ? 'Manage views'
-            : activeView
-              ? activeView.name
-              : activeAlbum
-                ? activeAlbum.folder.path
-                : 'All photos'
+          : route.name === 'peek'
+            ? `Peek: ${peekFolder?.path ?? ''}`
+            : route.name === 'views'
+              ? 'Manage views'
+              : activeView
+                ? activeView.name
+                : activeAlbum
+                  ? activeAlbum.folder.path
+                  : 'All photos'
 
   useEffect(() => {
     document.title = `${title} \u2013 Drive Photos`
@@ -343,9 +356,42 @@ function Viewer({ token }: { token: string }) {
             error={folders.error}
             entries={connected.entries}
             onSetFolder={connected.setFolder}
+            onPeek={(id) => navigate(paths.peek(id))}
             onClear={connected.clear}
             onDone={() => navigate(paths.gallery)}
           />
+        ) : route.name === 'peek' ? (
+          peekFolder ? (
+            <>
+              <Button
+                small
+                variant="outline"
+                className={styles.back}
+                onClick={() =>
+                  navigate(
+                    paths.foldersAt(
+                      folderChain(index!, peekFolder.id)
+                        .map((f) => f.id)
+                        .slice(0, -1),
+                    ),
+                  )
+                }
+              >
+                &lsaquo; Back to folders
+              </Button>
+              <Gallery
+                key={`peek:${peekFolder.id}`}
+                token={token}
+                folderIds={peekIds}
+                grouped
+                folders={index?.byId}
+                rootPath={peekFolder.path}
+                filters={filters}
+              />
+            </>
+          ) : (
+            <p>Loading&hellip;</p>
+          )
         ) : albums && route.name === 'map' ? (
           <PhotoMap
             folderIds={allIds}

@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 720px;
+  max-width: 800px;
 }
 
 .intro {
@@ -51,7 +51,7 @@
 .listHeader,
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 8rem 7rem 9.5rem 7.5rem;
+  grid-template-columns: minmax(0, 1fr) 8rem 7rem 9.5rem 4.5rem 7.5rem;
   align-items: center;
   gap: 12px;
   padding: 4px 8px;

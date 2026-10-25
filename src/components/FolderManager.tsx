@@ -17,6 +17,8 @@ interface FolderManagerProps {
   error: Error | null
   entries: readonly ConnectedFolder[]
   onSetFolder: (id: string, recursive: boolean | null) => void
+  /** Opens a read-only gallery of the folder's photos, subfolders included. */
+  onPeek: (folderId: string) => void
   onClear: () => void
   onDone: () => void
 }
@@ -29,6 +31,7 @@ export function FolderManager({
   error,
   entries,
   onSetFolder,
+  onPeek,
   onClear,
   onDone,
 }: FolderManagerProps) {
@@ -110,6 +113,7 @@ export function FolderManager({
           <span>Source</span>
           <span>Import folder</span>
           <span>Include subfolders</span>
+          <span>Peek</span>
           <span className={styles.countHeader}>Pictures found</span>
         </div>
       )}
@@ -164,6 +168,15 @@ export function FolderManager({
                 ) : (
                   <span />
                 )}
+                <Button
+                  small
+                  variant="outline"
+                  aria-label={`Peek inside ${folder.name}`}
+                  disabled={folder.totalCount === 0}
+                  onClick={() => onPeek(folder.id)}
+                >
+                  Peek
+                </Button>
                 <span className={styles.count}>
                   {formatNumber(
                     subfolders.length > 0

@@ -47,3 +47,7 @@
 .headingPrimary {
   color: var(--primary);
 }
+
+.back {
+  margin-bottom: 12px;
+}
