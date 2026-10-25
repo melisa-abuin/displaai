@@ -1,6 +1,7 @@
-﻿import { formatNumber } from '../format'
+import { formatNumber } from '../format'
 import { reloadApp } from '../queryClient'
-import { useLocalAi } from '../settings'
+import { MEDIA_KINDS } from '../mediaKind'
+import { useLocalAi, useMediaKinds } from '../settings'
 import { Button } from './Button'
 import styles from './Settings.module.css'
 import { Switch } from './Switch'
@@ -21,6 +22,7 @@ export function Settings({
   viewCount,
 }: SettingsProps) {
   const [localAi, setLocalAi] = useLocalAi()
+  const [mediaKinds, setMediaKinds] = useMediaKinds()
   return (
     <div className={styles.settings}>
       <section aria-labelledby="settings-folders">
@@ -47,7 +49,36 @@ export function Settings({
         </p>
       </section>
 
+      <section aria-labelledby="settings-media">
+        <h3 id="settings-media" className={styles.sectionTitle}>
+          Media types
+        </h3>
+        {MEDIA_KINDS.map(({ value, label }) => (
+          <div key={value} className={styles.row}>
+            <span>{label}</span>
+            <Switch
+              aria-label={label}
+              checked={mediaKinds.has(value)}
+              // At least one type has to stay on, or the app would be empty.
+              disabled={mediaKinds.has(value) && mediaKinds.size === 1}
+              onChange={(e) => {
+                const next = new Set(mediaKinds)
+                if (e.target.checked) next.add(value)
+                else next.delete(value)
+                setMediaKinds(next)
+              }}
+            />
+          </div>
+        ))}
+        <p className={styles.hint}>
+          Choose what shows up in the gallery, views and map. Images covers
+          every picture format except GIFs. Videos are downloaded when opened
+          and can't be edited.
+        </p>
+      </section>
+
       <section aria-labelledby="settings-ai">
+        {' '}
         <h3 id="settings-ai" className={styles.sectionTitle}>
           Smart features
         </h3>

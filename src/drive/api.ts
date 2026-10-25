@@ -115,7 +115,9 @@ export async function getUserEmail(token: string): Promise<string | undefined> {
   return data.user?.emailAddress
 }
 
-const IMAGE_QUERY = "mimeType contains 'image/' and trashed = false"
+// Videos are indexed too; what is shown is decided by the media types setting.
+const MEDIA_QUERY =
+  "(mimeType contains 'image/' or mimeType contains 'video/') and trashed = false"
 
 async function listAll<T>(
   token: string,
@@ -219,7 +221,7 @@ export async function getStartPageToken(token: string): Promise<string> {
 
 export async function listAllPhotos(token: string): Promise<IndexedPhoto[]> {
   const files = await listAll<RawPhoto>(token, {
-    q: IMAGE_QUERY,
+    q: MEDIA_QUERY,
     fields: `nextPageToken, files(${PHOTO_FIELDS})`,
   })
   return files.map(toPhoto)
@@ -236,7 +238,7 @@ export async function listAllFolders(token: string): Promise<IndexedFolder[]> {
 export interface ChangeSet {
   photos: IndexedPhoto[]
   folders: IndexedFolder[]
-  /** Ids that are gone from Drive, trashed, or no longer an image or folder. */
+  /** Ids that are gone from Drive, trashed, or no longer an image, video or folder. */
   removedIds: string[]
   newStartPageToken: string
 }
@@ -278,7 +280,7 @@ export async function listChanges(
       if (gone || !file || file.trashed) removed.add(fileId)
       else if (file.mimeType === FOLDER_MIME)
         folders.set(fileId, toFolder(file))
-      else if (file.mimeType.startsWith('image/'))
+      else if (/^(image|video)\//.test(file.mimeType))
         photos.set(fileId, toPhoto(file))
       else removed.add(fileId)
     }

@@ -13,9 +13,14 @@ import {
   type Library,
   THUMBNAIL_BATCH_SIZE,
 } from './api'
+import { mediaKindOf, type MediaKind } from '../mediaKind'
+import { getMediaKinds, useMediaKinds } from '../settings'
 import { readAll, writeBatch } from './store'
 
 const TOKEN_KEY = 'startPageToken'
+// Indexes written before videos were included lack this and are rebuilt.
+const SCOPE_KEY = 'scope'
+const SCOPE = 'media-v1'
 // Drive's thumbnail links stop working after a while; refresh well before that.
 const THUMBNAIL_TTL_MS = 1000 * 60 * 30
 const THUMBNAIL_CONCURRENCY = 2
@@ -31,6 +36,7 @@ interface State {
 
 interface Derived {
   version: number
+  kinds: ReadonlySet<MediaKind>
   library: Library
   byFolder: Map<string, IndexedPhoto[]>
 }
@@ -71,10 +77,10 @@ function subscribe(listener: () => void) {
 const byCreatedDesc = (a: IndexedPhoto, b: IndexedPhoto) =>
   (b.createdTime ?? '').localeCompare(a.createdTime ?? '')
 
-function computeLibrary(): Library {
+function computeLibrary(visible: readonly IndexedPhoto[]): Library {
   const counts = new Map<string, number>()
   const tagCounts = new Map<string, number>()
-  for (const photo of photos.values()) {
+  for (const photo of visible) {
     for (const tag of photoTags(photo))
       tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
     for (const parent of photo.parents)
@@ -123,9 +129,14 @@ function computeLibrary(): Library {
 }
 
 function getDerived(): Derived {
-  if (derived?.version === state.version) return derived
+  const kinds = getMediaKinds()
+  if (derived?.version === state.version && derived.kinds === kinds)
+    return derived
+  const visible = [...photos.values()].filter((photo) =>
+    kinds.has(mediaKindOf(photo)),
+  )
   const byFolder = new Map<string, IndexedPhoto[]>()
-  for (const photo of photos.values()) {
+  for (const photo of visible) {
     for (const parent of photo.parents) {
       const list = byFolder.get(parent)
       if (list) list.push(photo)
@@ -133,7 +144,12 @@ function getDerived(): Derived {
     }
   }
   for (const list of byFolder.values()) list.sort(byCreatedDesc)
-  derived = { version: state.version, library: computeLibrary(), byFolder }
+  derived = {
+    version: state.version,
+    kinds,
+    library: computeLibrary(visible),
+    byFolder,
+  }
   return derived
 }
 
@@ -143,7 +159,12 @@ export function loadIndex(): Promise<void> {
     try {
       const snapshot = await readAll()
       // A sync that finished first is newer than what was stored.
-      if (photos.size === 0 && folders.size === 0 && !startPageToken) {
+      if (
+        snapshot.meta[SCOPE_KEY] === SCOPE &&
+        photos.size === 0 &&
+        folders.size === 0 &&
+        !startPageToken
+      ) {
         for (const photo of snapshot.photos) photos.set(photo.id, photo)
         for (const folder of snapshot.folders) folders.set(folder.id, folder)
         startPageToken = snapshot.meta[TOKEN_KEY]
@@ -167,7 +188,7 @@ async function fullSync(token: string) {
     clear: true,
     putPhotos: allPhotos,
     putFolders: allFolders,
-    meta: { [TOKEN_KEY]: nextToken },
+    meta: { [TOKEN_KEY]: nextToken, [SCOPE_KEY]: SCOPE },
   })
   photos.clear()
   folders.clear()
@@ -394,6 +415,8 @@ export function useLibraryState() {
 
 export function useLibrary(): Library | undefined {
   const { ready, version } = useIndexState()
+  // Counts and tags only cover the shown media types.
+  useMediaKinds()
   void version
   return ready ? getDerived().library : undefined
 }
@@ -417,6 +440,8 @@ export function getPhotosOf(
   return [{ files }]
 }
 
-export function useIndexVersion(): number {
-  return useIndexState().version
+/** Changes whenever the index or the shown media types change. */
+export function useIndexVersion(): string {
+  const [kinds] = useMediaKinds()
+  return `${useIndexState().version}:${[...kinds].join()}`
 }

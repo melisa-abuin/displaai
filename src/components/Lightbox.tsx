@@ -12,6 +12,7 @@ import {
 import { useHeicTransform, useUpdateTags } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
 import { formatBytes, formatDate, formatNumber } from '../format'
+import { mediaKindOf } from '../mediaKind'
 import { useLocalAi } from '../settings'
 import { useFaces, useScene } from '../vision/hooks'
 import styles from './Lightbox.module.css'
@@ -61,6 +62,7 @@ export function Lightbox({
   onClose: () => void
 }) {
   const [photo] = useFreshThumbnails([indexedPhoto])
+  const isVideo = mediaKindOf(photo) === 'videos'
   // size 0 asks Drive for the full-resolution rendering
   const renderedUrl = isHeic(photo) ? thumbnailUrl(photo, 0) : undefined
   // Drive's thumbnails up to 512px are upright; the default size is already in the browser cache from the gallery.
@@ -96,8 +98,10 @@ export function Lightbox({
     meta: { persist: false },
   })
   const [objectUrl, setObjectUrl] = useState<string>()
+  const [videoFailed, setVideoFailed] = useState(false)
   const fullSrc = renderedUrl ?? objectUrl
-  const [localAi] = useLocalAi()
+  const [storedLocalAi] = useLocalAi()
+  const localAi = storedLocalAi && !isVideo
   const [faceBoxes, setShowFaces] = useState(false)
   const [objectBoxes, setShowObjects] = useState(false)
   const showFaces = localAi && faceBoxes
@@ -162,11 +166,23 @@ export function Lightbox({
       aria-label={photo.name}
     >
       <div className={styles.stage} onClick={onClose}>
-        {error ? (
-          <p role="alert">Could not load image.</p>
+        {error || videoFailed ? (
+          <p role="alert">Could not load {isVideo ? 'video' : 'image'}.</p>
         ) : (
           <>
-            {(renderedUrl ?? objectUrl) && (
+            {isVideo && objectUrl && (
+              <video
+                src={objectUrl}
+                controls
+                autoPlay
+                playsInline
+                className={styles.image}
+                onLoadedData={() => setDecodedSrc(objectUrl)}
+                onError={() => setVideoFailed(true)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            {!isVideo && (renderedUrl ?? objectUrl) && (
               <img
                 ref={imageRef}
                 src={renderedUrl ?? objectUrl}
@@ -269,9 +285,11 @@ export function Lightbox({
             </a>
           </div>
         )}
-        <Button className={styles.edit} onClick={() => setEditing(true)}>
-          Edit photo
-        </Button>
+        {!isVideo && (
+          <Button className={styles.edit} onClick={() => setEditing(true)}>
+            Edit photo
+          </Button>
+        )}
         {details.length > 0 && (
           <dl className={styles.details}>
             {details.map(([label, value]) => (
