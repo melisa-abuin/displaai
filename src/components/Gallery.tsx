@@ -1,10 +1,17 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { Virtuoso } from 'react-virtuoso'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { thumbnailUrl, type DriveFolder, type DrivePhoto } from '../drive/api'
 import { usePhotos } from '../drive/hooks'
+import { useFreshThumbnails } from '../drive/libraryStore'
+import { isEmptyFilter, type TagFilter } from '../drive/tagFilter'
 import { formatNumber } from '../format'
-import { Lightbox } from './Lightbox'
+import { monthOf, SORT_OPTIONS, sortByDate, type SortOrder } from '../photoSort'
+import { useGallerySort } from '../settings'
+import { Button } from './Button'
 import styles from './Gallery.module.css'
+import { Lightbox } from './Lightbox'
+import { TagEditor } from './TagEditor'
+import { Timeline, type TimelineMonth } from './Timeline'
 
 const MIN_TILE = 180
 const GAP = 8
@@ -24,6 +31,7 @@ interface Section {
 // The virtualized list is flat: a section is its header followed by its rows of tiles.
 type ListItem =
   | { kind: 'header'; key: string; folderId: string; isFirst: boolean }
+  | { kind: 'month'; key: string; label: string; isFirst: boolean }
   | { kind: 'row'; key: string; entries: PhotoEntry[] }
 
 function SectionHeader({
@@ -72,40 +80,103 @@ function SectionHeader({
   )
 }
 
+const COLLAGE_SIZE = 4
+
+/** Up to four of the selected photos as a mosaic, the last one showing how many more there are. */
+function Collage({ photos }: { photos: DrivePhoto[] }) {
+  const shown = useFreshThumbnails(photos.slice(0, COLLAGE_SIZE))
+  const hidden = photos.length - shown.length
+  return (
+    <div className={styles.collage} aria-hidden="true">
+      {shown.map((photo, i) => (
+        <div key={photo.id} className={styles.collageTile}>
+          {thumbnailUrl(photo) && (
+            <img
+              src={thumbnailUrl(photo)}
+              alt=""
+              referrerPolicy="no-referrer"
+            />
+          )}
+          {hidden > 0 && i === shown.length - 1 && (
+            <span className={styles.collageMore}>+{formatNumber(hidden)}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function BulkTagPanel({
+  token,
+  photos,
+  total,
+}: {
+  token: string
+  photos: DrivePhoto[]
+  total: number
+}) {
+  return (
+    <aside className={styles.panel} aria-label="Edit tags of selected photos">
+      <Collage photos={photos} />
+      <h3 className={styles.panelTitle}>
+        {formatNumber(photos.length)} of {formatNumber(total)} selected
+      </h3>
+      <TagEditor token={token} photos={photos} />
+    </aside>
+  )
+}
+
 function PhotoRow({
   entries,
   columns,
+  isSelecting,
+  selectedIds,
   onSelect,
 }: {
   entries: PhotoEntry[]
   columns: number
+  isSelecting: boolean
+  selectedIds: ReadonlySet<string>
   onSelect: (photoId: string) => void
 }) {
+  // Rows are only mounted while on screen, so only visible photos get refreshed.
+  const photos = useFreshThumbnails(entries.map((entry) => entry.photo))
   return (
     <div
       className={styles.row}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
-      {entries.map(({ key, photo }) => (
-        <button
-          key={key}
-          type="button"
-          className={styles.tile}
-          onClick={() => onSelect(photo.id)}
-          aria-label={photo.name}
-        >
-          {thumbnailUrl(photo) ? (
-            <img
-              src={thumbnailUrl(photo)}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <span className={styles.noThumb}>{photo.name}</span>
-          )}
-        </button>
-      ))}
+      {entries.map(({ key }, i) => {
+        const photo = photos[i]
+        const isSelected = isSelecting && selectedIds.has(photo.id)
+        return (
+          <button
+            key={key}
+            type="button"
+            className={`${styles.tile} ${isSelected ? styles.tileSelected : ''}`}
+            onClick={() => onSelect(photo.id)}
+            aria-label={photo.name}
+            aria-pressed={isSelecting ? isSelected : undefined}
+          >
+            {thumbnailUrl(photo) ? (
+              <img
+                src={thumbnailUrl(photo)}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <span className={styles.noThumb}>{photo.name}</span>
+            )}
+            {isSelecting && (
+              <span
+                className={`${styles.check} ${isSelected ? styles.checkOn : ''}`}
+                aria-hidden="true"
+              />
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -136,6 +207,8 @@ export function Gallery({
   grouped,
   folders,
   rootPath,
+  filters,
+  emptyMessage,
 }: {
   token: string
   folderIds: readonly string[]
@@ -144,23 +217,33 @@ export function Gallery({
   folders?: ReadonlyMap<string, DriveFolder>
   /** Path of the opened folder; section titles show the path below it. */
   rootPath?: string
+  /** Only photos matching every one of these filters are shown. */
+  filters?: readonly TagFilter[]
+  /** Shown when there are no photos and no filter is narrowing them. */
+  emptyMessage?: string
 }) {
-  const {
-    data,
-    isLoading,
-    error,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = usePhotos(token, folderIds, grouped)
+  const { data, isLoading, error } = usePhotos(folderIds, grouped, filters)
   const [selected, setSelected] = useState<string | null>(null)
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set())
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const [containerRef, columns] = useColumns()
+  const [sort, setSort] = useGallerySort()
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const virtuoso = useRef<VirtuosoHandle>(null)
+  // The list's width (minus the timeline gutter) decides the column count.
+  const listElement = useCallback(
+    (element: HTMLDivElement | null) => {
+      listRef.current = element
+      containerRef(element)
+    },
+    [containerRef],
+  )
 
   const showHeaders = grouped && folderIds.length > 1
   const sections = useMemo(() => {
     const result: Section[] = []
-    for (const page of data?.pages ?? []) {
+    for (const page of data.pages) {
       if (page.files.length === 0) continue
       const folderId = showHeaders ? page.folderId : undefined
       let section = result.at(-1)
@@ -169,16 +252,51 @@ export function Gallery({
         result.push(section)
       }
       for (const photo of page.files)
-        section.photos.push({ key: `${page.folderId ?? ''}:${photo.id}`, photo })
+        section.photos.push({
+          key: `${page.folderId ?? ''}:${photo.id}`,
+          photo,
+        })
     }
     return result
-  }, [data, showHeaders])
+  }, [data.pages, showHeaders])
 
   // Rows rather than single tiles: a grid can't mix full-width section headers with tiles.
-  const items = useMemo(() => {
+  const { items, months } = useMemo(() => {
     const result: ListItem[] = []
+    const monthMarks: TimelineMonth[] = []
     for (const section of sections) {
       const { folderId } = section
+      if (!folderId) {
+        // One mixed list: ordered by date, with a heading for every month.
+        const dated = sortByDate(section.photos, (entry) => entry.photo, sort)
+        const keys = dated.map(({ time }) => monthOf(time))
+        let start = 0
+        while (start < dated.length) {
+          const month = keys[start]
+          let end = start
+          while (end < dated.length && keys[end].key === month.key) end++
+          monthMarks.push({
+            key: month.key,
+            year: month.year,
+            label: month.label,
+            itemIndex: result.length,
+          })
+          result.push({
+            kind: 'month',
+            key: `month:${month.key}`,
+            label: month.label,
+            isFirst: result.length === 0,
+          })
+          for (let i = start; i < end; i += columns) {
+            const entries = dated
+              .slice(i, Math.min(i + columns, end))
+              .map(({ item }) => item)
+            result.push({ kind: 'row', key: entries[0].key, entries })
+          }
+          start = end
+        }
+        continue
+      }
       if (folderId)
         result.push({
           kind: 'header',
@@ -192,8 +310,37 @@ export function Gallery({
         result.push({ kind: 'row', key: entries[0].key, entries })
       }
     }
-    return result
-  }, [sections, collapsed, columns])
+    return { items: result, months: monthMarks }
+  }, [sections, collapsed, columns, sort])
+  const allPhotos = useMemo(() => {
+    const byId = new Map<string, DrivePhoto>()
+    for (const page of data.pages)
+      for (const photo of page.files) byId.set(photo.id, photo)
+    return [...byId.values()]
+  }, [data.pages])
+  const selectedPhotos = useMemo(
+    () => allPhotos.filter((photo) => selectedIds.has(photo.id)),
+    [allPhotos, selectedIds],
+  )
+  const stopSelecting = useCallback(() => {
+    setIsSelecting(false)
+    setSelectedIds(new Set())
+  }, [])
+  const toggleSelected = useCallback((photoId: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current)
+      if (!next.delete(photoId)) next.add(photoId)
+      return next
+    })
+  }, [])
+  useEffect(() => {
+    if (!isSelecting) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !e.defaultPrevented) stopSelecting()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isSelecting, stopSelecting])
   const toggle = useCallback((folderId: string) => {
     setCollapsed((current) => {
       const next = new Set(current)
@@ -210,58 +357,137 @@ export function Gallery({
       </p>
     )
 
-  const selectedPhoto = data?.pages
-    .flatMap((page) => page.files)
-    .find((photo) => photo.id === selected)
+  const selectedPhoto = allPhotos.find((photo) => photo.id === selected)
   if (sections.length === 0)
-    return <p className={styles.status}>No photos in the connected folders.</p>
+    return (
+      <p className={styles.status}>
+        {filters?.some((filter) => !isEmptyFilter(filter))
+          ? 'No photos match the selected tags.'
+          : (emptyMessage ?? 'No photos in the connected folders.')}
+      </p>
+    )
 
+  const isMixedByDate = sections[0].folderId === undefined
+  const hasTimeline = months.length > 1
+  const hasPanel = isSelecting && selectedPhotos.length > 0
+  const allSelected = selectedPhotos.length === allPhotos.length
   return (
-    <div ref={containerRef}>
-      <Virtuoso
-        useWindowScroll
-        data={items}
-        increaseViewportBy={800}
-        computeItemKey={(_, item) => item.key}
-        endReached={() => {
-          if (hasNextPage && !isFetchingNextPage) void fetchNextPage()
-        }}
-        itemContent={(_, item) => {
-          if (item.kind === 'row')
+    <div className={hasPanel ? styles.withPanel : undefined}>
+      <div className={styles.toolbar}>
+        {!isMixedByDate ? null : (
+          <label className={styles.sort}>
+            <span>Sort by</span>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as SortOrder)}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {isSelecting ? (
+          <>
+            <span className={styles.toolbarCount} role="status">
+              {selectedPhotos.length === 0
+                ? 'Select photos'
+                : `${formatNumber(selectedPhotos.length)} selected`}
+            </span>
+            <Button
+              small
+              variant="outline"
+              onClick={() =>
+                setSelectedIds(
+                  allSelected ? new Set() : new Set(allPhotos.map((p) => p.id)),
+                )
+              }
+            >
+              {allSelected ? 'Deselect all' : 'Select all'}
+            </Button>
+            <Button small onClick={stopSelecting}>
+              Done
+            </Button>
+          </>
+        ) : (
+          <Button small variant="outline" onClick={() => setIsSelecting(true)}>
+            Select
+          </Button>
+        )}
+      </div>
+      <div
+        ref={listElement}
+        className={hasTimeline ? styles.withTimeline : undefined}
+      >
+        <Virtuoso
+          ref={virtuoso}
+          useWindowScroll
+          data={items}
+          increaseViewportBy={800}
+          computeItemKey={(_, item) => item.key}
+          itemContent={(_, item) => {
+            if (item.kind === 'row')
+              return (
+                <PhotoRow
+                  entries={item.entries}
+                  columns={columns}
+                  isSelecting={isSelecting}
+                  selectedIds={selectedIds}
+                  onSelect={isSelecting ? toggleSelected : setSelected}
+                />
+              )
+            if (item.kind === 'month')
+              return (
+                <h3
+                  className={`${styles.monthTitle} ${item.isFirst ? styles.firstMonthTitle : ''}`}
+                >
+                  {item.label}
+                </h3>
+              )
+            const folder = folders?.get(item.folderId)
+            const prefix = rootPath ? `${rootPath} / ` : undefined
+            const title =
+              prefix && folder?.path.startsWith(prefix)
+                ? folder.path.slice(prefix.length)
+                : folder?.name
             return (
-              <PhotoRow
-                entries={item.entries}
-                columns={columns}
-                onSelect={setSelected}
+              <SectionHeader
+                title={title ?? 'Unknown folder'}
+                path={folder?.path}
+                count={folder?.photoCount}
+                isCollapsed={collapsed.has(item.folderId)}
+                isFirst={item.isFirst}
+                onToggle={() => toggle(item.folderId)}
               />
             )
-          const folder = folders?.get(item.folderId)
-          const prefix = rootPath ? `${rootPath} / ` : undefined
-          const title =
-            prefix && folder?.path.startsWith(prefix)
-              ? folder.path.slice(prefix.length)
-              : folder?.name
-          return (
-            <SectionHeader
-              title={title ?? 'Unknown folder'}
-              path={folder?.path}
-              count={folder?.photoCount}
-              isCollapsed={collapsed.has(item.folderId)}
-              isFirst={item.isFirst}
-              onToggle={() => toggle(item.folderId)}
-            />
-          )
-        }}
-      />
-      {isFetchingNextPage && (
-        <p className={styles.status} aria-live="polite">
-          Loading&hellip;
-        </p>
+          }}
+        />
+      </div>
+      {hasTimeline && (
+        <Timeline
+          className={hasPanel ? styles.timelineWithPanel : undefined}
+          months={months}
+          itemCount={items.length}
+          listRef={listRef}
+          onSeek={(index) =>
+            virtuoso.current?.scrollToIndex({ index, align: 'start' })
+          }
+        />
+      )}
+      {hasPanel && (
+        <BulkTagPanel
+          token={token}
+          photos={selectedPhotos}
+          total={allPhotos.length}
+        />
       )}
       {selectedPhoto && (
         <Lightbox
           token={token}
           photo={selectedPhoto}
+          folders={folders}
           onClose={() => setSelected(null)}
         />
       )}

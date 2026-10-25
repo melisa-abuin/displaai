@@ -1,20 +1,26 @@
-import { formatNumber } from '../format'
+﻿import { formatNumber } from '../format'
 import { reloadApp } from '../queryClient'
+import { useLocalAi } from '../settings'
 import { Button } from './Button'
 import styles from './Settings.module.css'
+import { Switch } from './Switch'
 
 interface SettingsProps {
   onSignOut: () => void
   onManageFolders: () => void
   connectedCount: number
+  onManageViews: () => void
+  viewCount: number
 }
 
-// Placeholder controls: they are not wired to any behavior yet.
 export function Settings({
   onSignOut,
   onManageFolders,
   connectedCount,
+  onManageViews,
+  viewCount,
 }: SettingsProps) {
+  const [localAi, setLocalAi] = useLocalAi()
   return (
     <div className={styles.settings}>
       <section aria-labelledby="settings-folders">
@@ -27,38 +33,36 @@ export function Settings({
         </div>
       </section>
 
-      <section aria-labelledby="settings-general">
-        <h3 id="settings-general" className={styles.sectionTitle}>
-          General
+      <section aria-labelledby="settings-views">
+        <h3 id="settings-views" className={styles.sectionTitle}>
+          Views
         </h3>
-        <label className={styles.row}>
-          <span>Theme</span>
-          <select defaultValue="system">
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-        <label className={styles.row}>
-          <span>Thumbnail size</span>
-          <select defaultValue="medium">
-            <option value="small">Small</option>
-            <option value="medium">Medium</option>
-            <option value="large">Large</option>
-          </select>
-        </label>
-        <label className={styles.row}>
-          <span>Show file names</span>
-          <input type="checkbox" />
-        </label>
-        <label className={styles.row}>
-          <span>Open albums on startup</span>
-          <input type="checkbox" defaultChecked />
-        </label>
-        <label className={styles.row}>
-          <span>Enable notifications</span>
-          <input type="checkbox" />
-        </label>
+        <div className={styles.row}>
+          <span>{formatNumber(viewCount)} custom</span>
+          <Button onClick={onManageViews}>Manage views</Button>
+        </div>
+        <p className={styles.hint}>
+          Saved galleries in the sidebar that combine folders with tags to
+          include or exclude.
+        </p>
+      </section>
+
+      <section aria-labelledby="settings-ai">
+        <h3 id="settings-ai" className={styles.sectionTitle}>
+          Smart features
+        </h3>
+        <div className={styles.row}>
+          <span>Local AI scanning</span>
+          <Switch
+            aria-label="Local AI scanning"
+            checked={localAi}
+            onChange={(e) => setLocalAi(e.target.checked)}
+          />
+        </div>
+        <p className={styles.hint}>
+          Detects faces, objects and suggested tags in the photo viewer. Runs in
+          your browser; photos are not sent anywhere.
+        </p>
       </section>
 
       <section aria-labelledby="settings-about">

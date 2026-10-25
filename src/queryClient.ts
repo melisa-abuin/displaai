@@ -1,10 +1,12 @@
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { QueryClient } from '@tanstack/react-query'
+import { clearIndex } from './drive/libraryStore'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 15, // 15 minutes
+      refetchOnWindowFocus: false,
     },
   },
 })
@@ -17,6 +19,7 @@ export const persister = createSyncStoragePersister({
 export async function reloadApp() {
   queryClient.clear()
   await persister.removeClient()
+  await clearIndex()
 
   if (navigator.onLine) {
     await Promise.all(

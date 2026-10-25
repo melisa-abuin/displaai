@@ -96,3 +96,166 @@
   opacity: 0.7;
   text-align: center;
 }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.toolbarCount {
+  margin-right: auto;
+  opacity: 0.8;
+}
+
+.tile {
+  position: relative;
+}
+
+.tile img {
+  transition: transform 0.1s;
+}
+
+.tileSelected img,
+.tileSelected .noThumb {
+  transform: scale(0.88);
+  border-radius: 4px;
+}
+
+.check {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.25);
+  box-shadow: 0 0 3px rgb(0 0 0 / 0.6);
+}
+
+.checkOn {
+  border-color: var(--primary);
+  background: var(--primary)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")
+    center / 100% no-repeat;
+}
+
+.withPanel {
+  margin-right: 340px;
+}
+
+.withTimeline {
+  margin-right: 40px;
+}
+
+.timelineWithPanel {
+  right: 340px;
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.sort span {
+  opacity: 0.7;
+}
+
+.sort select {
+  padding: 5px 8px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+}
+
+.sort option {
+  color: initial;
+}
+
+.monthTitle {
+  margin: 0;
+  padding: 24px 0 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.firstMonthTitle {
+  padding-top: 4px;
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 340px;
+  overflow-y: auto;
+  padding: 20px;
+  border-left: 1px solid rgb(255 255 255 / 0.15);
+  background: #1b1b22;
+  color: #fff;
+}
+
+.panelTitle {
+  margin: 12px 0;
+  font-size: 1rem;
+}
+
+.collage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.collageTile {
+  position: relative;
+  aspect-ratio: 1;
+  background: rgb(255 255 255 / 0.1);
+}
+
+.collageTile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.collageMore {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.5);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .withPanel {
+    margin-right: 0;
+    margin-bottom: 55svh;
+  }
+
+  .panel {
+    top: auto;
+    left: 0;
+    width: auto;
+    max-height: 55svh;
+    border-top: 1px solid rgb(255 255 255 / 0.15);
+    border-left: 0;
+  }
+
+  .collage {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

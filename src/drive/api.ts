@@ -1,4 +1,5 @@
 const API = 'https://www.googleapis.com/drive/v3'
+const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3'
 
 export interface DriveFolder {
   id: string
@@ -17,7 +18,11 @@ export interface DrivePhoto {
   id: string
   name: string
   mimeType: string
+  /** Ids of the folders containing the photo; always present for photos from the local index. */
+  parents?: string[]
   thumbnailLink?: string
+  /** When `thumbnailLink` was fetched (ms); the link expires after a while. */
+  thumbnailAt?: number
   /** Present only when the image has EXIF data (GPS may be missing). */
   imageMediaMetadata?: {
     location?: { latitude: number; longitude: number; altitude?: number }
@@ -43,16 +48,23 @@ export interface Library {
   tags: TagCount[]
 }
 
-export interface PhotoPageParam {
-  chunk: number
-  token?: string
+/** A photo as kept in the local index. */
+export interface IndexedPhoto extends DrivePhoto {
+  parents: string[]
+}
+
+/** A folder as kept in the local index. */
+export interface IndexedFolder {
+  id: string
+  name: string
+  parents?: string[]
+  ownedByMe: boolean
 }
 
 export interface PhotoPage {
   /** The folder all the photos of this page are in. */
   folderId?: string
   files: DrivePhoto[]
-  nextParam?: PhotoPageParam
 }
 
 export class UnauthorizedError extends Error {
@@ -61,14 +73,27 @@ export class UnauthorizedError extends Error {
   }
 }
 
+export class DriveHttpError extends Error {
+  status: number
+  constructor(status: number) {
+    super(`Drive API error ${status}`)
+    this.status = status
+  }
+}
+
 async function driveFetch(
   token: string,
   path: string,
   params?: Record<string, string>,
-  init?: { method?: string; body?: string; headers?: Record<string, string> },
+  init?: {
+    method?: string
+    body?: BodyInit
+    headers?: Record<string, string>
+    base?: string
+  },
 ): Promise<Response> {
   const query = params ? `?${new URLSearchParams(params)}` : ''
-  const res = await fetch(`${API}${path}${query}`, {
+  const res = await fetch(`${init?.base ?? API}${path}${query}`, {
     method: init?.method,
     body: init?.body,
     headers: {
@@ -78,7 +103,7 @@ async function driveFetch(
     },
   })
   if (res.status === 401) throw new UnauthorizedError()
-  if (!res.ok) throw new Error(`Drive API error ${res.status}`)
+  if (!res.ok) throw new DriveHttpError(res.status)
   return res
 }
 
@@ -111,125 +136,160 @@ async function listAll<T>(
   return items
 }
 
+const FOLDER_MIME = 'application/vnd.google-apps.folder'
+const PHOTO_FIELDS =
+  'id, name, mimeType, parents, thumbnailLink, createdTime, size, appProperties, imageMediaMetadata(location, time, width, height)'
+const FOLDER_FIELDS = 'id, name, parents, ownedByMe'
+
+type RawPhoto = Omit<IndexedPhoto, 'parents'> & { parents?: string[] }
+type RawFolder = Omit<IndexedFolder, 'ownedByMe'> & { ownedByMe?: boolean }
+
+const toPhoto = (file: RawPhoto): IndexedPhoto => ({
+  ...file,
+  parents: file.parents ?? [],
+  thumbnailAt: Date.now(),
+})
+
+const BATCH_API = 'https://www.googleapis.com/batch/drive/v3'
+/** Drive's limit of calls per batch request. */
+export const THUMBNAIL_BATCH_SIZE = 100
+
 /**
- * Every folder in the Drive (with the number of images directly inside it) and
- * every tag in use. Tags come from the same pass over all images, so the
- * suggestion list costs no extra requests.
+ * Fetches the thumbnail links of up to {@link THUMBNAIL_BATCH_SIZE} files in a
+ * single HTTP request. Files whose sub-request failed are left out of the
+ * result; a file without a thumbnail maps to `undefined`.
  */
-export async function listLibrary(token: string): Promise<Library> {
-  const [images, folders] = await Promise.all([
-    listAll<Pick<DrivePhoto, 'appProperties'> & { parents?: string[] }>(token, {
-      q: IMAGE_QUERY,
-      fields: 'nextPageToken, files(parents, appProperties)',
-    }),
-    listAll<{
-      id: string
-      name: string
-      parents?: string[]
-      ownedByMe?: boolean
-    }>(token, {
-      q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-      fields: 'nextPageToken, files(id, name, parents, ownedByMe)',
-    }),
-  ])
-
-  const counts = new Map<string, number>()
-  const tagCounts = new Map<string, number>()
-  for (const image of images) {
-    for (const tag of photoTags(image)) {
-      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
-    }
-    for (const parent of image.parents ?? []) {
-      counts.set(parent, (counts.get(parent) ?? 0) + 1)
-    }
-  }
-
-  const byId = new Map(folders.map((folder) => [folder.id, folder]))
-  const pathOf = (folder: { name: string; parents?: string[] }) => {
-    const names = [folder.name]
-    const seen = new Set<string>()
-    let parent = byId.get(folder.parents?.[0] ?? '')
-    while (parent && !seen.has(parent.id)) {
-      seen.add(parent.id)
-      names.unshift(parent.name)
-      parent = byId.get(parent.parents?.[0] ?? '')
-    }
-    return names.join(' / ')
-  }
-
-  const totals = new Map<string, number>()
-  for (const [folderId, count] of counts) {
-    const seen = new Set<string>()
-    let folder = byId.get(folderId)
-    while (folder && !seen.has(folder.id)) {
-      seen.add(folder.id)
-      totals.set(folder.id, (totals.get(folder.id) ?? 0) + count)
-      folder = byId.get(folder.parents?.[0] ?? '')
+export async function fetchThumbnailLinks(
+  token: string,
+  fileIds: readonly string[],
+): Promise<Map<string, string | undefined>> {
+  const result = new Map<string, string | undefined>()
+  if (!fileIds.length) return result
+  const boundary = `batch_${crypto.randomUUID()}`
+  const body =
+    fileIds
+      .map(
+        (id, i) =>
+          `--${boundary}\r\nContent-Type: application/http\r\nContent-ID: <${i}>\r\n\r\n` +
+          `GET /drive/v3/files/${encodeURIComponent(id)}?fields=thumbnailLink\r\n`,
+      )
+      .join('') + `--${boundary}--`
+  const res = await driveFetch(token, '', undefined, {
+    method: 'POST',
+    base: BATCH_API,
+    body,
+    headers: { 'Content-Type': `multipart/mixed; boundary=${boundary}` },
+  })
+  const text = await res.text()
+  const responseBoundary =
+    /boundary=("?)([^";\s]+)\1/i.exec(
+      res.headers.get('Content-Type') ?? '',
+    )?.[2] ?? /^--(\S+)/.exec(text)?.[1]
+  if (!responseBoundary) return result
+  for (const part of text.split(`--${responseBoundary}`)) {
+    const index = /Content-ID:\s*<response-(\d+)>/i.exec(part)?.[1]
+    if (index === undefined) continue
+    // Part headers, then the embedded HTTP response (status + headers), then its body.
+    const [, inner = '', json = ''] = part.split(/\r?\n\r?\n/, 3)
+    if (!/^HTTP\/\d(?:\.\d)?\s+2\d\d/.test(inner.trim())) continue
+    try {
+      const { thumbnailLink } = JSON.parse(json.trim()) as {
+        thumbnailLink?: string
+      }
+      result.set(fileIds[Number(index)], thumbnailLink)
+    } catch {
+      // Treated as failed.
     }
   }
-
-  return {
-    folders: folders
-      .map(({ id, name, parents, ownedByMe }) => ({
-        id,
-        name,
-        parentId: parents?.[0],
-        path: pathOf({ name, parents }),
-        ownedByMe: ownedByMe !== false,
-        photoCount: counts.get(id) ?? 0,
-        totalCount: totals.get(id) ?? 0,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    tags: [...tagCounts]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  }
+  return result
 }
 
-// Keeps the `q` parameter at a safe length when many folders are connected.
-const FOLDERS_PER_QUERY = 40
+const toFolder = (file: RawFolder): IndexedFolder => ({
+  id: file.id,
+  name: file.name,
+  parents: file.parents,
+  ownedByMe: file.ownedByMe !== false,
+})
 
-/**
- * Lists photos of the given folders. Mixed (the default) walks through the
- * folders in batches, newest first within each batch; grouped lists one folder
- * at a time, in the order given, so the photos of a folder come together.
- */
-export async function listPhotos(
-  token: string,
-  folderIds: string[],
-  param: PhotoPageParam = { chunk: 0 },
-  grouped = false,
-): Promise<PhotoPage> {
-  const size = grouped ? 1 : FOLDERS_PER_QUERY
-  const chunks: string[][] = []
-  for (let i = 0; i < folderIds.length; i += size) {
-    chunks.push(folderIds.slice(i, i + size))
-  }
-  const ids = chunks[param.chunk]
-  if (!ids) return { files: [] }
+/** Must be fetched before a full listing, so changes made during it aren't missed. */
+export async function getStartPageToken(token: string): Promise<string> {
+  const res = await driveFetch(token, '/changes/startPageToken')
+  return ((await res.json()) as { startPageToken: string }).startPageToken
+}
 
-  const parents = ids.map((id) => `'${id}' in parents`).join(' or ')
-  const res = await driveFetch(token, '/files', {
-    q: `${IMAGE_QUERY} and (${parents})`,
-    fields:
-      'nextPageToken, files(id, name, mimeType, thumbnailLink, createdTime, size, appProperties, imageMediaMetadata(location, time, width, height))',
-    orderBy: 'createdTime desc',
-    pageSize: '60',
-    ...(param.token && { pageToken: param.token }),
+export async function listAllPhotos(token: string): Promise<IndexedPhoto[]> {
+  const files = await listAll<RawPhoto>(token, {
+    q: IMAGE_QUERY,
+    fields: `nextPageToken, files(${PHOTO_FIELDS})`,
   })
-  const data = (await res.json()) as {
-    files: DrivePhoto[]
-    nextPageToken?: string
+  return files.map(toPhoto)
+}
+
+export async function listAllFolders(token: string): Promise<IndexedFolder[]> {
+  const files = await listAll<RawFolder>(token, {
+    q: `mimeType = '${FOLDER_MIME}' and trashed = false`,
+    fields: `nextPageToken, files(${FOLDER_FIELDS})`,
+  })
+  return files.map(toFolder)
+}
+
+export interface ChangeSet {
+  photos: IndexedPhoto[]
+  folders: IndexedFolder[]
+  /** Ids that are gone from Drive, trashed, or no longer an image or folder. */
+  removedIds: string[]
+  newStartPageToken: string
+}
+
+interface RawChange {
+  fileId: string
+  removed?: boolean
+  file?: (RawPhoto & RawFolder) & { trashed?: boolean }
+}
+
+/** Everything that changed since `startPageToken`, sorted into upserts and removals. */
+export async function listChanges(
+  token: string,
+  startPageToken: string,
+): Promise<ChangeSet> {
+  const photos = new Map<string, IndexedPhoto>()
+  const folders = new Map<string, IndexedFolder>()
+  const removed = new Set<string>()
+  let pageToken = startPageToken
+  let newStartPageToken: string | undefined
+  while (!newStartPageToken) {
+    const res = await driveFetch(token, '/changes', {
+      pageToken,
+      pageSize: '1000',
+      includeRemoved: 'true',
+      spaces: 'drive',
+      fields: `nextPageToken, newStartPageToken, changes(fileId, removed, file(${PHOTO_FIELDS}, trashed, ownedByMe))`,
+    })
+    const data = (await res.json()) as {
+      changes: RawChange[]
+      nextPageToken?: string
+      newStartPageToken?: string
+    }
+    // Later changes to the same file win.
+    for (const { fileId, removed: gone, file } of data.changes) {
+      photos.delete(fileId)
+      folders.delete(fileId)
+      removed.delete(fileId)
+      if (gone || !file || file.trashed) removed.add(fileId)
+      else if (file.mimeType === FOLDER_MIME)
+        folders.set(fileId, toFolder(file))
+      else if (file.mimeType.startsWith('image/'))
+        photos.set(fileId, toPhoto(file))
+      else removed.add(fileId)
+    }
+    newStartPageToken = data.newStartPageToken
+    if (!newStartPageToken) pageToken = data.nextPageToken!
   }
-  const nextParam: PhotoPageParam | undefined = data.nextPageToken
-    ? { chunk: param.chunk, token: data.nextPageToken }
-    : param.chunk + 1 < chunks.length
-      ? { chunk: param.chunk + 1 }
-      : undefined
   return {
-    folderId: grouped ? ids[0] : undefined,
-    files: data.files,
-    nextParam,
+    photos: [...photos.values()],
+    folders: [...folders.values()],
+    removedIds: [...removed],
+    newStartPageToken,
   }
 }
 
@@ -239,53 +299,11 @@ export interface PhotoLocation {
   latitude: number
   longitude: number
   thumbnailLink?: string
+  thumbnailAt?: number
   /** The folder (album) the photo is in. */
   parentId?: string
   /** EXIF capture time, falling back to when the file was added. */
   date?: string
-}
-
-/** Every photo with GPS data in the given folders. */
-export async function listPhotoLocations(
-  token: string,
-  folderIds: string[],
-): Promise<PhotoLocation[]> {
-  const chunks: string[][] = []
-  for (let i = 0; i < folderIds.length; i += FOLDERS_PER_QUERY) {
-    chunks.push(folderIds.slice(i, i + FOLDERS_PER_QUERY))
-  }
-  const results = await Promise.all(
-    chunks.map((ids) =>
-      listAll<
-        Pick<
-          DrivePhoto,
-          'id' | 'name' | 'thumbnailLink' | 'createdTime' | 'imageMediaMetadata'
-        > & { parents?: string[] }
-      >(token, {
-        q: `${IMAGE_QUERY} and (${ids.map((id) => `'${id}' in parents`).join(' or ')})`,
-        fields:
-          'nextPageToken, files(id, name, parents, thumbnailLink, createdTime, imageMediaMetadata(location, time))',
-      }),
-    ),
-  )
-  const seen = new Set<string>()
-  return results.flat().flatMap((file) => {
-    const { id, name, imageMediaMetadata } = file
-    const location = imageMediaMetadata?.location
-    if (!location || seen.has(id)) return []
-    seen.add(id)
-    return [
-      {
-        id,
-        name,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        thumbnailLink: file.thumbnailLink,
-        parentId: file.parents?.[0],
-        date: imageMediaMetadata?.time ?? file.createdTime,
-      },
-    ]
-  })
 }
 
 export async function fetchPhotoBlob(
@@ -475,4 +493,113 @@ export async function updatePhotoTags(
     appProperties?: Record<string, string>
   }
   return data.appProperties ?? {}
+}
+
+/** Renames a photo in Drive; resolves with the saved name. */
+export async function renamePhoto(
+  token: string,
+  photoId: string,
+  name: string,
+): Promise<string> {
+  const res = await driveFetch(
+    token,
+    `/files/${photoId}`,
+    { fields: 'name' },
+    { method: 'PATCH', body: JSON.stringify({ name }) },
+  )
+  return ((await res.json()) as { name: string }).name
+}
+
+/** Moves a photo to the Drive trash, where it can still be restored. */
+export async function trashPhoto(
+  token: string,
+  photoId: string,
+): Promise<void> {
+  await driveFetch(
+    token,
+    `/files/${photoId}`,
+    { fields: 'id', supportsAllDrives: 'true' },
+    { method: 'PATCH', body: JSON.stringify({ trashed: true }) },
+  )
+}
+
+/** Why files can't be added to the folder, or undefined when they can. */
+async function addChildrenBlocker(
+  token: string,
+  folderId: string,
+): Promise<string | undefined> {
+  const res = await driveFetch(token, `/files/${folderId}`, {
+    fields: 'name, mimeType, ownedByMe, capabilities(canAddChildren)',
+    supportsAllDrives: 'true',
+  })
+  const data = (await res.json()) as {
+    name: string
+    mimeType: string
+    ownedByMe?: boolean
+    capabilities?: { canAddChildren?: boolean }
+  }
+  if (data.mimeType !== FOLDER_MIME)
+    return `"${data.name}" (${folderId}) is not a folder (${data.mimeType}).`
+  if (data.capabilities?.canAddChildren === false)
+    return `Drive says you can't add files to "${data.name}" (${folderId}); ${data.ownedByMe ? 'you own it' : 'it is owned by someone else'}.`
+}
+
+/**
+ * Saves an edited image: as a new file, or (with `replaceId`) as the new
+ * content of an existing one. Resolves with the file's id.
+ */
+export async function uploadImage(
+  token: string,
+  file: {
+    name: string
+    blob: Blob
+    parentId?: string
+    appProperties?: Record<string, string>
+    replaceId?: string
+  },
+): Promise<string> {
+  const boundary = `dpd-${crypto.randomUUID()}`
+  if (!file.replaceId && file.parentId) {
+    const blocker = await addChildrenBlocker(token, file.parentId)
+    if (blocker) throw new Error(blocker)
+  }
+  const metadata = {
+    name: file.name,
+    mimeType: file.blob.type,
+    ...(!file.replaceId && file.parentId && { parents: [file.parentId] }),
+    ...(!file.replaceId &&
+      file.appProperties &&
+      Object.keys(file.appProperties).length > 0 && {
+        appProperties: file.appProperties,
+      }),
+  }
+  const body = new Blob([
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`,
+    `--${boundary}\r\nContent-Type: ${file.blob.type}\r\n\r\n`,
+    file.blob,
+    `\r\n--${boundary}--`,
+  ])
+  const res = await driveFetch(
+    token,
+    file.replaceId ? `/files/${file.replaceId}` : '/files',
+    { uploadType: 'multipart', fields: 'id', supportsAllDrives: 'true' },
+    {
+      method: file.replaceId ? 'PATCH' : 'POST',
+      body,
+      base: UPLOAD_API,
+      headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+    },
+  )
+  return ((await res.json()) as { id: string }).id
+}
+
+/** The tags of a photo as app properties, so a copy keeps them. */
+export function tagProperties(
+  photo: Pick<DrivePhoto, 'appProperties'>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(photo.appProperties ?? {}).filter(([key]) =>
+      key.startsWith(TAG_PREFIX),
+    ),
+  )
 }

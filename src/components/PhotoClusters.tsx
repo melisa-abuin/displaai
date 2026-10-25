@@ -1,6 +1,12 @@
 import { divIcon } from 'leaflet'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CircleMarker, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
+import {
+  CircleMarker,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet'
 import Supercluster from 'supercluster'
 import type { DriveFolder, PhotoLocation } from '../drive/api'
 import { PhotoCarousel } from './PhotoCarousel'

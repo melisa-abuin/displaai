@@ -4,12 +4,7 @@
   --secondary: #f6a655;
   --secondary-violet: #2a1f4d;
   color-scheme: light dark;
-  font-family:
-    'Inter Variable',
-    system-ui,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

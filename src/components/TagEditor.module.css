@@ -102,3 +102,15 @@
   font-size: 0.85rem;
   opacity: 0.8;
 }
+
+.partial {
+  background: transparent;
+  outline: 1px dashed rgb(255 255 255 / 0.5);
+  outline-offset: -1px;
+}
+
+.count {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}

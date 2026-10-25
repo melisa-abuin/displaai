@@ -5,10 +5,15 @@ export function formatNumber(value: number): string {
 }
 
 /** Drive reports EXIF capture times as `YYYY:MM:DD HH:MM:SS`; other dates are ISO. */
-export function formatDate(value: string | undefined): string | undefined {
+export function parseDate(value: string | undefined): Date | undefined {
   if (!value) return
   const date = new Date(value.replace(/^(\d{4}):(\d{2}):(\d{2}) /, '$1-$2-$3T'))
-  if (Number.isNaN(date.getTime())) return
+  return Number.isNaN(date.getTime()) ? undefined : date
+}
+
+export function formatDate(value: string | undefined): string | undefined {
+  const date = parseDate(value)
+  if (!date) return
   return date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',

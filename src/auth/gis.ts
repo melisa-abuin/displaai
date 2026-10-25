@@ -1,7 +1,6 @@
 const GIS_SRC = 'https://accounts.google.com/gsi/client'
-// Metadata write access lets the app save tags without being able to change file contents.
-export const DRIVE_SCOPE =
-  'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata'
+// Full access is needed to replace the contents of an existing photo with its edited version.
+export const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive'
 
 export interface AccessToken {
   value: string

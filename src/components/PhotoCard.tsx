@@ -1,14 +1,20 @@
-import { thumbnailUrl, type DriveFolder, type PhotoLocation } from '../drive/api'
+import {
+  thumbnailUrl,
+  type DriveFolder,
+  type PhotoLocation,
+} from '../drive/api'
+import { useFreshThumbnails } from '../drive/libraryStore'
 import { formatDate } from '../format'
 import styles from './PhotoMap.module.css'
 
 export function PhotoCard({
-  photo,
+  photo: indexedPhoto,
   folders,
 }: {
   photo: PhotoLocation
   folders: ReadonlyMap<string, DriveFolder> | undefined
 }) {
+  const [photo] = useFreshThumbnails([indexedPhoto])
   return (
     <div className={styles.card}>
       {thumbnailUrl(photo) && (

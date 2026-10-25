@@ -1,0 +1,119 @@
+.timeline {
+  position: fixed;
+  top: 72px;
+  right: 0;
+  bottom: 16px;
+  z-index: 4;
+  width: 44px;
+  padding: 0 4px 0 0;
+  outline: none;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.rail {
+  position: relative;
+  height: 100%;
+}
+
+.rail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 11px;
+  bottom: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.timeline:hover .rail::before,
+.active .rail::before {
+  opacity: 1;
+}
+
+.year {
+  position: absolute;
+  right: 20px;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.dot {
+  position: absolute;
+  right: 10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.handle {
+  position: absolute;
+  right: 7px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.timeline:focus-visible .handle {
+  box-shadow: 0 0 0 3px var(--primary);
+}
+
+.bubble {
+  position: absolute;
+  right: 28px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--primary-black);
+  color: #fff;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transform: translateY(-50%) translateX(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.active .bubble {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+
+.year,
+.dot {
+  transition: opacity 0.2s;
+}
+
+.active .year {
+  opacity: 0.85;
+}
+
+.active .dot {
+  opacity: 0.5;
+}
+
+@media (hover: none) {
+  .timeline {
+    width: 36px;
+  }
+}

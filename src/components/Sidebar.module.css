@@ -164,3 +164,110 @@ button.toggle:hover {
 .chevronOpen {
   transform: rotate(90deg);
 }
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  max-height: 35%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.filtersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 12px;
+}
+
+.filtersTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.clear {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.match {
+  display: flex;
+  margin: 0 12px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.matchOption {
+  flex: 1;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.matchOption[aria-pressed='true'] {
+  background: color-mix(in srgb, #4285f4 25%, transparent);
+  font-weight: 600;
+}
+
+.tagList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.tag {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.tag[aria-pressed='true'] {
+  background: color-mix(in srgb, #4285f4 25%, transparent);
+  font-weight: 600;
+}
+
+.tag[data-state='exclude'] {
+  background: color-mix(in srgb, #d93025 25%, transparent);
+}
+
+.tag[data-state='exclude'] .name {
+  text-decoration: line-through;
+}

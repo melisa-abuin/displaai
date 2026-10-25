@@ -1,14 +1,15 @@
-import { latLngBounds } from 'leaflet'
+﻿import { latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { type DriveFolder, type PhotoLocation } from '../drive/api'
 import { usePhotoLocations } from '../drive/hooks'
+import type { TagFilter } from '../drive/tagFilter'
 import { PhotoClusters } from './PhotoClusters'
 import './PhotoMap.css'
 import styles from './PhotoMap.module.css'
 
-// Web Mercator tiles end at about 85.05° latitude.
+// Web Mercator tiles end at about 85.05Â° latitude.
 const WORLD = latLngBounds([-85.0511, -180], [85.0511, 180])
 
 // Stops zooming out once the world fills the whole container, so nothing but map shows.
@@ -42,17 +43,18 @@ function FitBounds({ photos }: { photos: PhotoLocation[] }) {
 }
 
 export function PhotoMap({
-  token,
   folderIds,
   folders,
+  filters,
 }: {
-  token: string
   folderIds: readonly string[]
   folders: ReadonlyMap<string, DriveFolder> | undefined
+  filters: readonly TagFilter[]
 }) {
-  const { data, isLoading, error } = usePhotoLocations(token, folderIds)
+  const { data, isLoading, error } = usePhotoLocations(folderIds, filters)
 
-  if (isLoading) return <p className={styles.status}>Loading locations&hellip;</p>
+  if (isLoading)
+    return <p className={styles.status}>Loading locations&hellip;</p>
   if (error)
     return (
       <p role="alert" className={styles.status}>

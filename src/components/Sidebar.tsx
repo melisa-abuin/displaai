@@ -1,7 +1,20 @@
-import { useState } from 'react'
-import type { DriveFolder } from '../drive/api'
+﻿import { useState } from 'react'
+import type { DriveFolder, TagCount } from '../drive/api'
+import {
+  cycleTag,
+  tagState,
+  type TagFilter,
+  type TagMatch,
+} from '../drive/tagFilter'
 import { formatNumber } from '../format'
 import styles from './Sidebar.module.css'
+
+export interface SidebarView {
+  id: string
+  name: string
+  /** Photos the view shows; unset until the library has loaded. */
+  count: number | undefined
+}
 
 export interface SidebarAlbum {
   folder: DriveFolder
@@ -50,7 +63,15 @@ interface SidebarProps {
   isSettingsOpen: boolean
   onOpenSettings: () => void
   isMapActive: boolean
+  /** Photos with a location; unset until the library has loaded. */
+  mapCount: number | undefined
   onOpenMap: () => void
+  tags: TagCount[] | undefined
+  filter: TagFilter
+  onFilterChange: (filter: TagFilter) => void
+  views: readonly SidebarView[]
+  selectedViewId: string | null
+  onSelectView: (id: string) => void
 }
 
 export function Sidebar({
@@ -65,8 +86,16 @@ export function Sidebar({
   isSettingsOpen,
   onOpenSettings,
   isMapActive,
+  mapCount,
   onOpenMap,
+  tags,
+  filter,
+  onFilterChange,
+  views,
+  selectedViewId,
+  onSelectView,
 }: SidebarProps) {
+  const selectedCount = filter.tags.length + filter.exclude.length
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [revealedId, setRevealedId] = useState<string | null>(null)
 
@@ -111,7 +140,9 @@ export function Sidebar({
           {allPhotosCount !== undefined && (
             <>
               {' '}
-              <span className={styles.count}>{formatNumber(allPhotosCount)}</span>
+              <span className={styles.count}>
+                {formatNumber(allPhotosCount)}
+              </span>
             </>
           )}
         </button>
@@ -176,6 +207,23 @@ export function Sidebar({
               </div>
             )
           })}
+        {views.map((view) => (
+          <button
+            key={view.id}
+            type="button"
+            className={styles.item}
+            aria-current={selectedViewId === view.id ? 'true' : undefined}
+            onClick={() => onSelectView(view.id)}
+          >
+            <span className={styles.name}>{view.name}</span>
+            {view.count !== undefined && (
+              <>
+                {' '}
+                <span className={styles.count}>{formatNumber(view.count)}</span>
+              </>
+            )}
+          </button>
+        ))}
         <button
           type="button"
           className={styles.item}
@@ -183,8 +231,72 @@ export function Sidebar({
           onClick={onOpenMap}
         >
           <span className={styles.name}>Map</span>
+          {mapCount !== undefined && (
+            <>
+              {' '}
+              <span className={styles.count}>{formatNumber(mapCount)}</span>
+            </>
+          )}
         </button>
       </nav>
+      {!isSettingsOpen && tags && tags.length > 0 && (
+        <section className={styles.filters} aria-label="Filter by tag">
+          <div className={styles.filtersHeader}>
+            <h2 className={styles.filtersTitle}>Tags</h2>
+            {selectedCount > 0 && (
+              <button
+                type="button"
+                className={styles.clear}
+                onClick={() =>
+                  onFilterChange({ ...filter, tags: [], exclude: [] })
+                }
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          {filter.tags.length > 1 && (
+            <div className={styles.match} role="group" aria-label="Match">
+              {(['any', 'all'] as const).map((value: TagMatch) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={styles.matchOption}
+                  aria-pressed={filter.match === value}
+                  onClick={() => onFilterChange({ ...filter, match: value })}
+                >
+                  {value === 'any' ? 'Any' : 'All'}
+                </button>
+              ))}
+            </div>
+          )}
+          <ul className={styles.tagList}>
+            {tags.map((tag) => {
+              const state = tagState(filter, tag.name)
+              return (
+                <li key={tag.name}>
+                  <button
+                    type="button"
+                    className={styles.tag}
+                    aria-pressed={state === 'off' ? false : true}
+                    data-state={state}
+                    title={`${tag.name}${state === 'exclude' ? ' (excluded)' : ''}`}
+                    onClick={() => onFilterChange(cycleTag(filter, tag.name))}
+                  >
+                    <span className={styles.name}>
+                      {state === 'exclude' ? 'Not ' : ''}
+                      {tag.name}
+                    </span>{' '}
+                    <span className={styles.count}>
+                      {formatNumber(tag.count)}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}{' '}
+          </ul>
+        </section>
+      )}
       <div className={styles.account}>
         <span className={styles.email} title={email ?? undefined}>
           {email}

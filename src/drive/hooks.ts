@@ -1,48 +1,59 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type InfiniteData,
-} from '@tanstack/react-query'
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo } from 'react'
 import {
   fetchHeicTransform,
   getUserEmail,
-  listLibrary,
-  listPhotoLocations,
-  listPhotos,
+  renamePhoto,
+  trashPhoto,
   updatePhotoTags,
-  type Library,
+  uploadImage,
+  type PhotoLocation,
   type PhotoPage,
-  type PhotoPageParam,
 } from './api'
+import {
+  applyPhotoName,
+  applyPhotoProperties,
+  getPhotosOf,
+  loadIndex,
+  removePhoto,
+  syncIndex,
+  useIndexVersion,
+  useLibrary,
+  useLibraryState,
+} from './libraryStore'
+import { matchesFilters, NO_FILTERS, type TagFilter } from './tagFilter'
+const SYNC_STALE_MS = 1000 * 60 * 15 // 15 minutes
 
-const LIBRARY_KEY = ['drive', 'library', 'v3']
-
-function useLibrary<T>(token: string, select: (library: Library) => T) {
-  return useQuery({
-    queryKey: LIBRARY_KEY,
-    queryFn: () => listLibrary(token),
-    select,
-  })
-}
-
-const selectFolders = (library: Library) => library.folders
-const selectTags = (library: Library) => library.tags
-
+/** Folders of the Drive; keeps the local index in sync while mounted. */
 export function useFolders(token: string) {
-  return useLibrary(token, selectFolders)
+  const library = useLibrary()
+  const { ready, error } = useLibraryState()
+
+  useEffect(() => {
+    void loadIndex().then(() => syncIndex(token, SYNC_STALE_MS))
+    const onVisible = () => {
+      if (document.visibilityState === 'visible')
+        void syncIndex(token, SYNC_STALE_MS)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [token])
+
+  return {
+    data: library?.folders,
+    isLoading: !ready && !error,
+    error: ready ? null : error,
+  }
 }
 
-/** Every distinct tag in the Drive, gathered during the library sync. */
-export function useTags(token: string) {
-  return useLibrary(token, selectTags)
+/** Every distinct tag in the Drive. */
+export function useTags() {
+  return { data: useLibrary()?.tags }
 }
 
 export function useUpdateTags(token: string) {
-  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       photoId,
       add,
       remove,
@@ -50,58 +61,153 @@ export function useUpdateTags(token: string) {
       photoId: string
       add: string[]
       remove: string[]
-    }) => updatePhotoTags(token, photoId, { add, remove }),
-    onSuccess: (appProperties, { photoId, add, remove }) => {
-      queryClient.setQueriesData<InfiniteData<PhotoPage, unknown>>(
-        { queryKey: ['drive', 'photos'] },
-        (data) =>
-          data && {
-            ...data,
-            pages: data.pages.map((page) => ({
-              ...page,
-              files: page.files.map((file) =>
-                file.id === photoId ? { ...file, appProperties } : file,
-              ),
-            })),
-          },
-      )
-      queryClient.setQueryData<Library>(LIBRARY_KEY, (library) => {
-        if (!library) return library
-        const counts = new Map(library.tags.map((t) => [t.name, t.count]))
-        const bump = (name: string, by: number) =>
-          counts.set(name, (counts.get(name) ?? 0) + by)
-        // Callers pass only tags that really change on the photo.
-        for (const name of add) bump(name, 1)
-        for (const name of remove) bump(name, -1)
-        return {
-          ...library,
-          tags: [...counts]
-            .filter(([, count]) => count > 0)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        }
+    }) => {
+      const appProperties = await updatePhotoTags(token, photoId, {
+        add,
+        remove,
       })
+      await applyPhotoProperties(photoId, appProperties)
+      return appProperties
+    },
+  })
+}
+
+export function useRenamePhoto(token: string) {
+  return useMutation({
+    mutationFn: async ({
+      photoId,
+      name,
+    }: {
+      photoId: string
+      name: string
+    }) => {
+      const saved = await renamePhoto(token, photoId, name)
+      await applyPhotoName(photoId, saved)
+      return saved
+    },
+  })
+}
+
+/** Moves a photo to the Drive trash and removes it from the index. */
+export function useTrashPhoto(token: string) {
+  return useMutation({
+    mutationFn: async (photoId: string) => {
+      await trashPhoto(token, photoId)
+      await removePhoto(photoId)
+    },
+  })
+}
+
+/** Saves an edited image (new file or replacing one) and refreshes the index. */
+export function useSaveEditedPhoto(token: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (file: Parameters<typeof uploadImage>[1]) => {
+      const id = await uploadImage(token, file)
+      if (file.replaceId) {
+        for (const key of [
+          ['drive', 'photo-blob', id],
+          ['drive', 'heic-transform', 'v2', id],
+          ['vision', 'faces', id],
+          ['vision', 'scene', id],
+        ])
+          queryClient.removeQueries({ queryKey: key })
+      }
+      await syncIndex(token)
+      return id
+    },
+  })
+}
+
+export interface TagChange {
+  photoId: string
+  add: string[]
+  remove: string[]
+}
+
+const BULK_TAG_CONCURRENCY = 4
+
+/** Applies tag changes to several photos; every change is attempted even if some fail. */
+export function useUpdateTagsBulk(token: string) {
+  return useMutation({
+    mutationFn: async (changes: TagChange[]) => {
+      let next = 0
+      let failed = 0
+      const worker = async () => {
+        while (next < changes.length) {
+          const { photoId, add, remove } = changes[next++]
+          try {
+            const appProperties = await updatePhotoTags(token, photoId, {
+              add,
+              remove,
+            })
+            await applyPhotoProperties(photoId, appProperties)
+          } catch {
+            failed++
+          }
+        }
+      }
+      await Promise.all(
+        Array.from(
+          { length: Math.min(BULK_TAG_CONCURRENCY, changes.length) },
+          worker,
+        ),
+      )
+      if (failed > 0)
+        throw new Error(`${failed} of ${changes.length} photos failed`)
     },
   })
 }
 
 /**
- * Mixed by default (sorted by date); when `grouped`, photos are listed folder by
- * folder in the order of `folderIds`.
+ * Mixed by default (sorted by date); when `grouped`, one page per folder in
+ * the order of `folderIds`.
  */
 export function usePhotos(
-  token: string,
   folderIds: readonly string[],
   grouped: boolean,
+  filters: readonly TagFilter[] = NO_FILTERS,
 ) {
-  // Mixed listing doesn't depend on the order of the folders.
-  const ids = grouped ? folderIds : [...folderIds].sort()
-  return useInfiniteQuery({
-    queryKey: ['drive', 'photos', grouped, ids],
-    queryFn: ({ pageParam }) => listPhotos(token, [...ids], pageParam, grouped),
-    initialPageParam: undefined as PhotoPageParam | undefined,
-    getNextPageParam: (last) => last.nextParam,
-  })
+  const version = useIndexVersion()
+  const { ready, error } = useLibraryState()
+  const pages = useMemo<PhotoPage[]>(
+    () =>
+      ready
+        ? getPhotosOf(folderIds, grouped).map((page) => ({
+            ...page,
+            files: page.files.filter((photo) => matchesFilters(photo, filters)),
+          }))
+        : [],
+    // `version` invalidates the memo when the index changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ready, version, folderIds, grouped, filters],
+  )
+  return { data: { pages }, isLoading: !ready && !error, error }
+}
+
+/** How many photos each set of folders holds once its filters are applied, in the same order. */
+export function usePhotoCounts(
+  sets: readonly {
+    folderIds: readonly string[]
+    filters: readonly TagFilter[]
+  }[],
+) {
+  const version = useIndexVersion()
+  const { ready } = useLibraryState()
+  return useMemo<number[] | undefined>(
+    () =>
+      ready
+        ? sets.map(
+            ({ folderIds, filters }) =>
+              getPhotosOf(folderIds, false)[0].files.filter((photo) =>
+                matchesFilters(photo, filters),
+              ).length,
+          )
+        : undefined,
+    // `version` invalidates the memo when the index changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ready, version, sets],
+  )
 }
 
 export function useHeicTransform(
@@ -116,12 +222,38 @@ export function useHeicTransform(
   })
 }
 
-export function usePhotoLocations(token: string, folderIds: readonly string[]) {
-  const sortedIds = [...folderIds].sort()
-  return useQuery({
-    queryKey: ['drive', 'locations', 'v2', sortedIds],
-    queryFn: () => listPhotoLocations(token, sortedIds),
-  })
+/** Every photo with GPS data in the given folders. */
+export function usePhotoLocations(
+  folderIds: readonly string[],
+  filters: readonly TagFilter[] = NO_FILTERS,
+) {
+  const version = useIndexVersion()
+  const { ready, error } = useLibraryState()
+  const data = useMemo<PhotoLocation[]>(() => {
+    if (!ready) return []
+    return getPhotosOf(folderIds, false).flatMap(({ files }) =>
+      files.flatMap((photo) => {
+        if (!matchesFilters(photo, filters)) return []
+        const location = photo.imageMediaMetadata?.location
+        if (!location) return []
+        return [
+          {
+            id: photo.id,
+            name: photo.name,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            thumbnailLink: photo.thumbnailLink,
+            thumbnailAt: photo.thumbnailAt,
+            parentId: photo.parents[0],
+            date: photo.imageMediaMetadata?.time ?? photo.createdTime,
+          },
+        ]
+      }),
+    )
+    // `version` invalidates the memo when the index changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, version, folderIds, filters])
+  return { data, isLoading: !ready && !error, error }
 }
 
 export function useUserEmail(token: string) {

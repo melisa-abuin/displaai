@@ -24,6 +24,39 @@
   object-fit: contain;
 }
 
+.placeholder {
+  position: absolute;
+  inset: 16px;
+  width: calc(100% - 32px);
+  height: calc(100% - 32px);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgb(255 255 255 / 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Limits are swapped because the image is turned a quarter before display. */
 .sideways {
   max-width: 100cqh;
@@ -52,9 +85,37 @@
 }
 
 .name {
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   font-size: 1.1rem;
   word-break: break-all;
+}
+
+.location {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+}
+
+.path {
+  min-width: 0;
+  opacity: 0.7;
+  word-break: break-word;
+}
+
+.open {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.open:hover {
+  text-decoration: underline;
 }
 
 .details {
@@ -144,4 +205,9 @@
 .labels button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.edit {
+  width: 100%;
+  margin-bottom: 16px;
 }

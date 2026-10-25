@@ -1,6 +1,6 @@
 import type { Detection } from '@mediapipe/tasks-vision'
-import wasmBinaryPath from '@mediapipe/tasks-vision/vision_wasm_internal.wasm?url'
 import wasmLoaderPath from '@mediapipe/tasks-vision/vision_wasm_internal.js?url'
+import wasmBinaryPath from '@mediapipe/tasks-vision/vision_wasm_internal.wasm?url'
 
 const MODEL_BASE = 'https://storage.googleapis.com/mediapipe-models'
 const FACE_MODEL = `${MODEL_BASE}/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`
@@ -96,7 +96,7 @@ function enqueue<T>(job: () => Promise<T>, signal?: AbortSignal): Promise<T> {
 const MAX_SIDE = 1280
 
 /** Browsers can't decode HEIC, so the fallback decoder is loaded only when needed. */
-async function toBitmap(blob: Blob): Promise<ImageBitmap> {
+export async function toBitmap(blob: Blob): Promise<ImageBitmap> {
   try {
     return await createImageBitmap(blob, { imageOrientation: 'from-image' })
   } catch {

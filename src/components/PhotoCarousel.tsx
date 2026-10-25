@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { thumbnailUrl, type DriveFolder, type PhotoLocation } from '../drive/api'
+import {
+  thumbnailUrl,
+  type DriveFolder,
+  type PhotoLocation,
+} from '../drive/api'
+import { useFreshThumbnails } from '../drive/libraryStore'
 import { formatNumber } from '../format'
 import { PhotoCard } from './PhotoCard'
 import styles from './PhotoMap.module.css'
@@ -16,16 +21,20 @@ export function PhotoCarousel({
   const count = photos.length
   const step = (by: number) => setIndex((i) => (i + by + count) % count)
 
+  const [next] = useFreshThumbnails([photos[(index + 1) % count]])
+  const nextUrl = thumbnailUrl(next, 480)
   // Warm the cache so stepping to the next photo doesn't flash an empty card.
   useEffect(() => {
-    const next = photos[(index + 1) % count]
-    const url = next && thumbnailUrl(next, 480)
-    if (url) new Image().src = url
-  }, [photos, index, count])
+    if (nextUrl) new Image().src = nextUrl
+  }, [nextUrl])
 
   return (
     <div className={styles.carousel}>
-      <PhotoCard key={photos[index].id} photo={photos[index]} folders={folders} />
+      <PhotoCard
+        key={photos[index].id}
+        photo={photos[index]}
+        folders={folders}
+      />
       <button
         type="button"
         className={`${styles.arrow} ${styles.arrowPrev}`}

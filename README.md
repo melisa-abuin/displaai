@@ -13,11 +13,14 @@
 
 ## Features
 
-- Google OAuth sign-in (Google Identity Services, read-only file access plus Drive metadata access to save tags)
-- Left sidebar listing your Drive folders ("All photos" + one entry per folder)
+- Google OAuth sign-in (Google Identity Services, full Drive access, needed to rename photos and overwrite them with their edited version)
+- Left sidebar listing your Drive folders ("All photos" + one entry per folder), plus any custom views
+- Tag filters in the sidebar: click a tag to include it, again to exclude it; combine included tags with Any/All
+- Custom views (Settings > Manage views): saved galleries that combine folders (with subfolders) and included/excluded tags
 - Thumbnail grid with pagination and a full-size lightbox with a details panel
 - On-device [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector) analysis (`@mediapipe/tasks-vision`, loaded on demand): the lightbox can overlay face boxes and object boxes on the open photo and suggest tags from image classification (only the open photo is analysed, and only when a switch is on). Models are fetched from Google's model storage on first use.
 - Per-photo tags (add, remove, rename) stored in the file's private Drive app properties, with suggestions from every tag already in use
+- Photo editor (lightbox > **Edit photo**), all done on-device in a canvas: crop with aspect presets (1:1, 4:5, 9:16, 16:9...), rotate, flip, straighten, resize with locked proportions, 15 Instagram-style filters with intensity, adjustments (brightness, contrast, saturation, warmth, fade, glow, blur, vignette, grain), face blur/pixelate/emoji covers (MediaPipe), text and emoji stickers, borders and polaroid frames. Save as a new file (keeps tags, same folder), overwrite the original, or just rename; JPEG, PNG or WebP output.
 
 ## Google OAuth setup
 
@@ -26,7 +29,7 @@
 3. Configure the OAuth consent screen (add yourself as a test user).
 4. Copy `.env.example` to `.env.local` and set `VITE_GOOGLE_CLIENT_ID`.
 
-The access token is kept in `sessionStorage` only; no client secret is needed.
+The access token is kept in `localStorage` (so reopening the browser skips sign-in until it expires, ~1 hour); no client secret is needed.
 
 ## Getting started
 

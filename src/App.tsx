@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+﻿import { useEffect, useMemo } from 'react'
 import styles from './App.module.css'
 import { useAuth } from './auth/context'
 import { Button } from './components/Button'
@@ -7,15 +7,36 @@ import { Gallery } from './components/Gallery'
 import { PhotoMap } from './components/PhotoMap'
 import { Settings } from './components/Settings'
 import { Sidebar } from './components/Sidebar'
+import { ViewManager } from './components/ViewManager'
+import type { DriveFolder } from './drive/api'
 import { useConnectedFolders } from './drive/connectedFolders'
 import {
-    buildFolderIndex,
-    descendantIds,
-    folderChain,
+  buildFolderIndex,
+  descendantIds,
+  folderChain,
 } from './drive/folderTree'
-import { useFolders, useUserEmail } from './drive/hooks'
-import type { DriveFolder } from './drive/api'
-import { parseRoute, paths, useNavigate, usePathname } from './router'
+import {
+  useFolders,
+  usePhotoCounts,
+  usePhotoLocations,
+  useTags,
+  useUserEmail,
+} from './drive/hooks'
+import { pruneFilter, type TagFilter } from './drive/tagFilter'
+import { useViews, type CustomView } from './drive/views'
+import {
+  parseRoute,
+  paths,
+  useFilters,
+  useNavigate,
+  usePathname,
+} from './router'
+
+const ownFilter = (view: CustomView): TagFilter => ({
+  tags: view.tags,
+  exclude: view.exclude,
+  match: view.match,
+})
 
 function SignIn() {
   const { signIn, error, isConfigured } = useAuth()
@@ -33,7 +54,9 @@ function SignIn() {
       </p>
       <Button
         rounded
-        className={styles.signInButton} onClick={() => void signIn()}>
+        className={styles.signInButton}
+        onClick={() => void signIn()}
+      >
         Sign in with Google
       </Button>
       {!isConfigured && (
@@ -53,6 +76,14 @@ function Viewer({ token }: { token: string }) {
   const folders = useFolders(token)
   const email = useUserEmail(token)
   const connected = useConnectedFolders()
+  const { data: allTags } = useTags()
+  const [selectedFilter, setSelectedFilter] = useFilters()
+  const { views, saveView, removeView } = useViews()
+  // Tags that no longer exist (e.g. a stale link, or their last photo was untagged) are ignored.
+  const activeFilter = useMemo(() => {
+    if (!allTags) return selectedFilter
+    return pruneFilter(selectedFilter, new Set(allTags.map((tag) => tag.name)))
+  }, [allTags, selectedFilter])
 
   const index = useMemo(
     () => (folders.data ? buildFolderIndex(folders.data) : undefined),
@@ -76,6 +107,10 @@ function Viewer({ token }: { token: string }) {
       ]
     })
   }, [index, connected.entries])
+
+  useEffect(() => {
+    if (activeFilter !== selectedFilter) setSelectedFilter(activeFilter)
+  }, [activeFilter, selectedFilter, setSelectedFilter])
 
   const hasConnected = albums ? albums.length > 0 : connected.entries.length > 0
   const folderId = route.name === 'album' ? route.folderId : null
@@ -113,7 +148,12 @@ function Viewer({ token }: { token: string }) {
     folderId === null
       ? undefined
       : navItems?.find((item) => item.folder.id === folderId)
-  const isGalleryRoute = route.name === 'gallery' || route.name === 'album'
+  const activeView =
+    route.name === 'view'
+      ? views.find((view) => view.id === route.viewId)
+      : undefined
+  const isGalleryRoute =
+    route.name === 'gallery' || route.name === 'album' || route.name === 'view'
   const needsFolders = isGalleryRoute || route.name === 'map'
   const foldersPath = route.name === 'folders' ? route.path : undefined
   const foldersUrl = foldersPath ? paths.foldersAt(foldersPath) : undefined
@@ -132,6 +172,8 @@ function Viewer({ token }: { token: string }) {
       navigate(paths.folders, { replace: true })
     else if (route.name === 'album' && navItems && !activeAlbum)
       navigate(paths.gallery, { replace: true })
+    else if (route.name === 'view' && !activeView)
+      navigate(paths.gallery, { replace: true })
     else if (foldersUrl && index && managerFolderId !== null) {
       // Fix stale or hand-edited folder paths.
       const target = canonicalFoldersUrl ?? paths.folders
@@ -143,6 +185,7 @@ function Viewer({ token }: { token: string }) {
     hasConnected,
     navItems,
     activeAlbum,
+    activeView,
     foldersUrl,
     index,
     managerFolderId,
@@ -162,6 +205,49 @@ function Viewer({ token }: { token: string }) {
         index.byId.get(a)!.path.localeCompare(index.byId.get(b)!.path),
       )
   }, [index, activeAlbum, allIds])
+  // Each view's folders (with everything inside, only those enabled in Manage folders),
+  // or every enabled folder when it picked none; plus the filter of its own tags.
+  const viewSets = useMemo(() => {
+    if (!index) return []
+    const enabled = new Set(allIds)
+    return views.map((view) => {
+      const ids = new Set<string>()
+      if (view.folders.length === 0) for (const id of allIds) ids.add(id)
+      else
+        for (const { id } of view.folders)
+          if (index.byId.has(id))
+            for (const d of descendantIds(index, id))
+              if (enabled.has(d)) ids.add(d)
+      return {
+        view,
+        folderIds: [...ids].filter(
+          (id) => (index.byId.get(id)?.photoCount ?? 0) > 0,
+        ),
+        filters: [ownFilter(view)],
+      }
+    })
+  }, [views, index, allIds])
+  const viewCounts = usePhotoCounts(viewSets)
+  // Photos with a location in the enabled folders, whatever the sidebar filter.
+  const locations = usePhotoLocations(allIds)
+  const viewItems = useMemo(
+    () =>
+      viewSets.map(({ view }, i) => ({
+        id: view.id,
+        name: view.name,
+        count: viewCounts?.[i],
+      })),
+    [viewSets, viewCounts],
+  )
+  const viewIds = useMemo(
+    () =>
+      viewSets.find((set) => set.view.id === activeView?.id)?.folderIds ?? [],
+    [viewSets, activeView],
+  )
+  const filters = useMemo<TagFilter[]>(
+    () => (activeView ? [ownFilter(activeView), activeFilter] : [activeFilter]),
+    [activeView, activeFilter],
+  )
   const allPhotosCount = useMemo(() => {
     if (!index || !albums) return undefined
     return allIds.reduce(
@@ -177,9 +263,13 @@ function Viewer({ token }: { token: string }) {
         ? 'Map'
         : route.name === 'folders'
           ? 'Manage folders'
-          : activeAlbum
-            ? activeAlbum.folder.path
-            : 'All photos'
+          : route.name === 'views'
+            ? 'Manage views'
+            : activeView
+              ? activeView.name
+              : activeAlbum
+                ? activeAlbum.folder.path
+                : 'All photos'
 
   useEffect(() => {
     document.title = `${title} \u2013 Drive Photos`
@@ -197,11 +287,22 @@ function Viewer({ token }: { token: string }) {
           navigate(id === null ? paths.gallery : paths.album(id))
         }}
         email={email.data}
-        isGalleryActive={isGalleryRoute}
-        isSettingsOpen={route.name === 'settings'}
+        isGalleryActive={isGalleryRoute && !activeView}
+        isSettingsOpen={
+          route.name === 'settings' ||
+          route.name === 'views' ||
+          route.name === 'folders'
+        }
         onOpenSettings={() => navigate(paths.settings)}
+        mapCount={locations.isLoading ? undefined : locations.data.length}
         isMapActive={route.name === 'map'}
         onOpenMap={() => navigate(paths.map)}
+        tags={allTags}
+        filter={activeFilter}
+        onFilterChange={setSelectedFilter}
+        views={viewItems}
+        selectedViewId={activeView?.id ?? null}
+        onSelectView={(id) => navigate(paths.view(id))}
       />
       <main className={styles.content}>
         <h2
@@ -214,6 +315,24 @@ function Viewer({ token }: { token: string }) {
             onSignOut={() => void signOut()}
             onManageFolders={() => navigate(paths.folders)}
             connectedCount={albums?.length ?? connected.entries.length}
+            onManageViews={() => navigate(paths.views)}
+            viewCount={views.length}
+          />
+        ) : route.name === 'views' ? (
+          <ViewManager
+            views={views}
+            editingId={route.viewId}
+            folders={navItems}
+            tags={allTags}
+            onEdit={(id) =>
+              navigate(id === undefined ? paths.views : paths.editView(id))
+            }
+            onSave={(view) => {
+              saveView(view)
+              navigate(paths.views)
+            }}
+            onRemove={removeView}
+            onOpen={(id) => navigate(paths.view(id))}
           />
         ) : route.name === 'folders' ? (
           <FolderManager
@@ -228,15 +347,25 @@ function Viewer({ token }: { token: string }) {
             onDone={() => navigate(paths.gallery)}
           />
         ) : albums && route.name === 'map' ? (
-          <PhotoMap token={token} folderIds={allIds} folders={index?.byId} />
+          <PhotoMap
+            folderIds={allIds}
+            folders={index?.byId}
+            filters={filters}
+          />
         ) : albums ? (
           <Gallery
-            key={activeAlbum?.folder.id ?? 'all'}
+            key={
+              activeView
+                ? `view:${activeView.id}`
+                : (activeAlbum?.folder.id ?? 'all')
+            }
             token={token}
-            folderIds={galleryIds}
-            grouped={activeAlbum !== undefined}
+            folderIds={activeView ? viewIds : galleryIds}
+            grouped={activeAlbum !== undefined && !activeView}
             folders={index?.byId}
             rootPath={activeAlbum?.folder.path}
+            filters={filters}
+            emptyMessage={activeView ? 'No photos in this view.' : undefined}
           />
         ) : (
           <p>Loading&hellip;</p>

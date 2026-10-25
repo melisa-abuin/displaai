@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { clearIndex } from '../drive/libraryStore'
 import { AuthContext } from './context'
 import { requestAccessToken, revokeAccessToken, type AccessToken } from './gis'
 
@@ -9,7 +10,7 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 function loadStoredToken(): AccessToken | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const token = JSON.parse(raw) as AccessToken
     return token.expiresAt > Date.now() ? token : null
@@ -25,10 +26,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token) {
-      sessionStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY)
       return
     }
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(token))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(token))
     const timeout = setTimeout(
       () => setToken(null),
       Math.max(token.expiresAt - Date.now(), 0),
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const current = token
     setToken(null)
     queryClient.clear()
+    await clearIndex()
     if (current) await revokeAccessToken(current.value)
   }, [token, queryClient])
 
