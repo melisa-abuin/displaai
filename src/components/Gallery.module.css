@@ -143,6 +143,25 @@
     center / 100% no-repeat;
 }
 
+.videoBadge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #6b6b75;
+  color: #fff;
+}
+
+/* Leaves the corner to the selection check. */
+.videoBadgeSelecting {
+  right: 34px;
+}
+
 .withPanel {
   margin-right: 340px;
 }

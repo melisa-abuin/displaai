@@ -11,25 +11,25 @@ import { ViewManager } from './components/ViewManager'
 import type { DriveFolder } from './drive/api'
 import { useConnectedFolders } from './drive/connectedFolders'
 import {
-  buildFolderIndex,
-  descendantIds,
-  folderChain,
+    buildFolderIndex,
+    descendantIds,
+    folderChain,
 } from './drive/folderTree'
 import {
-  useFolders,
-  usePhotoCounts,
-  usePhotoLocations,
-  useTags,
-  useUserEmail,
+    useFolders,
+    usePhotoCounts,
+    usePhotoLocations,
+    useTags,
+    useUserEmail,
 } from './drive/hooks'
 import { pruneFilter, type TagFilter } from './drive/tagFilter'
 import { useViews, type CustomView } from './drive/views'
 import {
-  parseRoute,
-  paths,
-  useFilters,
-  useNavigate,
-  usePathname,
+    parseRoute,
+    paths,
+    useFilters,
+    useNavigate,
+    usePathname,
 } from './router'
 
 const ownFilter = (view: CustomView): TagFilter => ({
@@ -318,11 +318,35 @@ function Viewer({ token }: { token: string }) {
         onSelectView={(id) => navigate(paths.view(id))}
       />
       <main className={styles.content}>
-        <h2
-          className={`${styles.heading} ${route.name === 'folders' ? styles.headingPrimary : ''}`}
-        >
-          {title}
-        </h2>
+        <div className={styles.headingRow}>
+          {(route.name === 'folders' || route.name === 'views') && (
+            <button
+              type="button"
+              className={styles.backArrow}
+              aria-label="Back to settings"
+              onClick={() => navigate(paths.settings)}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M19 12H5M11 6l-6 6 6 6" />
+              </svg>
+            </button>
+          )}
+          <h2
+            className={`${styles.heading} ${route.name === 'folders' ? styles.headingPrimary : ''}`}
+          >
+            {title}
+          </h2>
+        </div>
         {route.name === 'settings' ? (
           <Settings
             onSignOut={() => void signOut()}

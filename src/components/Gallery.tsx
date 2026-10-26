@@ -5,6 +5,7 @@ import { usePhotos } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
 import { isEmptyFilter, type TagFilter } from '../drive/tagFilter'
 import { formatNumber } from '../format'
+import { mediaKindOf } from '../mediaKind'
 import { monthOf, SORT_OPTIONS, sortByDate } from '../photoSort'
 import { useGallerySort, useTimeline } from '../settings'
 import { Button } from './Button'
@@ -168,6 +169,16 @@ function PhotoRow({
               />
             ) : (
               <span className={styles.noThumb}>{photo.name}</span>
+            )}
+            {mediaKindOf(photo) === 'videos' && (
+              <span
+                className={`${styles.videoBadge} ${isSelecting ? styles.videoBadgeSelecting : ''}`}
+                aria-hidden="true"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 4v16l13-8z" />
+                </svg>
+              </span>
             )}
             {isSelecting && (
               <span

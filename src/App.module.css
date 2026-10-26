@@ -40,8 +40,15 @@
 }
 
 .heading {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 1.5rem;
+}
+
+.headingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .headingPrimary {
@@ -50,4 +57,18 @@
 
 .back {
   margin-bottom: 12px;
+}
+
+.backArrow {
+  display: flex;
+  padding: 4px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.backArrow:hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
 }
