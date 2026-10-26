@@ -5,9 +5,11 @@ import { usePhotos } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
 import { isEmptyFilter, type TagFilter } from '../drive/tagFilter'
 import { formatNumber } from '../format'
-import { monthOf, SORT_OPTIONS, sortByDate, type SortOrder } from '../photoSort'
-import { useGallerySort } from '../settings'
+import { mediaKindOf } from '../mediaKind'
+import { monthOf, SORT_OPTIONS, sortByDate } from '../photoSort'
+import { useGallerySort, useTimeline } from '../settings'
 import { Button } from './Button'
+import { Dropdown } from './Dropdown'
 import styles from './Gallery.module.css'
 import { Lightbox } from './Lightbox'
 import { TagEditor } from './TagEditor'
@@ -168,6 +170,16 @@ function PhotoRow({
             ) : (
               <span className={styles.noThumb}>{photo.name}</span>
             )}
+            {mediaKindOf(photo) === 'videos' && (
+              <span
+                className={`${styles.videoBadge} ${isSelecting ? styles.videoBadgeSelecting : ''}`}
+                aria-hidden="true"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 4v16l13-8z" />
+                </svg>
+              </span>
+            )}
             {isSelecting && (
               <span
                 className={`${styles.check} ${isSelected ? styles.checkOn : ''}`}
@@ -229,6 +241,7 @@ export function Gallery({
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const [containerRef, columns] = useColumns()
   const [sort, setSort] = useGallerySort()
+  const [showTimeline] = useTimeline()
   const listRef = useRef<HTMLDivElement | null>(null)
   const virtuoso = useRef<VirtuosoHandle>(null)
   // The list's width (minus the timeline gutter) decides the column count.
@@ -269,6 +282,14 @@ export function Gallery({
       if (!folderId) {
         // One mixed list: ordered by date, with a heading for every month.
         const dated = sortByDate(section.photos, (entry) => entry.photo, sort)
+        if (!showTimeline) {
+          // Without the timeline the photos flow as one continuous grid.
+          for (let i = 0; i < dated.length; i += columns) {
+            const entries = dated.slice(i, i + columns).map(({ item }) => item)
+            result.push({ kind: 'row', key: entries[0].key, entries })
+          }
+          continue
+        }
         const keys = dated.map(({ time }) => monthOf(time))
         let start = 0
         while (start < dated.length) {
@@ -311,7 +332,7 @@ export function Gallery({
       }
     }
     return { items: result, months: monthMarks }
-  }, [sections, collapsed, columns, sort])
+  }, [sections, collapsed, columns, sort, showTimeline])
   const allPhotos = useMemo(() => {
     const byId = new Map<string, DrivePhoto>()
     for (const page of data.pages)
@@ -368,25 +389,22 @@ export function Gallery({
     )
 
   const isMixedByDate = sections[0].folderId === undefined
-  const hasTimeline = months.length > 1
+  const hasTimeline = showTimeline && months.length > 1
   const hasPanel = isSelecting && selectedPhotos.length > 0
   const allSelected = selectedPhotos.length === allPhotos.length
   return (
     <div className={hasPanel ? styles.withPanel : undefined}>
-      <div className={styles.toolbar}>
+      <div
+        className={`${styles.toolbar} ${hasTimeline ? styles.withTimeline : ''}`}
+      >
         {!isMixedByDate ? null : (
           <label className={styles.sort}>
             <span>Sort by</span>
-            <select
+            <Dropdown
+              options={SORT_OPTIONS}
               value={sort}
-              onChange={(event) => setSort(event.target.value as SortOrder)}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onValueChange={setSort}
+            />
           </label>
         )}
         {isSelecting ? (

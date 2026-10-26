@@ -1,15 +1,16 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import {
-  DEFAULT_MEDIA_KINDS,
-  isMediaKind,
-  MEDIA_KINDS,
-  type MediaKind,
+    DEFAULT_MEDIA_KINDS,
+    isMediaKind,
+    MEDIA_KINDS,
+    type MediaKind,
 } from './mediaKind'
 import { DEFAULT_SORT, isSortOrder, type SortOrder } from './photoSort'
 
 const LOCAL_AI_KEY = 'drive-photos:local-ai'
 const SORT_KEY = 'drive-photos:sort'
 const MEDIA_KINDS_KEY = 'drive-photos:media-kinds'
+const TIMELINE_KEY = 'drive-photos:timeline'
 
 const listeners = new Set<() => void>()
 // Used when localStorage is unavailable, so settings still last for the session.
@@ -58,6 +59,17 @@ export function useGallerySort() {
   const sort: SortOrder = isSortOrder(stored) ? stored : DEFAULT_SORT
   const setSort = useCallback((value: SortOrder) => write(SORT_KEY, value), [])
   return [sort, setSort] as const
+}
+
+/** Whether the gallery's time scrubber is shown, persisted locally. On by default. */
+export function useTimeline() {
+  const visible =
+    useSyncExternalStore(subscribe, () => read(TIMELINE_KEY)) !== 'false'
+  const setVisible = useCallback(
+    (value: boolean) => write(TIMELINE_KEY, String(value)),
+    [],
+  )
+  return [visible, setVisible] as const
 }
 
 /** Called whenever any setting changes; returns the unsubscribe function. */

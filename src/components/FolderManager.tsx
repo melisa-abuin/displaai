@@ -113,7 +113,7 @@ export function FolderManager({
           <span>Source</span>
           <span>Import folder</span>
           <span>Include subfolders</span>
-          <span>Peek</span>
+          <span>Actions</span>
           <span className={styles.countHeader}>Pictures found</span>
         </div>
       )}
@@ -175,6 +175,21 @@ export function FolderManager({
                   disabled={folder.totalCount === 0}
                   onClick={() => onPeek(folder.id)}
                 >
+                  <svg
+                    className={styles.peekIcon}
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M20 20l-4-4" />
+                  </svg>
                   Peek
                 </Button>
                 <span className={styles.count}>

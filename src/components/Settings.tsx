@@ -1,7 +1,7 @@
 import { formatNumber } from '../format'
-import { reloadApp } from '../queryClient'
 import { MEDIA_KINDS } from '../mediaKind'
-import { useLocalAi, useMediaKinds } from '../settings'
+import { reloadApp } from '../queryClient'
+import { useLocalAi, useMediaKinds, useTimeline } from '../settings'
 import { Button } from './Button'
 import styles from './Settings.module.css'
 import { Switch } from './Switch'
@@ -23,6 +23,7 @@ export function Settings({
 }: SettingsProps) {
   const [localAi, setLocalAi] = useLocalAi()
   const [mediaKinds, setMediaKinds] = useMediaKinds()
+  const [timeline, setTimeline] = useTimeline()
   return (
     <div className={styles.settings}>
       <section aria-labelledby="settings-folders">
@@ -31,7 +32,9 @@ export function Settings({
         </h3>
         <div className={styles.row}>
           <span>{formatNumber(connectedCount)} connected</span>
-          <Button onClick={onManageFolders}>Manage folders</Button>
+          <Button small onClick={onManageFolders}>
+            Manage folders
+          </Button>
         </div>
       </section>
 
@@ -41,7 +44,9 @@ export function Settings({
         </h3>
         <div className={styles.row}>
           <span>{formatNumber(viewCount)} custom</span>
-          <Button onClick={onManageViews}>Manage views</Button>
+          <Button small onClick={onManageViews}>
+            Manage views
+          </Button>
         </div>
         <p className={styles.hint}>
           Saved galleries in the sidebar that combine folders with tags to
@@ -74,6 +79,23 @@ export function Settings({
           Choose what shows up in the gallery, views and map. Images covers
           every picture format except GIFs. Videos are downloaded when opened
           and can't be edited.
+        </p>
+      </section>
+
+      <section aria-labelledby="settings-timeline">
+        <h3 id="settings-timeline" className={styles.sectionTitle}>
+          Timeline
+        </h3>
+        <div className={styles.row}>
+          <span>Show timeline</span>
+          <Switch
+            aria-label="Show timeline"
+            checked={timeline}
+            onChange={(e) => setTimeline(e.target.checked)}
+          />
+        </div>
+        <p className={styles.hint}>
+          A bar next to the gallery to jump to a month or year.
         </p>
       </section>
 
