@@ -11,25 +11,25 @@ import { ViewManager } from './components/ViewManager'
 import type { DriveFolder } from './drive/api'
 import { useConnectedFolders } from './drive/connectedFolders'
 import {
-    buildFolderIndex,
-    descendantIds,
-    folderChain,
+  buildFolderIndex,
+  descendantIds,
+  folderChain,
 } from './drive/folderTree'
 import {
-    useFolders,
-    usePhotoCounts,
-    usePhotoLocations,
-    useTags,
-    useUserEmail,
+  useFolders,
+  usePhotoCounts,
+  usePhotoLocations,
+  useTags,
+  useUserEmail,
 } from './drive/hooks'
 import { pruneFilter, type TagFilter } from './drive/tagFilter'
 import { useViews, type CustomView } from './drive/views'
 import {
-    parseRoute,
-    paths,
-    useFilters,
-    useNavigate,
-    usePathname,
+  parseRoute,
+  paths,
+  useFilters,
+  useNavigate,
+  usePathname,
 } from './router'
 
 const ownFilter = (view: CustomView): TagFilter => ({
