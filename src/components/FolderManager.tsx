@@ -98,7 +98,14 @@ export function FolderManager({
         </nav>
       )}
 
-      {isLoading && <p className={styles.status}>Loading folders&hellip;</p>}
+      {isLoading && (
+        <div className={styles.status} role="status">
+          <div className={styles.loader}>
+            <img src={`${import.meta.env.BASE_URL}loader.gif`} alt="" />
+            <p>Loading folders&hellip;</p>
+          </div>
+        </div>
+      )}
       {error && (
         <p role="alert" className={styles.status}>
           Could not load folders.

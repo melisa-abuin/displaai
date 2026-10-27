@@ -438,7 +438,10 @@ function Viewer({ token }: { token: string }) {
             emptyMessage={activeView ? 'No photos in this view.' : undefined}
           />
         ) : (
-          <p>Loading&hellip;</p>
+          <div className={styles.loader} role="status">
+            <img src={`${import.meta.env.BASE_URL}loader.gif`} alt="" />
+            <p>Loading&hellip;</p>
+          </div>
         )}
       </main>
     </div>

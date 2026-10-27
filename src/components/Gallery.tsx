@@ -370,7 +370,15 @@ export function Gallery({
     })
   }, [])
 
-  if (isLoading) return <p className={styles.status}>Loading photos&hellip;</p>
+  if (isLoading)
+    return (
+      <div className={styles.status} role="status">
+        <div className={styles.loader}>
+          <img src={`${import.meta.env.BASE_URL}loader.gif`} alt="" />
+          <p>Loading photos&hellip;</p>
+        </div>
+      </div>
+    )
   if (error)
     return (
       <p role="alert" className={styles.status}>
