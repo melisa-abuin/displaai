@@ -44,7 +44,7 @@ function SignIn() {
     <main className={styles.signIn}>
       <img
         className={styles.logo}
-        src={`${import.meta.env.BASE_URL}loog.png`}
+        src={`${import.meta.env.BASE_URL}logo.png`}
         alt=""
       />
       <h1>Drive Photos Visualizer</h1>
