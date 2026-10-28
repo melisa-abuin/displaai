@@ -429,9 +429,7 @@ export function Sidebar({
           src={`${import.meta.env.BASE_URL}logo.png`}
           alt=""
         />
-        <h1 className={styles.title} title="Drive Photos Visualizer">
-          DPV
-        </h1>
+        <h1 className={styles.title}>Displai</h1>
       </div>
       <nav className={styles.nav}>
         <button

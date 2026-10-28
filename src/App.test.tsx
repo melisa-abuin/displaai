@@ -79,12 +79,12 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', { name: 'All photos' }),
     ).toBeInTheDocument()
-    expect(document.title).toBe('All photos \u2013 Drive Photos')
+    expect(document.title).toBe('All photos \u2013 Displai')
     await userEvent.click(screen.getByRole('button', { name: 'Holidays 2' }))
     expect(
       await screen.findByRole('heading', { name: 'Trips / Holidays' }),
     ).toBeInTheDocument()
-    expect(document.title).toBe('Trips / Holidays \u2013 Drive Photos')
+    expect(document.title).toBe('Trips / Holidays \u2013 Displai')
     expect(window.location.pathname).toBe('/albums/f1')
     vi.unstubAllGlobals()
   })

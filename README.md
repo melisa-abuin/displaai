@@ -1,7 +1,7 @@
 <div align="center">
   <img src="public/logo.png" alt="" width="120" />
-  <h1>Drive Photos Visualizer</h1>
-  <p>Browse, map, tag and edit the photos in your Google Drive, right in the browser.</p>
+  <h1>Displai</h1>
+  <p>Browse, map, tag and edit your Google Drive photos, right in the browser.</p>
   <p>
     <a href="https://melisa-abuin.github.io/drive-photos-displayer/"><strong>Visit the site &rarr;</strong></a>
   </p>
