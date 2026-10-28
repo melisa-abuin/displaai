@@ -8,6 +8,14 @@
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Space taken by the mobile bottom bar; 0 when the sidebar is shown. */
+  --bottom-bar-height: 0px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --bottom-bar-height: calc(60px + env(safe-area-inset-bottom));
+  }
 }
 
 * {

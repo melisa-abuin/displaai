@@ -409,14 +409,13 @@ export function Gallery({
         className={`${styles.toolbar} ${hasTimeline ? styles.withTimeline : ''}`}
       >
         {!isMixedByDate ? null : (
-          <label className={styles.sort}>
-            <span>Sort by</span>
-            <Dropdown
-              options={SORT_OPTIONS}
-              value={sort}
-              onValueChange={setSort}
-            />
-          </label>
+          <Dropdown
+            className={styles.sort}
+            aria-label="Sort by"
+            options={SORT_OPTIONS}
+            value={sort}
+            onValueChange={setSort}
+          />
         )}
         {isSelecting ? (
           <>

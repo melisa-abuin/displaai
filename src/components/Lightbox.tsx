@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-    fetchPhotoBlob,
-    isHeic,
-    normalizeTag,
-    photoTags,
-    thumbnailUrl,
-    type DriveFolder,
-    type DrivePhoto,
+  fetchPhotoBlob,
+  isHeic,
+  normalizeTag,
+  photoTags,
+  thumbnailUrl,
+  type DriveFolder,
+  type DrivePhoto,
 } from '../drive/api'
 import { useHeicTransform, useUpdateTags } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
@@ -21,6 +21,17 @@ import styles from './Lightbox.module.css'
 import { RegionBoxes } from './RegionBoxes'
 import { Switch } from './Switch'
 import { TagEditor } from './TagEditor'
+
+const ICON = {
+  width: 24,
+  height: 24,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+} as const
 
 /** Where an element sits inside its parent, including any transform, kept current on resize. */
 function useRectInParent() {
@@ -49,6 +60,8 @@ function useRectInParent() {
   }, [])
   return [ref, rect] as const
 }
+
+type MobilePanel = 'info' | 'tags'
 
 export function Lightbox({
   token,
@@ -107,6 +120,8 @@ export function Lightbox({
   const showFaces = localAi && faceBoxes
   const showObjects = localAi && objectBoxes
   const [editing, setEditing] = useState(false)
+  // The bottom drawer open on small screens; on wide ones the side panel shows everything.
+  const [panel, setPanel] = useState<MobilePanel | null>(null)
   const [imageRef, imageRect] = useRectInParent()
   const updateTags = useUpdateTags(token)
   const faces = useFaces(token, photo.id, showFaces)
@@ -136,6 +151,15 @@ export function Lightbox({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = previous
+    }
+  }, [])
+
   const folderId = photo.parents?.[0]
   const folderPath = folderId ? folders?.get(folderId)?.path : undefined
   const meta = photo.imageMediaMetadata
@@ -157,6 +181,8 @@ export function Lightbox({
     ],
     ['File size', formatBytes(photo.size)],
   ].filter((row): row is [string, string] => Boolean(row[1]))
+  const togglePanel = (next: MobilePanel) =>
+    setPanel((current) => (current === next ? null : next))
 
   return (
     <div
@@ -165,7 +191,10 @@ export function Lightbox({
       aria-modal="true"
       aria-label={photo.name}
     >
-      <div className={styles.stage} onClick={onClose}>
+      <div
+        className={styles.stage}
+        onClick={panel ? () => setPanel(null) : onClose}
+      >
         {error || videoFailed ? (
           <p role="alert">Could not load {isVideo ? 'video' : 'image'}.</p>
         ) : (
@@ -245,141 +274,205 @@ export function Lightbox({
           </div>
         )}
       </div>
-      <aside className={styles.info} aria-label="Photo info">
+      <button
+        type="button"
+        className={`${styles.close} ${styles.mobileClose}`}
+        aria-label="Close"
+        onClick={onClose}
+      >
+        &times;
+      </button>
+      <aside
+        className={styles.info}
+        aria-label="Photo info"
+        data-panel={panel ?? undefined}
+      >
         <button
           type="button"
-          className={styles.close}
+          className={`${styles.close} ${styles.desktopClose}`}
           aria-label="Close"
           onClick={onClose}
         >
           &times;
         </button>
-        <h2 className={styles.name}>{photo.name}</h2>
-        {folderId && (
-          <div className={styles.location}>
-            <span className={styles.path} title={folderPath}>
-              {folderPath ?? 'Unknown folder'}
-            </span>
-            <a
-              className={styles.open}
-              href={`https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open folder in Google Drive"
-              title="Open folder in Google Drive"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+        <span className={styles.handle} aria-hidden="true" />
+        <div className={styles.infoGroup}>
+          <h2 className={styles.name}>{photo.name}</h2>
+          {folderId && (
+            <div className={styles.location}>
+              <span className={styles.path} title={folderPath}>
+                {folderPath ?? 'Unknown folder'}
+              </span>
+              <a
+                className={styles.open}
+                href={`https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open folder in Google Drive"
+                title="Open folder in Google Drive"
               >
-                <path d="M14 3h7v7M10 14 21 3M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
-              </svg>
-              Open
-            </a>
-          </div>
-        )}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M14 3h7v7M10 14 21 3M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+                </svg>
+                Open
+              </a>
+            </div>
+          )}
+        </div>
         {!isVideo && (
           <Button className={styles.edit} onClick={() => setEditing(true)}>
             Edit photo
           </Button>
         )}
-        {details.length > 0 && (
-          <dl className={styles.details}>
-            {details.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
+        <div className={styles.infoGroup}>
+          {details.length > 0 && (
+            <dl className={styles.details}>
+              {details.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {localAi && (
+            <>
+              <h3 className={styles.heading}>Smart analysis</h3>
+              <div className={styles.option}>
+                <span>Face boxes</span>
+                <Switch
+                  aria-label="Face boxes"
+                  checked={showFaces}
+                  onChange={(e) => setShowFaces(e.target.checked)}
+                />
               </div>
-            ))}
-          </dl>
-        )}
-        {localAi && (
-          <>
-            <h3 className={styles.heading}>Smart analysis</h3>
-            <div className={styles.option}>
-              <span>Face boxes</span>
-              <Switch
-                aria-label="Face boxes"
-                checked={showFaces}
-                onChange={(e) => setShowFaces(e.target.checked)}
-              />
-            </div>
-            {showFaces && (
-              <p className={styles.note} role="status">
-                {faces.error
-                  ? `Face detection failed: ${faces.error.message}`
-                  : faces.data
-                    ? `${faces.data.faces.length} ${faces.data.faces.length === 1 ? 'face' : 'faces'} found`
-                    : 'Detecting faces…'}
-              </p>
-            )}
-            <div className={styles.option}>
-              <span>Objects &amp; labels</span>
-              <Switch
-                aria-label="Objects and labels"
-                checked={showObjects}
-                onChange={(e) => setShowObjects(e.target.checked)}
-              />
-            </div>
-            {showObjects && (
-              <div className={styles.note} role="status">
-                {scene.error ? (
-                  `Analysis failed: ${scene.error.message}`
-                ) : !scene.data ? (
-                  'Analysing…'
-                ) : (
-                  <>
-                    <p>
-                      {scene.data.objects.length}{' '}
-                      {scene.data.objects.length === 1 ? 'object' : 'objects'}{' '}
-                      found
-                    </p>
-                    {scene.data.labels.length > 0 && (
-                      <ul className={styles.labels} aria-label="Suggested tags">
-                        {scene.data.labels.map((label) => {
-                          const tag = normalizeTag(label.name)
-                          return (
-                            <li key={label.name}>
-                              <button
-                                type="button"
-                                title={`${Math.round(label.score * 100)}% - add as tag`}
-                                disabled={
-                                  !tag ||
-                                  photoTags(photo).includes(tag) ||
-                                  updateTags.isPending
-                                }
-                                onClick={() =>
-                                  tag &&
-                                  updateTags.mutate({
-                                    photoId: photo.id,
-                                    add: [tag],
-                                    remove: [],
-                                  })
-                                }
-                              >
-                                + {label.name}
-                              </button>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    )}
-                  </>
-                )}
+              {showFaces && (
+                <p className={styles.note} role="status">
+                  {faces.error
+                    ? `Face detection failed: ${faces.error.message}`
+                    : faces.data
+                      ? `${faces.data.faces.length} ${faces.data.faces.length === 1 ? 'face' : 'faces'} found`
+                      : 'Detecting faces…'}
+                </p>
+              )}
+              <div className={styles.option}>
+                <span>Objects &amp; labels</span>
+                <Switch
+                  aria-label="Objects and labels"
+                  checked={showObjects}
+                  onChange={(e) => setShowObjects(e.target.checked)}
+                />
               </div>
-            )}
-          </>
-        )}
-        <h3 className={styles.heading}>Tags</h3>{' '}
-        <TagEditor token={token} photos={[photo]} />
+              {showObjects && (
+                <div className={styles.note} role="status">
+                  {scene.error ? (
+                    `Analysis failed: ${scene.error.message}`
+                  ) : !scene.data ? (
+                    'Analysing…'
+                  ) : (
+                    <>
+                      <p>
+                        {scene.data.objects.length}{' '}
+                        {scene.data.objects.length === 1 ? 'object' : 'objects'}{' '}
+                        found
+                      </p>
+                      {scene.data.labels.length > 0 && (
+                        <ul
+                          className={styles.labels}
+                          aria-label="Suggested tags"
+                        >
+                          {scene.data.labels.map((label) => {
+                            const tag = normalizeTag(label.name)
+                            return (
+                              <li key={label.name}>
+                                <button
+                                  type="button"
+                                  title={`${Math.round(label.score * 100)}% - add as tag`}
+                                  disabled={
+                                    !tag ||
+                                    photoTags(photo).includes(tag) ||
+                                    updateTags.isPending
+                                  }
+                                  onClick={() =>
+                                    tag &&
+                                    updateTags.mutate({
+                                      photoId: photo.id,
+                                      add: [tag],
+                                      remove: [],
+                                    })
+                                  }
+                                >
+                                  + {label.name}
+                                </button>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <div className={styles.tags}>
+          <h3 className={styles.heading}>Tags</h3>{' '}
+          <TagEditor token={token} photos={[photo]} />
+        </div>
       </aside>
+      <nav className={styles.mobileBar} aria-label="Photo actions">
+        {!isVideo && (
+          <button
+            type="button"
+            className={styles.mobileAction}
+            aria-label="Edit photo"
+            onClick={() => {
+              setPanel(null)
+              setEditing(true)
+            }}
+          >
+            <svg {...ICON} aria-hidden="true">
+              <path d="M21.17 6.81a2.83 2.83 0 0 0-4-4L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z" />
+              <path d="m15 5 4 4" />
+            </svg>
+          </button>
+        )}
+        <button
+          type="button"
+          className={styles.mobileAction}
+          aria-label="Info"
+          aria-expanded={panel === 'info'}
+          onClick={() => togglePanel('info')}
+        >
+          <svg {...ICON} aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={styles.mobileAction}
+          aria-label="Tags"
+          aria-expanded={panel === 'tags'}
+          onClick={() => togglePanel('tags')}
+        >
+          <svg {...ICON} aria-hidden="true">
+            <path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42Z" />
+            <circle cx="7.5" cy="7.5" r="1.5" />
+          </svg>
+        </button>
+      </nav>
       {editing && (
         <PhotoEditor
           token={token}
