@@ -1,9 +1,9 @@
 <div align="center">
   <img src="public/logo.png" alt="" width="120" />
-  <h1>Displai</h1>
+  <h1>Displaai</h1>
   <p>Browse, map, tag and edit your Google Drive photos, right in the browser.</p>
   <p>
-    <a href="https://melisa-abuin.github.io/displai/"><strong>Visit the site &rarr;</strong></a>
+    <a href="https://melisa-abuin.github.io/displaai/"><strong>Visit the site &rarr;</strong></a>
   </p>
 </div>
 
@@ -54,12 +54,12 @@ To try a Pages-style build locally:
 
 ```sh
 # macOS / Linux
-URL_BASE_PATH=/displai/ pnpm build && pnpm preview
+URL_BASE_PATH=/displaai/ pnpm build && pnpm preview
 ```
 
 ```powershell
 # Windows (PowerShell)
-$env:URL_BASE_PATH = '/displai/'; pnpm build; pnpm preview
+$env:URL_BASE_PATH = '/displaai/'; pnpm build; pnpm preview
 ```
 
 ## Scripts

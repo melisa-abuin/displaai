@@ -47,7 +47,7 @@ function SignIn() {
         src={`${import.meta.env.BASE_URL}logo.png`}
         alt=""
       />
-      <h1>Displai</h1>
+      <h1>Displaai</h1>
       <p>
         Browse, map, tag and edit your Google Drive photos. Sign in with Google
         to start browsing.
@@ -296,7 +296,7 @@ function Viewer({ token }: { token: string }) {
                   : 'All photos'
 
   useEffect(() => {
-    document.title = `${title} \u2013 Displai`
+    document.title = `${title} \u2013 Displaai`
   }, [title])
 
   return (

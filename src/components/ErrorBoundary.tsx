@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
             Try clearing the cache and refreshing. If that fails, reveal the
             error details below and report them on{' '}
             <a
-              href="https://github.com/melisa-abuin/displai/issues"
+              href="https://github.com/melisa-abuin/displaai/issues"
               target="_blank"
               rel="noopener noreferrer"
             >
