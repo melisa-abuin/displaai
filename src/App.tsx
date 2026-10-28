@@ -47,10 +47,10 @@ function SignIn() {
         src={`${import.meta.env.BASE_URL}logo.png`}
         alt=""
       />
-      <h1>Drive Photos Visualizer</h1>
+      <h1>Displai</h1>
       <p>
-        The app to browse your Google Drive pictures in a smooth way. Sign in
-        with Google to start browsing.
+        Browse, map, tag and edit your Google Drive photos. Sign in with Google
+        to start browsing.
       </p>
       <Button
         rounded
@@ -296,7 +296,7 @@ function Viewer({ token }: { token: string }) {
                   : 'All photos'
 
   useEffect(() => {
-    document.title = `${title} \u2013 Drive Photos`
+    document.title = `${title} \u2013 Displai`
   }, [title])
 
   return (
