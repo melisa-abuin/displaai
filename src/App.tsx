@@ -114,6 +114,7 @@ function Viewer({ token }: { token: string }) {
 
   const hasConnected = albums ? albums.length > 0 : connected.entries.length > 0
   const folderId = route.name === 'album' ? route.folderId : null
+  const mapFolderId = route.name === 'map' ? (route.folderId ?? null) : null
   const peekFolder =
     route.name === 'peek' ? index?.byId.get(route.folderId) : undefined
 
@@ -150,6 +151,10 @@ function Viewer({ token }: { token: string }) {
     folderId === null
       ? undefined
       : navItems?.find((item) => item.folder.id === folderId)
+  const mapAlbum =
+    mapFolderId === null
+      ? undefined
+      : navItems?.find((item) => item.folder.id === mapFolderId)
   const activeView =
     route.name === 'view'
       ? views.find((view) => view.id === route.viewId)
@@ -175,6 +180,8 @@ function Viewer({ token }: { token: string }) {
       navigate(paths.folders, { replace: true })
     else if (route.name === 'album' && navItems && !activeAlbum)
       navigate(paths.gallery, { replace: true })
+    else if (mapFolderId !== null && navItems && !mapAlbum)
+      navigate(paths.map, { replace: true })
     else if (route.name === 'view' && !activeView)
       navigate(paths.gallery, { replace: true })
     else if (peekMissing) navigate(paths.folders, { replace: true })
@@ -189,6 +196,8 @@ function Viewer({ token }: { token: string }) {
     hasConnected,
     navItems,
     activeAlbum,
+    mapFolderId,
+    mapAlbum,
     activeView,
     peekMissing,
     foldersUrl,
@@ -271,7 +280,9 @@ function Viewer({ token }: { token: string }) {
     route.name === 'settings'
       ? 'Settings'
       : route.name === 'map'
-        ? 'Map'
+        ? mapAlbum
+          ? `Map: ${mapAlbum.folder.path}`
+          : 'Map'
         : route.name === 'folders'
           ? 'Manage folders'
           : route.name === 'peek'
@@ -346,6 +357,16 @@ function Viewer({ token }: { token: string }) {
           >
             {title}
           </h2>
+          {mapFolderId !== null && (
+            <Button
+              small
+              variant="outline"
+              className={styles.headingAction}
+              onClick={() => navigate(paths.map)}
+            >
+              See all
+            </Button>
+          )}
         </div>
         {route.name === 'settings' ? (
           <Settings
@@ -418,7 +439,7 @@ function Viewer({ token }: { token: string }) {
           )
         ) : albums && route.name === 'map' ? (
           <PhotoMap
-            folderIds={allIds}
+            folderIds={mapAlbum ? mapAlbum.ids : allIds}
             folders={index?.byId}
             filters={filters}
           />
@@ -436,6 +457,11 @@ function Viewer({ token }: { token: string }) {
             rootPath={activeAlbum?.folder.path}
             filters={filters}
             emptyMessage={activeView ? 'No photos in this view.' : undefined}
+            onShowOnMap={
+              activeAlbum && !activeView
+                ? () => navigate(paths.folderMap(activeAlbum.folder.id))
+                : undefined
+            }
           />
         ) : (
           <div className={styles.loader} role="status">
