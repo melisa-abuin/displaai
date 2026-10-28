@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { DriveFolder } from '../drive/api'
 import type { ConnectedFolder } from '../drive/connectedFolders'
 import { folderChain, type FolderIndex } from '../drive/folderTree'
@@ -35,6 +35,8 @@ export function FolderManager({
   onClear,
   onDone,
 }: FolderManagerProps) {
+  // The folder whose options drawer is open (small screens only).
+  const [optionsId, setOptionsId] = useState<string | null>(null)
   const byFolder = useMemo(
     () => new Map(entries.map((entry) => [entry.id, entry])),
     [entries],
@@ -69,6 +71,52 @@ export function FolderManager({
     }
     return undefined
   }
+
+  useEffect(() => {
+    if (optionsId === null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !e.defaultPrevented) setOptionsId(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [optionsId])
+
+  const importSwitch = (folder: DriveFolder) => {
+    const parent = coveredBy(folder.id)
+    return (
+      <Switch
+        aria-label={`Import ${folder.name}`}
+        checked={byFolder.has(folder.id) || !!parent}
+        disabled={!!parent}
+        onChange={(e) =>
+          onSetFolder(folder.id, e.target.checked ? false : null)
+        }
+      />
+    )
+  }
+
+  const subfoldersSwitch = (folder: DriveFolder, className?: string) => {
+    const entry = byFolder.get(folder.id)
+    const parent = coveredBy(folder.id)
+    return (
+      <Switch
+        className={className}
+        aria-label={`Include subfolders of ${folder.name}`}
+        checked={!!entry?.recursive || !!parent}
+        disabled={!entry || !!parent}
+        onChange={(e) => onSetFolder(folder.id, e.target.checked)}
+      />
+    )
+  }
+
+  const hasSubfolders = (folder: DriveFolder) =>
+    (index?.children.get(folder.id)?.length ?? 0) > 0
+  const sourceOf = (folder: DriveFolder) =>
+    folder.ownedByMe ? 'Own drive' : 'Shared with me'
+
+  const optionsFolder =
+    optionsId === null ? undefined : index?.byId.get(optionsId)
+  const optionsParent = optionsFolder && coveredBy(optionsFolder.id)
 
   return (
     <div className={styles.manager}>
@@ -127,9 +175,10 @@ export function FolderManager({
       {shown.length > 0 && (
         <ul className={styles.list}>
           {shown.map((folder) => {
-            const entry = byFolder.get(folder.id)
             const parent = coveredBy(folder.id)
             const subfolders = index?.children.get(folder.id) ?? []
+            const count =
+              subfolders.length > 0 ? folder.totalCount : folder.photoCount
             return (
               <li key={folder.id} className={styles.row}>
                 <div className={styles.nameCell}>
@@ -153,31 +202,24 @@ export function FolderManager({
                   {parent && (
                     <span className={styles.via}>via {parent.name}</span>
                   )}
+                  <span className={styles.meta}>
+                    {sourceOf(folder)} &middot; {formatNumber(count)} photos
+                    {parent && <> &middot; via {parent.name}</>}
+                  </span>
                 </div>
-                <span className={styles.source}>
-                  {folder.ownedByMe ? 'Own drive' : 'Shared with me'}
+                <span className={`${styles.source} ${styles.wideOnly}`}>
+                  {sourceOf(folder)}
                 </span>
-                <Switch
-                  aria-label={`Import ${folder.name}`}
-                  checked={!!entry || !!parent}
-                  disabled={!!parent}
-                  onChange={(e) =>
-                    onSetFolder(folder.id, e.target.checked ? false : null)
-                  }
-                />
+                {importSwitch(folder)}
                 {subfolders.length > 0 ? (
-                  <Switch
-                    aria-label={`Include subfolders of ${folder.name}`}
-                    checked={!!entry?.recursive || !!parent}
-                    disabled={!entry || !!parent}
-                    onChange={(e) => onSetFolder(folder.id, e.target.checked)}
-                  />
+                  subfoldersSwitch(folder, styles.wideOnly)
                 ) : (
-                  <span />
+                  <span className={styles.wideOnly} />
                 )}
                 <Button
                   small
                   variant="outline"
+                  className={styles.wideOnly}
                   aria-label={`Peek inside ${folder.name}`}
                   disabled={folder.totalCount === 0}
                   onClick={() => onPeek(folder.id)}
@@ -199,13 +241,28 @@ export function FolderManager({
                   </svg>
                   Peek
                 </Button>
-                <span className={styles.count}>
-                  {formatNumber(
-                    subfolders.length > 0
-                      ? folder.totalCount
-                      : folder.photoCount,
-                  )}
+                <span className={`${styles.count} ${styles.wideOnly}`}>
+                  {formatNumber(count)}
                 </span>
+                <button
+                  type="button"
+                  className={styles.more}
+                  aria-label={`Options for ${folder.name}`}
+                  aria-haspopup="dialog"
+                  onClick={() => setOptionsId(folder.id)}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                </button>
               </li>
             )
           })}
@@ -231,6 +288,62 @@ export function FolderManager({
           Done
         </Button>
       </div>
+
+      {optionsFolder && (
+        <>
+          <div
+            className={styles.sheetBackdrop}
+            aria-hidden="true"
+            onClick={() => setOptionsId(null)}
+          />
+          <section
+            className={styles.sheet}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Options for ${optionsFolder.name}`}
+          >
+            <span className={styles.handle} aria-hidden="true" />
+            <h3 className={styles.sheetTitle}>{optionsFolder.name}</h3>
+            <p className={styles.sheetMeta}>
+              {sourceOf(optionsFolder)} &middot;{' '}
+              {formatNumber(
+                hasSubfolders(optionsFolder)
+                  ? optionsFolder.totalCount
+                  : optionsFolder.photoCount,
+              )}{' '}
+              photos
+            </p>
+            <div className={styles.option}>
+              <span>
+                Import folder
+                {optionsParent && (
+                  <span className={styles.optionNote}>
+                    Included via {optionsParent.name}
+                  </span>
+                )}
+              </span>
+              {importSwitch(optionsFolder)}
+            </div>
+            {hasSubfolders(optionsFolder) && (
+              <div className={styles.option}>
+                <span>Include subfolders</span>
+                {subfoldersSwitch(optionsFolder)}
+              </div>
+            )}
+            <Button
+              variant="outline"
+              className={styles.sheetPeek}
+              disabled={optionsFolder.totalCount === 0}
+              onClick={() => {
+                setOptionsId(null)
+                onPeek(optionsFolder.id)
+              }}
+            >
+              Peek inside
+            </Button>
+          </section>
+        </>
+      )}
     </div>
   )
 }
