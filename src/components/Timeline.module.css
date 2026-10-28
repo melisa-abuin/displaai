@@ -2,7 +2,7 @@
   position: fixed;
   top: 72px;
   right: 0;
-  bottom: 16px;
+  bottom: calc(16px + var(--bottom-bar-height));
   z-index: 4;
   width: 44px;
   padding: 0 4px 0 0;

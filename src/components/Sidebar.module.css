@@ -101,7 +101,101 @@
 
 @media (max-width: 640px) {
   .sidebar {
-    width: 180px;
+    display: none;
+  }
+}
+
+.bottomBar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: var(--bottom-bar-height);
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  background: Canvas;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: none;
+  color: inherit;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.tab[aria-current='page'],
+.tab[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+  color: var(--primary);
+  opacity: 1;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  background: rgb(0 0 0 / 0.5);
+}
+
+.drawer {
+  position: fixed;
+  right: 0;
+  bottom: var(--bottom-bar-height);
+  left: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  max-height: 75svh;
+  padding: 0 8px 12px;
+  border-radius: 16px 16px 0 0;
+  background: Canvas;
+  box-shadow: 0 -4px 24px rgb(0 0 0 / 0.3);
+  animation: slideUp 0.2s ease-out;
+}
+
+.drawer .nav {
+  min-height: 0;
+}
+
+.drawerHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px 8px 12px;
+}
+
+.handle {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 30%, transparent);
+  transform: translateX(-50%);
+}
+
+.drawerTitle {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
   }
 }
 

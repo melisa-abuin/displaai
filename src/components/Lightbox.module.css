@@ -3,6 +3,7 @@
   inset: 0;
   z-index: 10;
   display: flex;
+  overscroll-behavior: contain;
   background: rgb(0 0 0 / 0.9);
   color: #fff;
 }
@@ -67,6 +68,7 @@
   position: relative;
   flex: 0 0 320px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 48px 20px 20px;
   border-left: 1px solid rgb(255 255 255 / 0.15);
   background: rgb(255 255 255 / 0.05);
@@ -144,22 +146,6 @@
   font-size: 1rem;
 }
 
-@media (max-width: 720px) {
-  .backdrop {
-    flex-direction: column;
-  }
-
-  .stage {
-    flex: 1 1 50%;
-  }
-
-  .info {
-    flex: 1 1 50%;
-    border-left: 0;
-    border-top: 1px solid rgb(255 255 255 / 0.15);
-  }
-}
-
 .overlay {
   position: absolute;
   pointer-events: none;
@@ -210,4 +196,107 @@
 .edit {
   width: 100%;
   margin-bottom: 16px;
+}
+
+/* Small screens get an action bar with bottom drawers instead of the side panel. */
+.mobileClose,
+.mobileBar,
+.handle {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .backdrop {
+    --action-bar-height: calc(56px + env(safe-area-inset-bottom));
+    flex-direction: column;
+  }
+
+  .stage {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .desktopClose,
+  .edit {
+    display: none;
+  }
+
+  .mobileClose {
+    display: block;
+    position: fixed;
+    z-index: 2;
+    text-shadow: 0 0 6px rgb(0 0 0 / 0.8);
+  }
+
+  .info {
+    display: none;
+    position: fixed;
+    right: 0;
+    bottom: var(--action-bar-height);
+    left: 0;
+    z-index: 1;
+    max-height: 60svh;
+    padding: 24px 16px 16px;
+    border: 0;
+    border-radius: 16px 16px 0 0;
+    background: #1b1b22;
+    box-shadow: 0 -4px 24px rgb(0 0 0 / 0.4);
+    animation: slideUp 0.2s ease-out;
+  }
+
+  .info[data-panel] {
+    display: block;
+  }
+
+  .info[data-panel='info'] .tags,
+  .info[data-panel='tags'] .infoGroup {
+    display: none;
+  }
+
+  .handle {
+    display: block;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.3);
+    transform: translateX(-50%);
+  }
+
+  .mobileBar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-around;
+    height: var(--action-bar-height);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid rgb(255 255 255 / 0.15);
+  }
+
+  .mobileAction {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 20px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .mobileAction[aria-expanded='true'] {
+    background: color-mix(in srgb, var(--primary) 25%, transparent);
+    color: var(--primary);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
 }

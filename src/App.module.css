@@ -1,6 +1,7 @@
 .layout {
   display: flex;
   min-height: 100svh;
+  padding-bottom: var(--bottom-bar-height);
 }
 
 .content {

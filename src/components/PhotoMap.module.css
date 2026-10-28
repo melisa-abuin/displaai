@@ -1,7 +1,9 @@
 .map {
-  height: calc(100svh - 96px);
+  height: calc(100svh - 96px - var(--bottom-bar-height));
   min-height: 320px;
   border-radius: 6px;
+  /* Keeps Leaflet's high z-indexes from covering the bottom bar and drawer. */
+  isolation: isolate;
 }
 
 .status {
