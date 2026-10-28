@@ -1,6 +1,7 @@
 {
   "name": "drive-photos-displayer",
   "private": true,
+  "license": "MIT",
   "version": "1.0.0",
   "type": "module",
   "packageManager": "pnpm@12.14.0",
