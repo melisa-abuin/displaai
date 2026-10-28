@@ -1,23 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  fetchPhotoBlob,
-  isHeic,
-  normalizeTag,
-  photoTags,
-  thumbnailUrl,
-  type DriveFolder,
-  type DrivePhoto,
+    fetchPhotoBlob,
+    isHeic,
+    normalizeTag,
+    photoTags,
+    thumbnailUrl,
+    type DriveFolder,
+    type DrivePhoto,
 } from '../drive/api'
 import { useHeicTransform, useUpdateTags } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
+import { PhotoEditor } from '../editor/PhotoEditor'
 import { formatBytes, formatDate, formatNumber } from '../format'
 import { mediaKindOf } from '../mediaKind'
 import { useLocalAi } from '../settings'
 import { useFaces, useScene } from '../vision/hooks'
-import styles from './Lightbox.module.css'
-import { PhotoEditor } from '../editor/PhotoEditor'
 import { Button } from './Button'
+import styles from './Lightbox.module.css'
 import { RegionBoxes } from './RegionBoxes'
 import { Switch } from './Switch'
 import { TagEditor } from './TagEditor'

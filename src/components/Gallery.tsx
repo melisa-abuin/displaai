@@ -221,6 +221,7 @@ export function Gallery({
   rootPath,
   filters,
   emptyMessage,
+  onShowOnMap,
 }: {
   token: string
   folderIds: readonly string[]
@@ -233,6 +234,8 @@ export function Gallery({
   filters?: readonly TagFilter[]
   /** Shown when there are no photos and no filter is narrowing them. */
   emptyMessage?: string
+  /** When set, a toolbar button shows these photos on the map. */
+  onShowOnMap?: () => void
 }) {
   const { data, isLoading, error } = usePhotos(folderIds, grouped, filters)
   const [selected, setSelected] = useState<string | null>(null)
@@ -370,7 +373,15 @@ export function Gallery({
     })
   }, [])
 
-  if (isLoading) return <p className={styles.status}>Loading photos&hellip;</p>
+  if (isLoading)
+    return (
+      <div className={styles.status} role="status">
+        <div className={styles.loader}>
+          <img src={`${import.meta.env.BASE_URL}loader.gif`} alt="" />
+          <p>Loading photos&hellip;</p>
+        </div>
+      </div>
+    )
   if (error)
     return (
       <p role="alert" className={styles.status}>
@@ -430,9 +441,20 @@ export function Gallery({
             </Button>
           </>
         ) : (
-          <Button small variant="outline" onClick={() => setIsSelecting(true)}>
-            Select
-          </Button>
+          <>
+            {onShowOnMap && (
+              <Button small variant="outline" onClick={onShowOnMap}>
+                See on map
+              </Button>
+            )}
+            <Button
+              small
+              variant="outline"
+              onClick={() => setIsSelecting(true)}
+            >
+              Select
+            </Button>
+          </>
         )}
       </div>
       <div

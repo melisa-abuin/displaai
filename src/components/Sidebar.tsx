@@ -1,10 +1,10 @@
 ﻿import { useState } from 'react'
 import type { DriveFolder, TagCount } from '../drive/api'
 import {
-  cycleTag,
-  tagState,
-  type TagFilter,
-  type TagMatch,
+    cycleTag,
+    tagState,
+    type TagFilter,
+    type TagMatch,
 } from '../drive/tagFilter'
 import { formatNumber } from '../format'
 import styles from './Sidebar.module.css'
@@ -120,7 +120,7 @@ export function Sidebar({
       <div className={styles.brand}>
         <img
           className={styles.logo}
-          src={`${import.meta.env.BASE_URL}loog.png`}
+          src={`${import.meta.env.BASE_URL}logo.png`}
           alt=""
         />
         <h1 className={styles.title} title="Drive Photos Visualizer">
