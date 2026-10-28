@@ -1,65 +1,80 @@
-# drive-photos-displayer
+<div align="center">
+  <img src="public/logo.png" alt="" width="120" />
+  <h1>Drive Photos Visualizer</h1>
+  <p>Browse, map, tag and edit the photos in your Google Drive, right in the browser.</p>
+  <p>
+    <a href="https://melisa-abuin.github.io/drive-photos-displayer/"><strong>Visit the site &rarr;</strong></a>
+  </p>
+</div>
 
-## Stack
+## Tech stack
 
-- [React](https://react.dev/) 19
-- [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vite.dev/)
-- [TanStack Query](https://tanstack.com/query/latest)
-- CSS Modules
-- [Prettier](https://prettier.io/)
-- [Vitest](https://vitest.dev/) + Testing Library
-- [ESLint](https://eslint.org/)
+- [React 19](https://react.dev/) — UI
+- [TypeScript](https://www.typescriptlang.org/) — language
+- [Vite](https://vite.dev/) — dev server and build tool
+- [TanStack Query](https://tanstack.com/query) — data fetching and caching of Drive API calls
+- [Google Drive API](https://developers.google.com/drive/api) + [Google Identity Services](https://developers.google.com/identity/oauth2/web) — photo storage and sign-in
+- [React Virtuoso](https://virtuoso.dev/) — virtualized photo grid
+- [Leaflet](https://leafletjs.com/) + [React Leaflet](https://react-leaflet.js.org/) — photo map
+- [Supercluster](https://github.com/mapbox/supercluster) — map marker clustering
+- [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/guide) — on-device face and object detection
+- [heic-to](https://github.com/hoppergee/heic-to) — HEIC image decoding
+- CSS Modules — styling
+- [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) — testing
+- [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) — linting and formatting
 
-## Features
+## Privacy
 
-- Google OAuth sign-in (Google Identity Services, full Drive access, needed to rename photos and overwrite them with their edited version)
-- Left sidebar listing your Drive folders ("All photos" + one entry per folder), plus any custom views
-- Tag filters in the sidebar: click a tag to include it, again to exclude it; combine included tags with Any/All
-- Media types (Settings > Media types): choose whether images (every picture format except GIFs; the default), GIFs and videos are shown. Videos play in the lightbox and can't be edited
-- Custom views (Settings > Manage views): saved galleries that combine folders (with subfolders) and included/excluded tags
-- Thumbnail grid with pagination and a full-size lightbox with a details panel
-- On-device [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector) analysis (`@mediapipe/tasks-vision`, loaded on demand): the lightbox can overlay face boxes and object boxes on the open photo and suggest tags from image classification (only the open photo is analysed, and only when a switch is on). Models are fetched from Google's model storage on first use.
-- Per-photo tags (add, remove, rename) stored in the file's private Drive app properties, with suggestions from every tag already in use
-- Photo editor (lightbox > **Edit photo**), all done on-device in a canvas: crop with aspect presets (1:1, 4:5, 9:16, 16:9...), rotate, flip, straighten, resize with locked proportions, 15 Instagram-style filters with intensity, adjustments (brightness, contrast, saturation, warmth, fade, glow, blur, vignette, grain), face blur/pixelate/emoji covers (MediaPipe), text and emoji stickers, borders and polaroid frames. Save as a new file (keeps tags, same folder), overwrite the original, or just rename; JPEG, PNG or WebP output.
+There is no backend: the app talks straight to the Google Drive API from your browser. Tags are stored in each file's private Drive app properties, and face and object detection run on your device. Sign-in asks for full Drive access because the editor can rename photos and overwrite them with their edited version.
 
-## Google OAuth setup
+## Run locally
 
-1. In [Google Cloud Console](https://console.cloud.google.com/) enable the **Google Drive API**.
-2. Create an **OAuth client ID** of type _Web application_ and add `http://localhost:5173` to **Authorized JavaScript origins**.
-3. Configure the OAuth consent screen (add yourself as a test user).
+**Prerequisites:** Node 24 (see [.nvmrc](.nvmrc)) and [pnpm](https://pnpm.io/).
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), enable the **Google Drive API**.
+2. Configure the **OAuth consent screen** and add yourself as a test user.
+3. Create an **OAuth client ID** of type _Web application_ and add `http://localhost:5173` to **Authorized JavaScript origins**. No client secret is needed.
 4. Copy `.env.example` to `.env.local` and set `VITE_GOOGLE_CLIENT_ID`.
+5. Install and start:
 
-The access token is kept in `localStorage` (so reopening the browser skips sign-in until it expires, ~1 hour); no client secret is needed.
+   ```sh
+   pnpm install
+   pnpm dev
+   ```
 
-## Getting started
+## Deploy to GitHub Pages
+
+[.github/workflows/static.yml](.github/workflows/static.yml) builds and publishes the app on every push to `main`. It also copies `index.html` to `404.html` so deep links work.
+
+1. In **Settings → Pages**, set the source to **GitHub Actions**.
+2. Add a repository variable `VITE_GOOGLE_CLIENT_ID` (**Settings → Secrets and variables → Actions → Variables**).
+3. Add `https://<your-user>.github.io` to the OAuth client's **Authorized JavaScript origins**.
+
+To try a Pages-style build locally:
 
 ```sh
-pnpm install
-pnpm dev
+# macOS / Linux
+URL_BASE_PATH=/drive-photos-displayer/ pnpm build && pnpm preview
 ```
 
-## Deploying to GitHub Pages
-
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml) builds with `URL_BASE_PATH=/<repo>/` and publishes on every push to `main`. The built `index.html` is also copied to `404.html` so deep links work (SPA fallback).
-
-1. In **Settings ? Pages**, set the source to **GitHub Actions**.
-2. Add a repository variable `VITE_GOOGLE_CLIENT_ID` (Settings ? Secrets and variables ? Actions ? Variables).
-3. Add `https://melisa-abuin.github.io` to the OAuth client's **Authorized JavaScript origins**.
-
-To test a Pages-style build locally: `URL_BASE_PATH=/drive-photos-displayer/ pnpm build && pnpm preview`.
+```powershell
+# Windows (PowerShell)
+$env:URL_BASE_PATH = '/drive-photos-displayer/'; pnpm build; pnpm preview
+```
 
 ## Scripts
 
-| Script              | Description                         |
-| ------------------- | ----------------------------------- |
-| `pnpm dev`          | Start the Vite dev server           |
-| `pnpm build`        | Type-check and build for production |
-| `pnpm preview`      | Preview the production build        |
-| `pnpm lint`         | Lint the codebase with ESLint       |
-| `pnpm lint:fix`     | Lint and auto-fix issues            |
-| `pnpm format`       | Format the codebase with Prettier   |
-| `pnpm format:check` | Check formatting without writing    |
-| `pnpm test`         | Run tests with Vitest               |
-| `pnpm test:ui`      | Run tests with the Vitest UI        |
-| `pnpm typecheck`    | Type-check the project              |
+| Script           | Description                         |
+| ---------------- | ----------------------------------- |
+| `pnpm dev`       | Start the dev server                |
+| `pnpm build`     | Type-check and build for production |
+| `pnpm preview`   | Preview the production build        |
+| `pnpm test`      | Run the tests                       |
+| `pnpm typecheck` | Type-check the project              |
+| `pnpm format`    | Format the code with Prettier       |
+
+## License
+
+[MIT](LICENSE) © Melisa Abuin
+
+_Not affiliated with or endorsed by Google. Google Drive is a trademark of Google LLC._
