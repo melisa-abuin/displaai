@@ -3,7 +3,7 @@
   <h1>Displaai</h1>
   <p>Browse, map, tag and edit your Google Drive photos, right in the browser.</p>
   <p>
-    <a href="https://melisa-abuin.github.io/displaai/"><strong>Visit the site &rarr;</strong></a>
+    <a href="https://displaai.mkdir.no"><strong>Visit the site &rarr;</strong></a>
   </p>
 </div>
 
@@ -48,7 +48,7 @@ There is no backend: the app talks straight to the Google Drive API from your br
 
 1. In **Settings → Pages**, set the source to **GitHub Actions**.
 2. Add a repository variable `VITE_GOOGLE_CLIENT_ID` (**Settings → Secrets and variables → Actions → Variables**).
-3. Add `https://<your-user>.github.io` to the OAuth client's **Authorized JavaScript origins**.
+3. Add the site's origin (`https://displaai.mkdir.no`) to the OAuth client's **Authorized JavaScript origins**.
 
 To try a Pages-style build locally:
 
