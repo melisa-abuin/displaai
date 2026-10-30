@@ -1,5 +1,11 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
+﻿import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { thumbnailUrl, type DriveFolder, type DrivePhoto } from '../drive/api'
 import { usePhotos } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
@@ -11,6 +17,7 @@ import { useGallerySort, useTimeline } from '../settings'
 import { Button } from './Button'
 import { Dropdown } from './Dropdown'
 import styles from './Gallery.module.css'
+import { LazyImage } from './LazyImage'
 import { Lightbox } from './Lightbox'
 import { TagEditor } from './TagEditor'
 import { Timeline, type TimelineMonth } from './Timeline'
@@ -30,7 +37,7 @@ interface Section {
   photos: PhotoEntry[]
 }
 
-// The virtualized list is flat: a section is its header followed by its rows of tiles.
+// The list is flat: a section is its header followed by its rows of tiles.
 type ListItem =
   | { kind: 'header'; key: string; folderId: string; isFirst: boolean }
   | { kind: 'month'; key: string; label: string; isFirst: boolean }
@@ -141,7 +148,6 @@ function PhotoRow({
   selectedIds: ReadonlySet<string>
   onSelect: (photoId: string) => void
 }) {
-  // Rows are only mounted while on screen, so only visible photos get refreshed.
   const photos = useFreshThumbnails(entries.map((entry) => entry.photo))
   return (
     <div
@@ -150,6 +156,7 @@ function PhotoRow({
     >
       {entries.map(({ key }, i) => {
         const photo = photos[i]
+        const thumbnail = thumbnailUrl(photo)
         const isSelected = isSelecting && selectedIds.has(photo.id)
         return (
           <button
@@ -160,11 +167,10 @@ function PhotoRow({
             aria-label={photo.name}
             aria-pressed={isSelecting ? isSelected : undefined}
           >
-            {thumbnailUrl(photo) ? (
-              <img
-                src={thumbnailUrl(photo)}
+            {thumbnail ? (
+              <LazyImage
+                src={thumbnail}
                 alt=""
-                loading="lazy"
                 referrerPolicy="no-referrer"
               />
             ) : (
@@ -246,7 +252,6 @@ export function Gallery({
   const [sort, setSort] = useGallerySort()
   const [showTimeline] = useTimeline()
   const listRef = useRef<HTMLDivElement | null>(null)
-  const virtuoso = useRef<VirtuosoHandle>(null)
   // The list's width (minus the timeline gutter) decides the column count.
   const listElement = useCallback(
     (element: HTMLDivElement | null) => {
@@ -460,38 +465,34 @@ export function Gallery({
         ref={listElement}
         className={hasTimeline ? styles.withTimeline : undefined}
       >
-        <Virtuoso
-          ref={virtuoso}
-          useWindowScroll
-          data={items}
-          increaseViewportBy={800}
-          computeItemKey={(_, item) => item.key}
-          itemContent={(_, item) => {
-            if (item.kind === 'row')
-              return (
-                <PhotoRow
-                  entries={item.entries}
-                  columns={columns}
-                  isSelecting={isSelecting}
-                  selectedIds={selectedIds}
-                  onSelect={isSelecting ? toggleSelected : setSelected}
-                />
-              )
-            if (item.kind === 'month')
-              return (
-                <h3
-                  className={`${styles.monthTitle} ${item.isFirst ? styles.firstMonthTitle : ''}`}
-                >
-                  {item.label}
-                </h3>
-              )
+        {items.map((item, index) => {
+          let content: ReactNode
+          if (item.kind === 'row')
+            content = (
+              <PhotoRow
+                entries={item.entries}
+                columns={columns}
+                isSelecting={isSelecting}
+                selectedIds={selectedIds}
+                onSelect={isSelecting ? toggleSelected : setSelected}
+              />
+            )
+          else if (item.kind === 'month')
+            content = (
+              <h3
+                className={`${styles.monthTitle} ${item.isFirst ? styles.firstMonthTitle : ''}`}
+              >
+                {item.label}
+              </h3>
+            )
+          else {
             const folder = folders?.get(item.folderId)
             const prefix = rootPath ? `${rootPath} / ` : undefined
             const title =
               prefix && folder?.path.startsWith(prefix)
                 ? folder.path.slice(prefix.length)
                 : folder?.name
-            return (
+            content = (
               <SectionHeader
                 title={title ?? 'Unknown folder'}
                 path={folder?.path}
@@ -501,8 +502,13 @@ export function Gallery({
                 onToggle={() => toggle(item.folderId)}
               />
             )
-          }}
-        />
+          }
+          return (
+            <div key={item.key} data-item-index={index}>
+              {content}
+            </div>
+          )
+        })}
       </div>
       {hasTimeline && (
         <Timeline
@@ -511,7 +517,9 @@ export function Gallery({
           itemCount={items.length}
           listRef={listRef}
           onSeek={(index) =>
-            virtuoso.current?.scrollToIndex({ index, align: 'start' })
+            listRef.current
+              ?.querySelector(`[data-item-index="${index}"]`)
+              ?.scrollIntoView({ block: 'start' })
           }
         />
       )}

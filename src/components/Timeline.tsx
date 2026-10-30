@@ -1,12 +1,12 @@
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-  type RefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type KeyboardEvent,
+    type PointerEvent,
+    type RefObject,
 } from 'react'
 import styles from './Timeline.module.css'
 
@@ -40,7 +40,7 @@ export function Timeline({
   className?: string
   months: readonly TimelineMonth[]
   itemCount: number
-  /** The element holding the virtualized list, whose items carry `data-item-index`. */
+  /** The element holding the list, whose items carry `data-item-index`. */
   listRef: RefObject<HTMLElement | null>
   onSeek: (index: number) => void
 }) {
