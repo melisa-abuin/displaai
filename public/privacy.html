@@ -8,7 +8,7 @@
       content="Privacy policy of Displaai, a browser app to browse, map, tag and edit your Google Drive photos."
     />
     <link rel="icon" type="image/png" sizes="256x256" href="favicon.png" />
-    <title>Privacy Policy – Displaai</title>
+    <title>Privacy Policy &ndash; Displaai</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -33,8 +33,8 @@
         margin-bottom: 24px;
       }
       header img {
-        width: 48px;
-        height: 48px;
+        width: 170px;
+        height: 104px;
       }
       header a {
         color: var(--primary);
@@ -59,6 +59,23 @@
       table {
         border-collapse: collapse;
         width: 100%;
+        margin: 8px 0 16px;
+      }
+      nav ol {
+        columns: 2;
+        column-gap: 32px;
+        padding-left: 24px;
+      }
+      .summary {
+        padding: 4px 20px;
+        border: 1px solid rgba(128, 128, 128, 0.4);
+        border-left: 4px solid var(--primary);
+        border-radius: 6px;
+      }
+      @media (max-width: 560px) {
+        nav ol {
+          columns: 1;
+        }
       }
       th,
       td {
@@ -71,56 +88,183 @@
   </head>
   <body>
     <header>
-      <img src="logo.png" alt="" />
+      <img src="logo.png" width="170" height="104" alt="" />
       <a href="./">Displaai</a>
     </header>
 
     <main>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: October 30, 2026</p>
+      <p class="updated">Last updated: October 31, 2026</p>
 
       <p>
-        Displaai (“the app”, “we”) is a free, open-source web app published at
+        Displaai (&ldquo;the app&rdquo;, &ldquo;we&rdquo;) is a free, open-source web app published at
         <a href="https://displaai.mkdir.no">displaai.mkdir.no</a> by Melisa
-        Abuin (“the developer”). It lets you browse, map, tag and edit the
+        Abuin (&ldquo;the developer&rdquo;). It lets you browse, map, tag and edit the
         photos and videos stored in your own Google Drive. This policy explains
         what data the app accesses, how it is used, shared, stored and
         protected, and how you can delete it.
       </p>
+
+      <div class="summary">
+        <h2 style="margin-top: 12px">Summary</h2>
+        <ul>
+          <li>
+            The app runs entirely in your browser. It has no server and no
+            database of its own.
+          </li>
+          <li>
+            The developer never receives, stores or can see your Google account
+            data or your photos.
+          </li>
+          <li>
+            The app accesses your Google Drive only after you sign in with
+            Google and grant permission, and only to show, tag, edit and
+            organize your own photos and videos.
+          </li>
+          <li>
+            Photos are never uploaded anywhere other than back to your own
+            Google Drive. Face and object detection run on your device.
+          </li>
+          <li>
+            The app has no analytics, advertising, tracking or user profiling,
+            and your data is never sold or shared.
+          </li>
+          <li>
+            You can sign out and revoke access at any time, and clear all data
+            the app keeps on your device.
+          </li>
+        </ul>
+      </div>
+
+      <nav aria-label="Contents">
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#scope">Who we are and scope</a></li>
+          <li><a href="#data-accessed">Data the app accesses</a></li>
+          <li><a href="#not-collected">What the app does not collect</a></li>
+          <li><a href="#use">How the app uses that data</a></li>
+          <li><a href="#consent">Consent and legal basis</a></li>
+          <li><a href="#device">Data stored on your device</a></li>
+          <li><a href="#security">Security</a></li>
+          <li><a href="#sharing">Sharing and third parties</a></li>
+          <li><a href="#google-policy">Google API Services User Data Policy</a></li>
+          <li><a href="#retention">Retention and deletion</a></li>
+          <li><a href="#rights">Your rights and choices</a></li>
+          <li><a href="#cookies">Cookies</a></li>
+          <li><a href="#transfers">International data transfers</a></li>
+          <li><a href="#children">Children</a></li>
+          <li><a href="#changes">Changes to this policy</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="scope">1. Who we are and scope</h2>
       <p>
-        In short: the app runs entirely in your browser. It has no server and no
-        database of its own, and the developer never receives, stores or can
-        see your Google account data or your photos. The app has no analytics,
-        advertising or tracking.
+        Displaai is operated by Melisa Abuin, an individual developer, who is
+        the only party responsible for the app. This policy applies to the web
+        app at displaai.mkdir.no and to this privacy page. It does not apply to
+        the third-party services the app connects to (see
+        <a href="#sharing">Sharing and third parties</a>), which have their own
+        policies. The app is not affiliated with or endorsed by Google. Google
+        Drive is a trademark of Google LLC.
+      </p>
+      <p>
+        Because the app runs only in your browser and the developer does not
+        receive your data, the developer does not act as a controller or
+        processor of your Google Drive content. Your browser, on your device,
+        is where the processing happens.
       </p>
 
-      <h2>1. Data the app accesses</h2>
+      <h2 id="data-accessed">2. Data the app accesses</h2>
       <p>
-        When you choose “Sign in with Google”, the app asks for the Google Drive
+        When you choose &ldquo;Sign in with Google&rdquo;, the app asks for the Google Drive
         permission <code>https://www.googleapis.com/auth/drive</code>. Through
-        it, the app accesses:
+        it, the app accesses the following data. It is fetched directly from
+        Google to your browser:
       </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>What it includes</th>
+            <th>Why it is needed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Account email address</td>
+            <td>The email address of the signed-in Google account</td>
+            <td>Shown in the sidebar so you can see which account is in use</td>
+          </tr>
+          <tr>
+            <td>Folders</td>
+            <td>Names, identifiers and the hierarchy of your Drive folders</td>
+            <td>Browsing, connecting folders and building views</td>
+          </tr>
+          <tr>
+            <td>Photo and video metadata</td>
+            <td>
+              Names, identifiers, types, sizes, dates, parent folders,
+              dimensions, capture time, thumbnail links and embedded location
+              (GPS) metadata
+            </td>
+            <td>
+              Galleries, timeline, sorting, and showing photos on the map
+            </td>
+          </tr>
+          <tr>
+            <td>Photo and video content</td>
+            <td>The files you open or edit</td>
+            <td>
+              Displaying them in full size, playing videos, on-device detection
+              and editing
+            </td>
+          </tr>
+          <tr>
+            <td>Tags</td>
+            <td>
+              Custom properties that the app itself writes on your files to
+              store the tags you add
+            </td>
+            <td>Tagging and filtering photos</td>
+          </tr>
+          <tr>
+            <td>Drive change history</td>
+            <td>
+              The list of files that changed since the last time the app synced
+            </td>
+            <td>Keeping the cached index of your library up to date</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The app only requests the data it needs for these features, and only
+        lists images, videos and folders. It does not read documents,
+        spreadsheets or other file types for any purpose.
+      </p>
+
+      <h2 id="not-collected">3. What the app does not collect</h2>
       <ul>
         <li>
-          The email address of your Google account, shown in the sidebar so you
-          can see which account is signed in.
+          The developer does not receive any of your Google account data,
+          photos, videos, tags, locations or settings.
         </li>
         <li>
-          The list of your folders, and the names, identifiers, types, sizes,
-          dates, thumbnails, dimensions and embedded location metadata (such as
-          GPS coordinates) of the images and videos in them.
+          The app does not ask for your name, password, phone number, address or
+          payment details. Your Google password is entered only on Google&rsquo;s own
+          sign-in page and is never seen by the app.
         </li>
         <li>
-          The content of the photos you open, so they can be displayed, edited
-          and, when you ask for it, saved back.
+          The app does not use analytics, advertising, crash-reporting or
+          tracking tools, and does not build profiles about you.
         </li>
         <li>
-          Custom properties that the app itself writes on your files to store
-          the tags you add.
+          The app does not request your device&rsquo;s location. Locations shown on
+          the map come only from the metadata already inside your own photos.
         </li>
       </ul>
 
-      <h2>2. How the app uses that data</h2>
+      <h2 id="use">4. How the app uses that data</h2>
       <p>The data is used only to provide the features you see in the app:</p>
       <ul>
         <li>Displaying your photos and videos in galleries, folders and views.</li>
@@ -144,38 +288,91 @@
         Full Drive access is needed because the editor must be able to replace
         the contents of an existing photo, rename it and trash it, which the
         narrower Drive permissions do not allow for files the app did not
-        create.
+        create. The app does not use this permission for anything outside the
+        features listed above.
       </p>
 
-      <h2>3. Data stored on your device</h2>
+      <h2 id="consent">5. Consent and legal basis</h2>
+      <p>
+        The app accesses your Google Drive only with your explicit consent,
+        given on Google&rsquo;s own consent screen when you sign in. Without that
+        consent the app cannot read any of your data. You can withdraw consent
+        at any time by revoking access (see
+        <a href="#retention">Retention and deletion</a>). Withdrawing consent
+        does not affect your Drive content, which stays in your account.
+      </p>
+
+      <h2 id="device">6. Data stored on your device</h2>
       <p>
         To work faster and remember your preferences, the app stores the
         following in your browser (local storage and IndexedDB). This data stays
         on your device and is never sent to the developer:
       </p>
-      <ul>
-        <li>The short-lived Google access token for your session.</li>
-        <li>
-          A cached index of your photo and folder metadata and cached API
-          responses.
-        </li>
-        <li>
-          Your settings, the folders you connected, and the views you created.
-        </li>
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Where</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google access token and its expiry time</td>
+            <td>Local storage</td>
+            <td>Keeps you signed in until the token expires (about an hour)</td>
+          </tr>
+          <tr>
+            <td>Cached index of your photo and folder metadata</td>
+            <td>IndexedDB</td>
+            <td>Opens your library quickly and syncs only the changes</td>
+          </tr>
+          <tr>
+            <td>Cached API responses (for example, your email address)</td>
+            <td>Local storage</td>
+            <td>Avoids repeating the same requests to Google</td>
+          </tr>
+          <tr>
+            <td>Settings, connected folders and views you created</td>
+            <td>Local storage</td>
+            <td>Remembers your preferences</td>
+          </tr>
+        </tbody>
+      </table>
       <p>
-        Signing out revokes the access token and clears the cached photo index.
-        You can remove everything else by clearing this site’s data in your
-        browser settings.
-      </p>
-      <p>
-        Data is protected in transit: all communication with Google happens over
-        HTTPS, and the access token is kept only in your browser and expires
-        after about an hour. The app has no server, so there is no developer-side
-        database that could be breached.
+        Signing out clears the cached photo index and cached responses, removes
+        the stored token and revokes it with Google. You can remove everything
+        else, such as your settings, by clearing this site&rsquo;s data in your
+        browser settings, or by using &ldquo;Reload App&rdquo; in the app&rsquo;s Settings.
       </p>
 
-      <h2>4. Sharing and third parties</h2>
+      <h2 id="security">7. Security</h2>
+      <ul>
+        <li>
+          All communication between the app and Google, the map tile provider
+          and the model host happens over HTTPS.
+        </li>
+        <li>
+          The access token is short-lived, is kept only in your browser, and is
+          sent only to Google&rsquo;s APIs. The app never receives a client secret or
+          a long-lived refresh token.
+        </li>
+        <li>
+          The app has no server and no developer-side database, so there is no
+          central store of user data that could be breached.
+        </li>
+        <li>
+          Data kept in your browser is protected by your device and browser
+          security. Anyone with access to your device and browser profile could
+          see it, so sign out on shared or public computers.
+        </li>
+        <li>
+          The source code is public, so anyone can review how your data is
+          handled.
+        </li>
+      </ul>
+
+      <h2 id="sharing">8. Sharing and third parties</h2>
       <p>
         The app does not sell, rent, share or transfer your Google user data to
         anyone, does not use it for advertising, and does not allow humans to
@@ -191,14 +388,33 @@
         </thead>
         <tbody>
           <tr>
-            <td>Google (Drive API and Google Identity Services)</td>
-            <td>Sign-in and reading and editing your Drive files</td>
-            <td>Requests you make to your own Drive, authorized by your token</td>
+            <td>
+              Google (Drive API, Google Identity Services and Google&rsquo;s image
+              servers)
+            </td>
+            <td>
+              Sign-in, reading and editing your Drive files, and loading your
+              thumbnails and photos
+            </td>
+            <td>
+              Requests you make to your own Drive, authorized by your token.
+              Google also sees your IP address and browser details, as
+              described in
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noreferrer"
+                >Google&rsquo;s Privacy Policy</a
+              >
+            </td>
           </tr>
           <tr>
             <td>Google Cloud Storage (MediaPipe models)</td>
             <td>Downloading the detection models used by on-device detection</td>
-            <td>A standard download request; no photos or account data</td>
+            <td>
+              A standard download request, plus your IP address; no photos or
+              account data
+            </td>
           </tr>
           <tr>
             <td>Stadia Maps / OpenStreetMap contributors</td>
@@ -208,12 +424,26 @@
               address; no photos or account data
             </td>
           </tr>
+          <tr>
+            <td>Static web hosting (GitHub Pages)</td>
+            <td>Serving the app&rsquo;s files to your browser</td>
+            <td>
+              Standard web requests, which may be logged by the host (for
+              example your IP address and browser type); no photos or account
+              data
+            </td>
+          </tr>
         </tbody>
       </table>
-
-      <h2>5. Google API Services User Data Policy</h2>
       <p>
-        Displaai’s use and transfer to any other app of information received
+        These providers act independently and are governed by their own privacy
+        policies. Your photos, tags, email address and Drive file names are
+        never sent to any provider other than Google.
+      </p>
+
+      <h2 id="google-policy">9. Google API Services User Data Policy</h2>
+      <p>
+        Displaai&rsquo;s use and transfer to any other app of information received
         from Google APIs will adhere to the
         <a
           href="https://developers.google.com/terms/api-services-user-data-policy"
@@ -243,16 +473,21 @@
         </li>
       </ul>
 
-      <h2>6. Data retention, deletion and your choices</h2>
+      <h2 id="retention">10. Retention and deletion</h2>
       <p>
         The developer does not collect or retain your data, so there is nothing
-        for the developer to delete. Data on your device is kept until you sign
-        out or clear this site’s data. You can:
+        for the developer to delete. Your photos and videos stay in your Google
+        Drive and are never copied elsewhere by the app. Data the app keeps on
+        your device (see <a href="#device">Data stored on your device</a>) is
+        kept until you sign out, reset the app or clear this site&rsquo;s data. The
+        access token expires on its own after about an hour. You can:
       </p>
       <ul>
-        <li>Sign out in the app’s Settings to revoke access and clear the cache.</li>
         <li>
-          Remove the app’s access at any time from your
+          Sign out in the app&rsquo;s Settings to revoke access and clear the cache.
+        </li>
+        <li>
+          Remove the app&rsquo;s access at any time from your
           <a
             href="https://myaccount.google.com/permissions"
             target="_blank"
@@ -262,20 +497,77 @@
         </li>
         <li>
           Remove the tags the app wrote by removing them in the app; they are
-          stored only as private properties on your own Drive files.
+          stored only as private properties on your own Drive files and are
+          removed together with a file if you delete it.
+        </li>
+        <li>
+          Photos you moved to the trash through the app can be restored from
+          the Google Drive trash until Google empties it.
         </li>
       </ul>
 
-      <h2>7. Children</h2>
-      <p>The app is not directed to children under 13.</p>
-
-      <h2>8. Changes to this policy</h2>
+      <h2 id="rights">11. Your rights and choices</h2>
       <p>
-        If this policy changes, the updated version will be published on this
-        page with a new “Last updated” date.
+        Depending on where you live, you may have rights over your personal
+        data, such as the right to access, correct, delete, restrict or port it,
+        to object to its processing, and to withdraw consent. Because the
+        developer does not hold your data, you exercise these directly:
+      </p>
+      <ul>
+        <li>
+          Your Drive content and account data are managed in your Google
+          Account and Google Drive, under Google&rsquo;s own tools and policies.
+        </li>
+        <li>
+          Data kept by the app is on your device and you can view, change or
+          delete it using your browser&rsquo;s settings or the app&rsquo;s Settings.
+        </li>
+        <li>
+          The app does not sell or share personal information and does not use
+          it for targeted advertising or automated decision-making.
+        </li>
+      </ul>
+      <p>
+        If you have a question or request about this policy, see
+        <a href="#contact">Contact</a>. You may also lodge a complaint with your
+        local data protection authority.
       </p>
 
-      <h2>9. Contact</h2>
+      <h2 id="cookies">12. Cookies</h2>
+      <p>
+        The app does not set its own cookies and does not use cookies for
+        tracking. It uses your browser&rsquo;s local storage and IndexedDB as
+        described above. Google sign-in and the map tile provider are loaded
+        from their own domains and may set or read cookies according to their
+        own policies.
+      </p>
+
+      <h2 id="transfers">13. International data transfers</h2>
+      <p>
+        The developer does not transfer your data, because it is never
+        received. Your browser communicates directly with the services listed
+        in <a href="#sharing">Sharing and third parties</a>, whose servers may
+        be located in different countries. How those providers handle data is
+        described in their own policies.
+      </p>
+
+      <h2 id="children">14. Children</h2>
+      <p>
+        The app is not directed to children under 13, and the developer does
+        not knowingly collect information from children. Signing in requires a
+        Google account, which is subject to Google&rsquo;s own age requirements.
+      </p>
+
+      <h2 id="changes">15. Changes to this policy</h2>
+      <p>
+        If this policy changes, for example because the app adds a feature that
+        uses data differently, the updated version will be published on this
+        page with a new &ldquo;Last updated&rdquo; date. Any new use of your Google data
+        that goes beyond what is described here will require your consent
+        again.
+      </p>
+
+      <h2 id="contact">16. Contact</h2>
       <p>
         For questions about this policy, open an issue at
         <a
