@@ -11,25 +11,25 @@ import { ViewManager } from './components/ViewManager'
 import type { DriveFolder } from './drive/api'
 import { useConnectedFolders } from './drive/connectedFolders'
 import {
-    buildFolderIndex,
-    descendantIds,
-    folderChain,
+  buildFolderIndex,
+  descendantIds,
+  folderChain,
 } from './drive/folderTree'
 import {
-    useFolders,
-    usePhotoCounts,
-    usePhotoLocations,
-    useTags,
-    useUserEmail,
+  useFolders,
+  usePhotoCounts,
+  usePhotoLocations,
+  useTags,
+  useUserEmail,
 } from './drive/hooks'
 import { pruneFilter, type TagFilter } from './drive/tagFilter'
 import { useViews, type CustomView } from './drive/views'
 import {
-    parseRoute,
-    paths,
-    useFilters,
-    useNavigate,
-    usePathname,
+  parseRoute,
+  paths,
+  useFilters,
+  useNavigate,
+  usePathname,
 } from './router'
 
 const ownFilter = (view: CustomView): TagFilter => ({
@@ -99,8 +99,8 @@ function SignIn() {
           Signing in with Google gives the app access to your Google Drive so it
           can list, display, tag and edit your photos. There is no Displaai
           server: everything happens in your browser, and your photos and
-          account data are never sent to or stored by the developer or any
-          third party. You can sign out and revoke access at any time. Displaai
+          account data are never sent to or stored by the developer or any third
+          party. You can sign out and revoke access at any time. Displaai
           follows the Google API Services User Data Policy, including the
           Limited Use requirements. Read the full{' '}
           <a href={privacyUrl}>privacy policy</a>.
@@ -127,8 +127,8 @@ function SignIn() {
           Source code
         </a>
         <p>
-          Not affiliated with or endorsed by Google. Google Drive is a
-          trademark of Google LLC.
+          Not affiliated with or endorsed by Google. Google Drive is a trademark
+          of Google LLC.
         </p>
       </footer>
     </main>
@@ -142,14 +142,8 @@ function Viewer({ token }: { token: string }) {
   const folders = useFolders(token)
   const email = useUserEmail(token)
   const connected = useConnectedFolders()
-  const { data: allTags } = useTags()
   const [selectedFilter, setSelectedFilter] = useFilters()
   const { views, saveView, removeView } = useViews()
-  // Tags that no longer exist (e.g. a stale link, or their last photo was untagged) are ignored.
-  const activeFilter = useMemo(() => {
-    if (!allTags) return selectedFilter
-    return pruneFilter(selectedFilter, new Set(allTags.map((tag) => tag.name)))
-  }, [allTags, selectedFilter])
 
   const index = useMemo(
     () => (folders.data ? buildFolderIndex(folders.data) : undefined),
@@ -173,6 +167,17 @@ function Viewer({ token }: { token: string }) {
       ]
     })
   }, [index, connected.entries])
+
+  const allIds = useMemo(
+    () => [...new Set((albums ?? []).flatMap((album) => album.ids))],
+    [albums],
+  )
+  const { data: allTags } = useTags()
+  // Tags that no longer exist (e.g. a stale link, or their last photo was untagged) are ignored.
+  const activeFilter = useMemo(() => {
+    if (!allTags) return selectedFilter
+    return pruneFilter(selectedFilter, new Set(allTags.map((tag) => tag.name)))
+  }, [allTags, selectedFilter])
 
   useEffect(() => {
     if (activeFilter !== selectedFilter) setSelectedFilter(activeFilter)
@@ -272,10 +277,6 @@ function Viewer({ token }: { token: string }) {
     canonicalFoldersUrl,
     navigate,
   ])
-  const allIds = useMemo(
-    () => [...new Set((albums ?? []).flatMap((album) => album.ids))],
-    [albums],
-  )
   const peekIds = useMemo(() => {
     if (!index || !peekFolder) return []
     return descendantIds(index, peekFolder.id).filter(

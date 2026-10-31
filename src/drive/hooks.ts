@@ -3,13 +3,17 @@ import { useEffect, useMemo } from 'react'
 import {
   fetchHeicTransform,
   getUserEmail,
+  photoTags,
   renamePhoto,
   trashPhoto,
   updatePhotoTags,
   uploadImage,
   type PhotoLocation,
   type PhotoPage,
+  type TagCount,
 } from './api'
+import { useConnectedFolders } from './connectedFolders'
+import { buildFolderIndex, descendantIds } from './folderTree'
 import {
   applyPhotoName,
   applyPhotoProperties,
@@ -46,9 +50,30 @@ export function useFolders(token: string) {
   }
 }
 
-/** Every distinct tag in the Drive. */
+/** Every distinct tag among the photos of the enabled folders. */
 export function useTags() {
-  return { data: useLibrary()?.tags }
+  const version = useIndexVersion()
+  const library = useLibrary()
+  const { entries } = useConnectedFolders()
+  const data = useMemo<TagCount[] | undefined>(() => {
+    if (!library) return undefined
+    const index = buildFolderIndex(library.folders)
+    const ids = new Set<string>()
+    for (const { id, recursive } of entries) {
+      if (!index.byId.has(id)) continue
+      for (const d of recursive ? descendantIds(index, id) : [id]) ids.add(d)
+    }
+    const counts = new Map<string, number>()
+    for (const photo of getPhotosOf([...ids], false)[0].files)
+      for (const tag of photoTags(photo))
+        counts.set(tag, (counts.get(tag) ?? 0) + 1)
+    return [...counts]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+    // `version` invalidates the memo when the index changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [library, version, entries])
+  return { data }
 }
 
 export function useUpdateTags(token: string) {
