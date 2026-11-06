@@ -341,6 +341,22 @@ export function Gallery({
     }
     return { items: result, months: monthMarks }
   }, [sections, collapsed, columns, sort, showTimeline])
+  // Photos in display order; with folder sections, a photo's neighbours are only those of its own folder.
+  const neighbourLists = useMemo(() => {
+    const lists = new Map<string, DrivePhoto[]>()
+    const all: DrivePhoto[] = []
+    let current: DrivePhoto[] = all
+    for (const item of items) {
+      if (item.kind === 'header') current = []
+      if (item.kind !== 'row') continue
+      for (const { photo } of item.entries) {
+        current.push(photo)
+        if (current !== all) all.push(photo)
+        lists.set(photo.id, current)
+      }
+    }
+    return lists
+  }, [items])
   const allPhotos = useMemo(() => {
     const byId = new Map<string, DrivePhoto>()
     for (const page of data.pages)
@@ -395,6 +411,10 @@ export function Gallery({
     )
 
   const selectedPhoto = allPhotos.find((photo) => photo.id === selected)
+  const neighbours = selectedPhoto && neighbourLists.get(selectedPhoto.id)
+  const selectedIndex = neighbours ? neighbours.indexOf(selectedPhoto) : -1
+  const previousPhoto = neighbours?.[selectedIndex - 1]
+  const nextPhoto = neighbours?.[selectedIndex + 1]
   if (sections.length === 0)
     return (
       <p className={styles.status}>
@@ -532,9 +552,14 @@ export function Gallery({
       )}
       {selectedPhoto && (
         <Lightbox
+          key={selectedPhoto.id}
           token={token}
           photo={selectedPhoto}
           folders={folders}
+          hasPrevious={Boolean(previousPhoto)}
+          hasNext={Boolean(nextPhoto)}
+          onPrevious={() => previousPhoto && setSelected(previousPhoto.id)}
+          onNext={() => nextPhoto && setSelected(nextPhoto.id)}
           onClose={() => setSelected(null)}
         />
       )}

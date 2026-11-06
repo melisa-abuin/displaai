@@ -67,11 +67,19 @@ export function Lightbox({
   token,
   photo: indexedPhoto,
   folders,
+  hasPrevious,
+  hasNext,
+  onPrevious,
+  onNext,
   onClose,
 }: {
   token: string
   photo: DrivePhoto
   folders?: ReadonlyMap<string, DriveFolder>
+  hasPrevious: boolean
+  hasNext: boolean
+  onPrevious: () => void
+  onNext: () => void
   onClose: () => void
 }) {
   const [photo] = useFreshThumbnails([indexedPhoto])
@@ -145,11 +153,23 @@ export function Lightbox({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !e.defaultPrevented && !editing) onClose()
+      if (e.defaultPrevented || editing) return
+      if (e.key === 'Escape') onClose()
+      const target = e.target as HTMLElement
+      if (
+        e.altKey ||
+        e.ctrlKey ||
+        e.metaKey ||
+        target.isContentEditable ||
+        ['INPUT', 'TEXTAREA', 'SELECT', 'VIDEO'].includes(target.tagName)
+      )
+        return
+      if (e.key === 'ArrowLeft' && hasPrevious) onPrevious()
+      else if (e.key === 'ArrowRight' && hasNext) onNext()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, editing, hasPrevious, hasNext, onPrevious, onNext])
 
   useEffect(() => {
     const root = document.documentElement
@@ -274,6 +294,28 @@ export function Lightbox({
           </div>
         )}
       </div>
+      <button
+        type="button"
+        className={`${styles.nav} ${styles.previous}`}
+        aria-label="Previous photo"
+        disabled={!hasPrevious}
+        onClick={onPrevious}
+      >
+        <svg {...ICON} aria-hidden="true">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className={`${styles.nav} ${styles.next}`}
+        aria-label="Next photo"
+        disabled={!hasNext}
+        onClick={onNext}
+      >
+        <svg {...ICON} aria-hidden="true">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
       <button
         type="button"
         className={`${styles.close} ${styles.mobileClose}`}

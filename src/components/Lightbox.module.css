@@ -74,6 +74,40 @@
   background: rgb(255 255 255 / 0.05);
 }
 
+.nav {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.nav:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.25);
+}
+
+.nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.previous {
+  left: 12px;
+}
+
+.next {
+  right: 332px;
+}
 .close {
   position: absolute;
   top: 8px;
@@ -209,6 +243,14 @@
   .backdrop {
     --action-bar-height: calc(56px + env(safe-area-inset-bottom));
     flex-direction: column;
+  }
+
+  .nav {
+    top: calc((100% - var(--action-bar-height)) / 2);
+  }
+
+  .next {
+    right: 12px;
   }
 
   .stage {
