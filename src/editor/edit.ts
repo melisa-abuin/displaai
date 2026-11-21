@@ -7,7 +7,7 @@ export interface Crop {
   h: number
 }
 
-export type OverlayStyle = 'plain' | 'outline' | 'band'
+type OverlayStyle = 'plain' | 'outline' | 'band'
 
 /** Text or an emoji sticker; position and size are fractions of the output. */
 export interface Overlay {
@@ -24,7 +24,7 @@ export interface Overlay {
 }
 
 export type FaceMode = 'none' | 'blur' | 'pixelate' | 'emoji'
-export type FrameStyle = 'none' | 'solid' | 'polaroid'
+type FrameStyle = 'none' | 'solid' | 'polaroid'
 
 export interface Adjust {
   brightness: number
@@ -58,9 +58,9 @@ export interface EditState {
   overlays: Overlay[]
 }
 
-export const FULL_CROP: Crop = { x: 0, y: 0, w: 1, h: 1 }
+const FULL_CROP: Crop = { x: 0, y: 0, w: 1, h: 1 }
 
-export const NO_ADJUST: Adjust = {
+const NO_ADJUST: Adjust = {
   brightness: 0,
   contrast: 0,
   saturation: 0,

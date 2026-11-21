@@ -72,9 +72,6 @@ export function useTimeline() {
   return [visible, setVisible] as const
 }
 
-/** Called whenever any setting changes; returns the unsubscribe function. */
-export const subscribeSettings = subscribe
-
 let parsedKinds:
   { raw: string | null; kinds: ReadonlySet<MediaKind> } | undefined
 

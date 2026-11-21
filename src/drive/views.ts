@@ -3,7 +3,7 @@ import type { TagMatch } from './tagFilter'
 
 const STORAGE_KEY = 'drive-photos:views'
 
-export interface ViewFolder {
+interface ViewFolder {
   id: string
   /** Also include everything inside the folder's subfolders. */
   recursive: boolean

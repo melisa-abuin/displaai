@@ -11,10 +11,6 @@ export interface TagFilter {
   match: TagMatch
 }
 
-const NONE: readonly string[] = []
-
-export const NO_FILTER: TagFilter = { tags: NONE, exclude: NONE, match: 'any' }
-
 /** Filters that must all match; a view's own filter plus the sidebar's. */
 export const NO_FILTERS: readonly TagFilter[] = []
 
@@ -22,7 +18,7 @@ export function isEmptyFilter(filter: TagFilter): boolean {
   return filter.tags.length === 0 && filter.exclude.length === 0
 }
 
-export function matchesTags(
+function matchesTags(
   photo: Pick<DrivePhoto, 'appProperties'>,
   filter: TagFilter,
 ): boolean {

@@ -17,7 +17,7 @@ export interface Region {
   label?: string
 }
 
-export interface Label {
+interface Label {
   name: string
   score: number
 }

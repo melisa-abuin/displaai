@@ -6,10 +6,10 @@ import { newViewId, type CustomView } from '../drive/views'
 import { Button } from './Button'
 import styles from './ViewManager.module.css'
 
-export const NEW_VIEW = 'new'
+const NEW_VIEW = 'new'
 
 /** A folder enabled in Manage folders; depth is its nesting below the connected folder. */
-export interface ViewFolderOption {
+interface ViewFolderOption {
   folder: DriveFolder
   depth: number
 }

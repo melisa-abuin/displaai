@@ -67,7 +67,7 @@ export interface PhotoPage {
   files: DrivePhoto[]
 }
 
-export class UnauthorizedError extends Error {
+class UnauthorizedError extends Error {
   constructor() {
     super('Google Drive session expired')
   }
