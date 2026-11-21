@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { DriveFolder, TagCount, TagMatch, TagFilter } from '../interfaces'
-import { cycleTag, tagState } from '../drive/tagFilter'
-import { formatNumber } from '../format'
+import type { DriveFolder, TagCount, TagMatch, TagFilter } from '../../interfaces'
+import { cycleTag, tagState } from '../../drive/tagFilter'
+import { formatNumber } from '../../lib/format'
 import styles from './Sidebar.module.css'
 
 // Keep in sync with the breakpoint in index.css and Sidebar.module.css.

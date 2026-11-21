@@ -1,5 +1,5 @@
 ﻿import { useCallback, useMemo, useSyncExternalStore } from 'react'
-import type { TagFilter } from './interfaces'
+import type { TagFilter } from '../interfaces'
 
 const NAVIGATE_EVENT = 'app:navigate'
 

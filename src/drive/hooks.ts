@@ -16,7 +16,7 @@ import type {
   TagChange,
   TagFilter,
 } from '../interfaces'
-import { useConnectedFolders } from './connectedFolders'
+import { useConnectedFolders } from '../features/folders/connectedFolders'
 import { buildFolderIndex, descendantIds } from './folderTree'
 import {
   applyPhotoName,

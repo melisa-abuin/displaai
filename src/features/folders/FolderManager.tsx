@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DriveFolder, ConnectedFolder, FolderIndex } from '../interfaces'
-import { folderChain } from '../drive/folderTree'
-import { formatNumber } from '../format'
-import { Button } from './Button'
+import type { DriveFolder, ConnectedFolder, FolderIndex } from '../../interfaces'
+import { folderChain } from '../../drive/folderTree'
+import { formatNumber } from '../../lib/format'
+import { Button } from '../../ui/Button'
 import styles from './FolderManager.module.css'
-import { Switch } from './Switch'
+import { Switch } from '../../ui/Switch'
 
 interface FolderManagerProps {
   index: FolderIndex | undefined

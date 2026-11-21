@@ -1,5 +1,5 @@
 ﻿import { useCallback, useSyncExternalStore } from 'react'
-import type { CustomView } from '../interfaces'
+import type { CustomView } from '../../interfaces'
 
 const STORAGE_KEY = 'drive-photos:views'
 

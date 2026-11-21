@@ -1,15 +1,15 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './App.module.css'
 import { useAuth } from './auth/context'
-import { Button } from './components/Button'
-import { FolderManager } from './components/FolderManager'
-import { Gallery } from './components/Gallery'
-import { PhotoMap } from './components/PhotoMap'
-import { Settings } from './components/Settings'
-import { Sidebar } from './components/Sidebar'
-import { ViewManager } from './components/ViewManager'
+import { Button } from './ui/Button'
+import { FolderManager } from './features/folders/FolderManager'
+import { Gallery } from './features/gallery/Gallery'
+import { PhotoMap } from './features/map/PhotoMap'
+import { Settings } from './features/settings/Settings'
+import { Sidebar } from './features/sidebar/Sidebar'
+import { ViewManager } from './features/views/ViewManager'
 import type { DriveFolder, TagFilter, CustomView } from './interfaces'
-import { useConnectedFolders } from './drive/connectedFolders'
+import { useConnectedFolders } from './features/folders/connectedFolders'
 import {
   buildFolderIndex,
   descendantIds,
@@ -22,14 +22,14 @@ import {
   useUserEmail
 } from './drive/hooks'
 import { pruneFilter } from './drive/tagFilter'
-import { useViews } from './drive/views'
+import { useViews } from './features/views/views'
 import {
   parseRoute,
   paths,
   useFilters,
   useNavigate,
   usePathname,
-} from './router'
+} from './lib/router'
 
 const ownFilter = (view: CustomView): TagFilter => ({
   tags: view.tags,

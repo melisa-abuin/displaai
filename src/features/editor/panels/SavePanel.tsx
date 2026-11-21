@@ -1,5 +1,5 @@
-import { Button } from '../../components/Button'
-import type { DrivePhoto } from '../../interfaces'
+import { Button } from '../../../ui/Button'
+import type { DrivePhoto } from '../../../interfaces'
 import { FORMATS } from '../edit'
 import styles from '../PhotoEditor.module.css'
 import type { SaveForm } from '../useSaveForm'

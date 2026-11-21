@@ -6,26 +6,26 @@
   useState,
   type ReactNode,
 } from 'react'
-import { thumbnailUrl } from '../drive/api'
+import { thumbnailUrl } from '../../drive/api'
 import type {
   DriveFolder,
   DrivePhoto,
   TagFilter,
   TimelineMonth,
-} from '../interfaces'
-import { usePhotos } from '../drive/hooks'
-import { useFreshThumbnails } from '../drive/libraryStore'
-import { isEmptyFilter } from '../drive/tagFilter'
-import { formatNumber } from '../format'
-import { mediaKindOf } from '../mediaKind'
-import { monthOf, SORT_OPTIONS, sortByDate } from '../photoSort'
-import { useGallerySort, useTimeline } from '../settings'
-import { Button } from './Button'
-import { Dropdown } from './Dropdown'
+} from '../../interfaces'
+import { usePhotos } from '../../drive/hooks'
+import { useFreshThumbnails } from '../../drive/libraryStore'
+import { isEmptyFilter } from '../../drive/tagFilter'
+import { formatNumber } from '../../lib/format'
+import { mediaKindOf } from '../../lib/mediaKind'
+import { monthOf, SORT_OPTIONS, sortByDate } from '../../lib/photoSort'
+import { useGallerySort, useTimeline } from '../settings/preferences'
+import { Button } from '../../ui/Button'
+import { Dropdown } from '../../ui/Dropdown'
 import styles from './Gallery.module.css'
-import { LazyImage } from './LazyImage'
-import { Lightbox } from './Lightbox'
-import { TagEditor } from './TagEditor'
+import { LazyImage } from '../../ui/LazyImage'
+import { Lightbox } from '../lightbox/Lightbox'
+import { TagEditor } from '../tags/TagEditor'
 import { Timeline } from './Timeline'
 
 const MIN_TILE = 180

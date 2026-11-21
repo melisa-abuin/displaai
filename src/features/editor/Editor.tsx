@@ -1,7 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { Button } from '../components/Button'
-import type { DrivePhoto, EditState, Overlay } from '../interfaces'
-import { useFaces } from '../vision/hooks'
+import { Button } from '../../ui/Button'
+import type { DrivePhoto, EditState, Overlay } from '../../interfaces'
+import { useFaces } from '../../vision/hooks'
 import { EditorStage } from './EditorStage'
 import {
   FILTERS,

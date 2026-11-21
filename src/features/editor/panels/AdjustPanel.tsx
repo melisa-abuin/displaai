@@ -1,5 +1,5 @@
-import { Button } from '../../components/Button'
-import type { Adjust } from '../../interfaces'
+import { Button } from '../../../ui/Button'
+import type { Adjust } from '../../../interfaces'
 import { INITIAL_STATE } from '../edit'
 import { Slider } from './controls'
 import type { PanelProps } from './types'

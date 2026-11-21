@@ -6,7 +6,7 @@ import {
   useLocalAi,
   useMediaKinds,
   useTimeline,
-} from './settings'
+} from './preferences'
 
 describe('settings', () => {
   beforeEach(() => window.localStorage.clear())

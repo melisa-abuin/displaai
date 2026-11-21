@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { DrivePhoto } from './interfaces'
+import type { DrivePhoto } from '../interfaces'
 import { monthOf, sortByDate } from './photoSort'
 
 const photo = (

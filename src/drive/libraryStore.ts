@@ -16,8 +16,8 @@ import type {
   IndexedFolder,
   MediaKind,
 } from '../interfaces'
-import { mediaKindOf } from '../mediaKind'
-import { getMediaKinds, useMediaKinds } from '../settings'
+import { mediaKindOf } from '../lib/mediaKind'
+import { getMediaKinds, useMediaKinds } from '../features/settings/preferences'
 import { readAll, writeBatch } from './store'
 
 const TOKEN_KEY = 'startPageToken'

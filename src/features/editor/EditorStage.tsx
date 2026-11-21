@@ -1,5 +1,5 @@
 import { useRef, type RefObject } from 'react'
-import type { Crop, Overlay } from '../interfaces'
+import type { Crop, Overlay } from '../../interfaces'
 import { CropBox } from './CropBox'
 import styles from './PhotoEditor.module.css'
 

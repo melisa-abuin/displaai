@@ -1,4 +1,4 @@
-import { Button } from '../../components/Button'
+import { Button } from '../../../ui/Button'
 import styles from '../PhotoEditor.module.css'
 import { Chips, Slider } from './controls'
 import type { PanelProps } from './types'

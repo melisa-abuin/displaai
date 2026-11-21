@@ -1,4 +1,4 @@
-import type { MediaKind } from './interfaces'
+import type { MediaKind } from '../interfaces'
 
 export const MEDIA_KINDS: readonly {
   value: MediaKind

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { thumbnailUrl } from '../drive/api'
-import type { DriveFolder, PhotoLocation } from '../interfaces'
-import { useFreshThumbnails } from '../drive/libraryStore'
-import { formatNumber } from '../format'
+import { thumbnailUrl } from '../../drive/api'
+import type { DriveFolder, PhotoLocation } from '../../interfaces'
+import { useFreshThumbnails } from '../../drive/libraryStore'
+import { formatNumber } from '../../lib/format'
 import { PhotoCard } from './PhotoCard'
 import styles from './PhotoMap.module.css'
 

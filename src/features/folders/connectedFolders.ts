@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import type { ConnectedFolder } from '../interfaces'
+import type { ConnectedFolder } from '../../interfaces'
 
 const STORAGE_KEY = 'drive-photos:connected-folders'
 

@@ -1,4 +1,4 @@
-import type { DrivePhoto, SortOrder } from './interfaces'
+import type { DrivePhoto, SortOrder } from '../interfaces'
 import { parseDate } from './format'
 
 export const DEFAULT_SORT: SortOrder = 'taken-desc'

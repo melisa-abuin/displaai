@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import type { Crop } from '../interfaces'
+import type { Crop } from '../../interfaces'
 import styles from './PhotoEditor.module.css'
 
 const MIN = 0.05

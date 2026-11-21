@@ -1,4 +1,4 @@
-import { toBitmap } from '../vision/vision'
+import { toBitmap } from '../../vision/vision'
 import type {
   Crop,
   Overlay,
@@ -6,7 +6,7 @@ import type {
   Adjust,
   EditState,
   Region,
-} from '../interfaces'
+} from '../../interfaces'
 
 const FULL_CROP: Crop = { x: 0, y: 0, w: 1, h: 1 }
 

@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
-import { normalizeTag, photoTags } from '../drive/api'
-import type { DrivePhoto, TagChange } from '../interfaces'
-import { useTags, useUpdateTagsBulk } from '../drive/hooks'
+import { normalizeTag, photoTags } from '../../drive/api'
+import type { DrivePhoto, TagChange } from '../../interfaces'
+import { useTags, useUpdateTagsBulk } from '../../drive/hooks'
 import styles from './TagEditor.module.css'
 
 const MAX_SUGGESTIONS = 8

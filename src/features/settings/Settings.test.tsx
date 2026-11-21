@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { formatNumber } from '../format'
+import { formatNumber } from '../../lib/format'
 import { Settings } from './Settings'
 
 function renderSettings(props: Partial<Parameters<typeof Settings>[0]> = {}) {

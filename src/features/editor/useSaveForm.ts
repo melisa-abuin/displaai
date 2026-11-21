@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
-import { tagProperties } from '../drive/api'
+import { tagProperties } from '../../drive/api'
 import {
   useRenamePhoto,
   useSaveEditedPhoto,
   useTrashPhoto,
-} from '../drive/hooks'
-import type { DrivePhoto, EditState, IndexedPhoto } from '../interfaces'
+} from '../../drive/hooks'
+import type { DrivePhoto, EditState, IndexedPhoto } from '../../interfaces'
 import { FORMATS, applyFaces, canvasToBlob, fileStem, renderEdit } from './edit'
 
 export type SaveMode = 'copy' | 'overwrite' | 'rename'

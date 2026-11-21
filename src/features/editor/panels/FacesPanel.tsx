@@ -1,4 +1,4 @@
-import type { FaceMode } from '../../interfaces'
+import type { FaceMode } from '../../../interfaces'
 import styles from '../PhotoEditor.module.css'
 import { Chips } from './controls'
 import type { PanelProps } from './types'

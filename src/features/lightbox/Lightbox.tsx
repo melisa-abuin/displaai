@@ -6,20 +6,20 @@ import {
   normalizeTag,
   photoTags,
   thumbnailUrl,
-} from '../drive/api'
-import type { DriveFolder, DrivePhoto } from '../interfaces'
-import { useHeicTransform, useUpdateTags } from '../drive/hooks'
-import { useFreshThumbnails } from '../drive/libraryStore'
+} from '../../drive/api'
+import type { DriveFolder, DrivePhoto } from '../../interfaces'
+import { useHeicTransform, useUpdateTags } from '../../drive/hooks'
+import { useFreshThumbnails } from '../../drive/libraryStore'
 import { PhotoEditor } from '../editor/PhotoEditor'
-import { formatBytes, formatDate, formatNumber } from '../format'
-import { mediaKindOf } from '../mediaKind'
-import { useLocalAi } from '../settings'
-import { useFaces, useScene } from '../vision/hooks'
-import { Button } from './Button'
+import { formatBytes, formatDate, formatNumber } from '../../lib/format'
+import { mediaKindOf } from '../../lib/mediaKind'
+import { useLocalAi } from '../settings/preferences'
+import { useFaces, useScene } from '../../vision/hooks'
+import { Button } from '../../ui/Button'
 import styles from './Lightbox.module.css'
 import { RegionBoxes } from './RegionBoxes'
-import { Switch } from './Switch'
-import { TagEditor } from './TagEditor'
+import { Switch } from '../../ui/Switch'
+import { TagEditor } from '../tags/TagEditor'
 
 const ICON = {
   width: 24,

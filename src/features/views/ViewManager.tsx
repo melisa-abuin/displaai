@@ -4,10 +4,10 @@ import type {
   TagCount,
   TagFilter,
   CustomView,
-} from '../interfaces'
-import { cycleTag, tagState } from '../drive/tagFilter'
-import { newViewId } from '../drive/views'
-import { Button } from './Button'
+} from '../../interfaces'
+import { cycleTag, tagState } from '../../drive/tagFilter'
+import { newViewId } from './views'
+import { Button } from '../../ui/Button'
 import styles from './ViewManager.module.css'
 
 const NEW_VIEW = 'new'

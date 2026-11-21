@@ -9,7 +9,7 @@ import {
     type RefObject,
 } from 'react'
 import styles from './Timeline.module.css'
-import type { TimelineMonth } from '../interfaces'
+import type { TimelineMonth } from '../../interfaces'
 
 const MIN_YEAR_GAP = 22
 const MIN_MONTH_GAP = 7
