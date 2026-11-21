@@ -1,6 +1,6 @@
 import { DomEvent, latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { type DriveFolder, type PhotoLocation } from '../drive/api'
 import { usePhotoLocations } from '../drive/hooks'
@@ -11,6 +11,21 @@ import styles from './PhotoMap.module.css'
 
 // Web Mercator tiles end at about 85.05Â° latitude.
 const WORLD = latLngBounds([-85.0511, -180], [85.0511, 180])
+
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
+function subscribeDark(listener: () => void) {
+  const query = window.matchMedia?.(DARK_QUERY)
+  query?.addEventListener('change', listener)
+  return () => query?.removeEventListener('change', listener)
+}
+
+const getIsDark = () => window.matchMedia?.(DARK_QUERY).matches ?? true
+
+/** The map style follows the system theme, like the rest of the app. */
+function useIsDark() {
+  return useSyncExternalStore(subscribeDark, getIsDark)
+}
 
 // Stops zooming out once the world fills the whole container, so nothing but map shows.
 function LockToWorld() {
@@ -97,6 +112,7 @@ export function PhotoMap({
 }) {
   const { data, isLoading, error } = usePhotoLocations(folderIds, filters)
   const [grouped, setGrouped] = useState(true)
+  const isDark = useIsDark()
 
   if (isLoading)
     return <p className={styles.status}>Loading locations&hellip;</p>
@@ -122,7 +138,7 @@ export function PhotoMap({
     >
       <TileLayer
         attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank" rel="noreferrer">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+        url={`https://tiles.stadiamaps.com/tiles/${isDark ? 'alidade_smooth_dark' : 'alidade_smooth'}/{z}/{x}/{y}{r}.png`}
         noWrap
       />
       <LockToWorld />

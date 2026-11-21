@@ -180,8 +180,14 @@
 }
 
 .leaflet-container {
-  background-color: var(--primary-black);
+  background-color: #f3f1ee;
   z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .leaflet-container {
+    background-color: var(--primary-black);
+  }
 }
 
 .leaflet-container:focus,

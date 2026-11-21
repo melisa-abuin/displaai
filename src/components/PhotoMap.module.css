@@ -11,17 +11,17 @@
   text-align: center;
 }
 
-/* Sits to the right of Leaflet's zoom buttons (30px wide, 34px on touch screens). */
+/* Sits below Leaflet's zoom buttons (26px wide, 30px on touch screens). */
 .groupToggle {
   position: absolute;
-  top: 10px;
-  left: 50px;
+  top: 71px;
+  left: 10px;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: 0;
   border-radius: 4px;
@@ -32,9 +32,9 @@
 }
 
 :global(.leaflet-touch) .groupToggle {
-  left: 54px;
-  width: 34px;
-  height: 34px;
+  top: 79px;
+  width: 30px;
+  height: 30px;
 }
 
 .groupToggle:hover {
