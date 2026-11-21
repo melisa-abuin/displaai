@@ -1,6 +1,6 @@
-﻿import { latLngBounds } from 'leaflet'
+import { DomEvent, latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { type DriveFolder, type PhotoLocation } from '../drive/api'
 import { usePhotoLocations } from '../drive/hooks'
@@ -42,6 +42,50 @@ function FitBounds({ photos }: { photos: PhotoLocation[] }) {
   return null
 }
 
+/** A button beside the zoom controls that switches between clustered and individual photos. */
+function GroupToggle({
+  grouped,
+  onChange,
+}: {
+  grouped: boolean
+  onChange: (grouped: boolean) => void
+}) {
+  const element = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!element.current) return
+    // Keeps clicks and double-clicks on the button from reaching the map.
+    DomEvent.disableClickPropagation(element.current)
+  }, [])
+  const label = grouped ? 'Show every photo' : 'Group photos into clusters'
+  return (
+    <button
+      ref={element}
+      type="button"
+      className={styles.groupToggle}
+      aria-pressed={grouped}
+      aria-label={label}
+      title={label}
+      onClick={() => onChange(!grouped)}
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="9" cy="9" r="5" />
+        <circle cx="16" cy="16" r="4" />
+        <circle cx="18" cy="6" r="2" />
+      </svg>
+    </button>
+  )
+}
+
 export function PhotoMap({
   folderIds,
   folders,
@@ -52,6 +96,7 @@ export function PhotoMap({
   filters: readonly TagFilter[]
 }) {
   const { data, isLoading, error } = usePhotoLocations(folderIds, filters)
+  const [grouped, setGrouped] = useState(true)
 
   if (isLoading)
     return <p className={styles.status}>Loading locations&hellip;</p>
@@ -82,7 +127,8 @@ export function PhotoMap({
       />
       <LockToWorld />
       <FitBounds photos={photos} />
-      <PhotoClusters photos={photos} folders={folders} />
+      <PhotoClusters photos={photos} folders={folders} grouped={grouped} />
+      <GroupToggle grouped={grouped} onChange={setGrouped} />
     </MapContainer>
   )
 }

@@ -128,6 +128,7 @@ export function Sidebar({
   const [revealedId, setRevealedId] = useState<string | null>(null)
   const isMobile = useIsMobile()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [tagsOpen, setTagsOpen] = useState(true)
   const isDrawerOpen = isMobile && drawerOpen
 
   useEffect(() => {
@@ -276,7 +277,30 @@ export function Sidebar({
   const tagFilters = !isSettingsOpen && tags && tags.length > 0 && (
     <section className={styles.filters} aria-label="Filter by tag">
       <div className={styles.filtersHeader}>
-        <h2 className={styles.filtersTitle}>Tags</h2>
+        <h2 className={styles.filtersTitle}>
+          <button
+            type="button"
+            className={styles.filtersToggle}
+            aria-expanded={tagsOpen}
+            onClick={() => setTagsOpen(!tagsOpen)}
+          >
+            <svg
+              className={tagsOpen ? styles.chevronOpen : undefined}
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+            Tags
+          </button>
+        </h2>
         {selectedCount > 0 && (
           <button
             type="button"
@@ -287,7 +311,7 @@ export function Sidebar({
           </button>
         )}
       </div>
-      {filter.tags.length > 1 && (
+      {tagsOpen && filter.tags.length > 1 && (
         <div className={styles.match} role="group" aria-label="Match">
           {(['any', 'all'] as const).map((value: TagMatch) => (
             <button
@@ -302,29 +326,33 @@ export function Sidebar({
           ))}
         </div>
       )}
-      <ul className={styles.tagList}>
-        {tags.map((tag) => {
-          const state = tagState(filter, tag.name)
-          return (
-            <li key={tag.name}>
-              <button
-                type="button"
-                className={styles.tag}
-                aria-pressed={state === 'off' ? false : true}
-                data-state={state}
-                title={`${tag.name}${state === 'exclude' ? ' (excluded)' : ''}`}
-                onClick={() => onFilterChange(cycleTag(filter, tag.name))}
-              >
-                <span className={styles.name}>
-                  {state === 'exclude' ? 'Not ' : ''}
-                  {tag.name}
-                </span>{' '}
-                <span className={styles.count}>{formatNumber(tag.count)}</span>
-              </button>
-            </li>
-          )
-        })}{' '}
-      </ul>
+      {tagsOpen && (
+        <ul className={styles.tagList}>
+          {tags.map((tag) => {
+            const state = tagState(filter, tag.name)
+            return (
+              <li key={tag.name}>
+                <button
+                  type="button"
+                  className={styles.tag}
+                  aria-pressed={state === 'off' ? false : true}
+                  data-state={state}
+                  title={`${tag.name}${state === 'exclude' ? ' (excluded)' : ''}`}
+                  onClick={() => onFilterChange(cycleTag(filter, tag.name))}
+                >
+                  <span className={styles.name}>
+                    {state === 'exclude' ? 'Not ' : ''}
+                    {tag.name}
+                  </span>{' '}
+                  <span className={styles.count}>
+                    {formatNumber(tag.count)}
+                  </span>
+                </button>
+              </li>
+            )
+          })}{' '}
+        </ul>
+      )}
     </section>
   )
 

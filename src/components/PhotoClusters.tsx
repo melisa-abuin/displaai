@@ -84,13 +84,51 @@ function ClusterMarker({
   )
 }
 
-/** Photos on the map: single dots, merged into numbered clusters while zoomed out. */
+/** One photo as a dot; its popup shows the photo. */
+function PhotoDot({
+  photo,
+  folders,
+}: {
+  photo: PhotoLocation
+  folders: ReadonlyMap<string, DriveFolder> | undefined
+}) {
+  const position: [number, number] = [photo.latitude, photo.longitude]
+  return (
+    <CircleMarker
+      center={position}
+      radius={5}
+      pathOptions={{
+        color: '#ffffff',
+        weight: 1,
+        fillColor: '#aa85f8',
+        fillOpacity: 0.9,
+      }}
+      eventHandlers={{
+        // Anchor to the dot's center, not the exact click point.
+        popupopen: (e) => e.popup.setLatLng(position),
+      }}
+    >
+      <Popup
+        className="photo-popup"
+        minWidth={240}
+        maxWidth={240}
+        offset={[0, -8]}
+      >
+        <PhotoCard photo={photo} folders={folders} />
+      </Popup>
+    </CircleMarker>
+  )
+}
+
+/** Photos on the map: single dots, merged into numbered clusters while zoomed out and `grouped`. */
 export function PhotoClusters({
   photos,
   folders,
+  grouped,
 }: {
   photos: PhotoLocation[]
   folders: ReadonlyMap<string, DriveFolder> | undefined
+  grouped: boolean
 }) {
   const map = useMap()
 
@@ -110,23 +148,40 @@ export function PhotoClusters({
   }, [photos])
 
   const [clusters, setClusters] = useState<Clusters>([])
+  const [dots, setDots] = useState<PhotoLocation[]>([])
   const update = useCallback(() => {
     const bounds = map.getBounds().pad(0.2)
-    setClusters(
-      index.getClusters(
-        [
-          bounds.getWest(),
-          bounds.getSouth(),
-          bounds.getEast(),
-          bounds.getNorth(),
-        ],
-        Math.round(map.getZoom()),
-      ),
-    )
-  }, [map, index])
+    if (grouped) {
+      setDots([])
+      setClusters(
+        index.getClusters(
+          [
+            bounds.getWest(),
+            bounds.getSouth(),
+            bounds.getEast(),
+            bounds.getNorth(),
+          ],
+          Math.round(map.getZoom()),
+        ),
+      )
+    } else {
+      setClusters([])
+      // Only the photos in view are drawn, to keep large libraries fast.
+      setDots(
+        photos.filter((photo) =>
+          bounds.contains([photo.latitude, photo.longitude]),
+        ),
+      )
+    }
+  }, [map, index, photos, grouped])
 
   useMapEvents({ moveend: update })
   useEffect(update, [update])
+
+  if (!grouped)
+    return dots.map((photo) => (
+      <PhotoDot key={photo.id} photo={photo} folders={folders} />
+    ))
 
   return clusters.map((feature) => {
     const [lng, lat] = feature.geometry.coordinates
@@ -146,31 +201,6 @@ export function PhotoClusters({
       )
     }
     const { photo } = feature.properties as PointProps
-    return (
-      <CircleMarker
-        key={photo.id}
-        center={[lat, lng]}
-        radius={5}
-        pathOptions={{
-          color: '#ffffff',
-          weight: 1,
-          fillColor: '#aa85f8',
-          fillOpacity: 0.9,
-        }}
-        eventHandlers={{
-          // Anchor to the dot's center, not the exact click point.
-          popupopen: (e) => e.popup.setLatLng([lat, lng]),
-        }}
-      >
-        <Popup
-          className="photo-popup"
-          minWidth={240}
-          maxWidth={240}
-          offset={[0, -8]}
-        >
-          <PhotoCard photo={photo} folders={folders} />
-        </Popup>
-      </CircleMarker>
-    )
+    return <PhotoDot key={photo.id} photo={photo} folders={folders} />
   })
 }

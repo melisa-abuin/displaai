@@ -313,6 +313,22 @@ button.toggle:hover {
   opacity: 0.7;
 }
 
+.filtersToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.filtersToggle svg {
+  transition: transform 0.15s;
+}
+
 .clear {
   padding: 0;
   border: 0;
