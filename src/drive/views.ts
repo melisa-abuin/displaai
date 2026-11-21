@@ -1,23 +1,7 @@
 ﻿import { useCallback, useSyncExternalStore } from 'react'
-import type { TagMatch } from './tagFilter'
+import type { CustomView } from '../interfaces'
 
 const STORAGE_KEY = 'drive-photos:views'
-
-interface ViewFolder {
-  id: string
-  /** Also include everything inside the folder's subfolders. */
-  recursive: boolean
-}
-
-/** A saved gallery: photos from some folders (all connected ones if none), narrowed by tags. */
-export interface CustomView {
-  id: string
-  name: string
-  folders: ViewFolder[]
-  tags: string[]
-  exclude: string[]
-  match: TagMatch
-}
 
 const EMPTY: readonly CustomView[] = []
 

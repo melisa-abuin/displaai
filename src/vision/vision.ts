@@ -1,21 +1,12 @@
 import type { Detection } from '@mediapipe/tasks-vision'
 import wasmLoaderPath from '@mediapipe/tasks-vision/vision_wasm_internal.js?url'
 import wasmBinaryPath from '@mediapipe/tasks-vision/vision_wasm_internal.wasm?url'
+import type { Region } from '../interfaces'
 
 const MODEL_BASE = 'https://storage.googleapis.com/mediapipe-models'
 const FACE_MODEL = `${MODEL_BASE}/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`
 const OBJECT_MODEL = `${MODEL_BASE}/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`
 const CLASSIFIER_MODEL = `${MODEL_BASE}/image_classifier/efficientnet_lite0/float32/1/efficientnet_lite0.tflite`
-
-/** A region of an image; every coordinate is a 0-1 fraction of the image's size. */
-export interface Region {
-  x: number
-  y: number
-  width: number
-  height: number
-  score: number
-  label?: string
-}
 
 interface Label {
   name: string

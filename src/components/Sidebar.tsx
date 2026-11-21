@@ -1,11 +1,6 @@
 ﻿import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { DriveFolder, TagCount } from '../drive/api'
-import {
-  cycleTag,
-  tagState,
-  type TagFilter,
-  type TagMatch,
-} from '../drive/tagFilter'
+import type { DriveFolder, TagCount, TagMatch, TagFilter } from '../interfaces'
+import { cycleTag, tagState } from '../drive/tagFilter'
 import { formatNumber } from '../format'
 import styles from './Sidebar.module.css'
 

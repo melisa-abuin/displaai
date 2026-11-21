@@ -6,9 +6,8 @@ import {
   normalizeTag,
   photoTags,
   thumbnailUrl,
-  type DriveFolder,
-  type DrivePhoto,
 } from '../drive/api'
+import type { DriveFolder, DrivePhoto } from '../interfaces'
 import { useHeicTransform, useUpdateTags } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
 import { PhotoEditor } from '../editor/PhotoEditor'

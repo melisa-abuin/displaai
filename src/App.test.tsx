@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { AuthContext, type AuthState } from './auth/context'
+import { AuthContext } from './auth/context'
+import type { AuthState } from './interfaces'
 import { queryClient } from './queryClient'
 
 function renderApp(auth: Partial<AuthState>) {

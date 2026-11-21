@@ -1,62 +1,12 @@
 import { toBitmap } from '../vision/vision'
-
-export interface Crop {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-
-type OverlayStyle = 'plain' | 'outline' | 'band'
-
-/** Text or an emoji sticker; position and size are fractions of the output. */
-export interface Overlay {
-  id: number
-  kind: 'text' | 'emoji'
-  text: string
-  x: number
-  y: number
-  /** Font size as a fraction of the output height. */
-  size: number
-  color: string
-  style: OverlayStyle
-  bold: boolean
-}
-
-export type FaceMode = 'none' | 'blur' | 'pixelate' | 'emoji'
-type FrameStyle = 'none' | 'solid' | 'polaroid'
-
-export interface Adjust {
-  brightness: number
-  contrast: number
-  saturation: number
-  warmth: number
-  fade: number
-  glow: number
-  blur: number
-  vignette: number
-  grain: number
-}
-
-export interface EditState {
-  /** Quarter turns clockwise. */
-  rotate: number
-  flipX: boolean
-  flipY: boolean
-  /** Straighten angle in degrees. */
-  angle: number
-  /** Fractions of the rotated image. */
-  crop: Crop
-  /** Output width in pixels before the frame (height follows the crop); null keeps the cropped size. */
-  width: number | null
-  filter: string
-  filterAmount: number
-  adjust: Adjust
-  faces: FaceMode
-  faceEmoji: string
-  frame: { style: FrameStyle; color: string; size: number }
-  overlays: Overlay[]
-}
+import type {
+  Crop,
+  Overlay,
+  FaceMode,
+  Adjust,
+  EditState,
+  Region,
+} from '../interfaces'
 
 const FULL_CROP: Crop = { x: 0, y: 0, w: 1, h: 1 }
 
@@ -344,20 +294,13 @@ function effective(state: EditState): Effective {
   }
 }
 
-export interface Region {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
 const EMOJI_FONT =
   '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
 
 /** Covers faces (fractions of the source) with a blur, pixelation or emoji. */
 export function applyFaces(
   source: HTMLCanvasElement,
-  regions: readonly Region[],
+  regions: readonly Pick<Region, 'x' | 'y' | 'width' | 'height'>[],
   mode: FaceMode,
   emoji: string,
 ): HTMLCanvasElement {

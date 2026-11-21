@@ -1,7 +1,5 @@
-import type { DrivePhoto } from './drive/api'
+import type { DrivePhoto, SortOrder } from './interfaces'
 import { parseDate } from './format'
-
-export type SortOrder = 'taken-desc' | 'taken-asc' | 'added-desc' | 'added-asc'
 
 export const DEFAULT_SORT: SortOrder = 'taken-desc'
 

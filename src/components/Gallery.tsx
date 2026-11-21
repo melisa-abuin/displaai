@@ -6,10 +6,16 @@
   useState,
   type ReactNode,
 } from 'react'
-import { thumbnailUrl, type DriveFolder, type DrivePhoto } from '../drive/api'
+import { thumbnailUrl } from '../drive/api'
+import type {
+  DriveFolder,
+  DrivePhoto,
+  TagFilter,
+  TimelineMonth,
+} from '../interfaces'
 import { usePhotos } from '../drive/hooks'
 import { useFreshThumbnails } from '../drive/libraryStore'
-import { isEmptyFilter, type TagFilter } from '../drive/tagFilter'
+import { isEmptyFilter } from '../drive/tagFilter'
 import { formatNumber } from '../format'
 import { mediaKindOf } from '../mediaKind'
 import { monthOf, SORT_OPTIONS, sortByDate } from '../photoSort'
@@ -20,7 +26,7 @@ import styles from './Gallery.module.css'
 import { LazyImage } from './LazyImage'
 import { Lightbox } from './Lightbox'
 import { TagEditor } from './TagEditor'
-import { Timeline, type TimelineMonth } from './Timeline'
+import { Timeline } from './Timeline'
 
 const MIN_TILE = 180
 const GAP = 8

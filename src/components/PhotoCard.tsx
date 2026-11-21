@@ -1,8 +1,5 @@
-import {
-  thumbnailUrl,
-  type DriveFolder,
-  type PhotoLocation,
-} from '../drive/api'
+import { thumbnailUrl } from '../drive/api'
+import type { DriveFolder, PhotoLocation } from '../interfaces'
 import { useFreshThumbnails } from '../drive/libraryStore'
 import { formatDate } from '../format'
 import styles from './PhotoMap.module.css'

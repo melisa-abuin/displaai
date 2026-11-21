@@ -1,4 +1,4 @@
-import type { Region } from '../vision/vision'
+import type { Region } from '../interfaces'
 import styles from './RegionBoxes.module.css'
 
 const percent = (fraction: number) => `${fraction * 100}%`

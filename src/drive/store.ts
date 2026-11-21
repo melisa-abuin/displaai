@@ -1,4 +1,4 @@
-import type { IndexedFolder, IndexedPhoto } from './api'
+import type { IndexedPhoto, IndexedFolder } from '../interfaces'
 
 const DB_NAME = 'drive-photos-displayer'
 const DB_VERSION = 3

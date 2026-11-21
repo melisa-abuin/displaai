@@ -1,15 +1,5 @@
-﻿import { photoTags, type DrivePhoto } from './api'
-
-/** `any` keeps photos with at least one selected tag, `all` those with every one. */
-export type TagMatch = 'any' | 'all'
-
-export interface TagFilter {
-  /** Tags to include, combined according to `match`. */
-  tags: readonly string[]
-  /** Photos with any of these tags are always left out. */
-  exclude: readonly string[]
-  match: TagMatch
-}
+﻿import { photoTags } from './api'
+import type { DrivePhoto, TagFilter } from '../interfaces'
 
 /** Filters that must all match; a view's own filter plus the sidebar's. */
 export const NO_FILTERS: readonly TagFilter[] = []

@@ -1,10 +1,4 @@
-import type { DriveFolder } from './api'
-
-export interface FolderIndex {
-  byId: Map<string, DriveFolder>
-  /** Non-empty folders grouped by parent; top-level folders are under `null`. */
-  children: Map<string | null, DriveFolder[]>
-}
+import type { DriveFolder, FolderIndex } from '../interfaces'
 
 /** Indexes folders, leaving out those without photos anywhere inside them. */
 export function buildFolderIndex(folders: DriveFolder[]): FolderIndex {

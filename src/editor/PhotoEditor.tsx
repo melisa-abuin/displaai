@@ -8,12 +8,15 @@ import {
   type ReactNode,
 } from 'react'
 import { Button } from '../components/Button'
-import {
-  fetchPhotoBlob,
-  tagProperties,
-  type DrivePhoto,
-  type IndexedPhoto,
-} from '../drive/api'
+import { fetchPhotoBlob, tagProperties } from '../drive/api'
+import type {
+  DrivePhoto,
+  IndexedPhoto,
+  Overlay,
+  FaceMode,
+  Adjust,
+  EditState,
+} from '../interfaces'
 import {
   useRenamePhoto,
   useSaveEditedPhoto,
@@ -36,10 +39,6 @@ import {
   orientedSize,
   outputSize,
   renderEdit,
-  type Adjust,
-  type EditState,
-  type FaceMode,
-  type Overlay,
 } from './edit'
 import styles from './PhotoEditor.module.css'
 

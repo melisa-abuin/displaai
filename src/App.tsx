@@ -8,7 +8,7 @@ import { PhotoMap } from './components/PhotoMap'
 import { Settings } from './components/Settings'
 import { Sidebar } from './components/Sidebar'
 import { ViewManager } from './components/ViewManager'
-import type { DriveFolder } from './drive/api'
+import type { DriveFolder, TagFilter, CustomView } from './interfaces'
 import { useConnectedFolders } from './drive/connectedFolders'
 import {
   buildFolderIndex,
@@ -21,8 +21,8 @@ import {
   useTags,
   useUserEmail
 } from './drive/hooks'
-import { pruneFilter, type TagFilter } from './drive/tagFilter'
-import { useViews, type CustomView } from './drive/views'
+import { pruneFilter } from './drive/tagFilter'
+import { useViews } from './drive/views'
 import {
   parseRoute,
   paths,

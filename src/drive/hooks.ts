@@ -8,10 +8,14 @@ import {
   trashPhoto,
   updatePhotoTags,
   uploadImage,
-  type PhotoLocation,
-  type PhotoPage,
-  type TagCount,
 } from './api'
+import type {
+  TagCount,
+  PhotoPage,
+  PhotoLocation,
+  TagChange,
+  TagFilter,
+} from '../interfaces'
 import { useConnectedFolders } from './connectedFolders'
 import { buildFolderIndex, descendantIds } from './folderTree'
 import {
@@ -25,7 +29,7 @@ import {
   useLibrary,
   useLibraryState,
 } from './libraryStore'
-import { matchesFilters, NO_FILTERS, type TagFilter } from './tagFilter'
+import { matchesFilters, NO_FILTERS } from './tagFilter'
 const SYNC_STALE_MS = 1000 * 60 * 15 // 15 minutes
 
 /** Folders of the Drive; keeps the local index in sync while mounted. */
@@ -142,12 +146,6 @@ export function useSaveEditedPhoto(token: string) {
       return id
     },
   })
-}
-
-export interface TagChange {
-  photoId: string
-  add: string[]
-  remove: string[]
 }
 
 const BULK_TAG_CONCURRENCY = 4

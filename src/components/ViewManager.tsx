@@ -1,8 +1,12 @@
 ﻿import { useMemo, useState } from 'react'
-import type { TagCount } from '../drive/api'
-import type { DriveFolder } from '../drive/api'
-import { cycleTag, tagState, type TagFilter } from '../drive/tagFilter'
-import { newViewId, type CustomView } from '../drive/views'
+import type {
+  DriveFolder,
+  TagCount,
+  TagFilter,
+  CustomView,
+} from '../interfaces'
+import { cycleTag, tagState } from '../drive/tagFilter'
+import { newViewId } from '../drive/views'
 import { Button } from './Button'
 import styles from './ViewManager.module.css'
 

@@ -9,14 +9,7 @@ import {
     type RefObject,
 } from 'react'
 import styles from './Timeline.module.css'
-
-export interface TimelineMonth {
-  key: number
-  year?: number
-  label: string
-  /** Index of the month's heading in the list. */
-  itemIndex: number
-}
+import type { TimelineMonth } from '../interfaces'
 
 const MIN_YEAR_GAP = 22
 const MIN_MONTH_GAP = 7

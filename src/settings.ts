@@ -1,11 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import {
-    DEFAULT_MEDIA_KINDS,
-    isMediaKind,
-    MEDIA_KINDS,
-    type MediaKind,
-} from './mediaKind'
-import { DEFAULT_SORT, isSortOrder, type SortOrder } from './photoSort'
+import { DEFAULT_MEDIA_KINDS, isMediaKind, MEDIA_KINDS } from './mediaKind'
+import type { MediaKind, SortOrder } from './interfaces'
+import { DEFAULT_SORT, isSortOrder } from './photoSort'
 
 const LOCAL_AI_KEY = 'drive-photos:local-ai'
 const SORT_KEY = 'drive-photos:sort'

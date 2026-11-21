@@ -3,7 +3,8 @@ import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { clearIndex } from '../drive/libraryStore'
 import { AuthContext } from './context'
-import { requestAccessToken, revokeAccessToken, type AccessToken } from './gis'
+import { requestAccessToken, revokeAccessToken } from './gis'
+import type { AccessToken } from '../interfaces'
 
 const STORAGE_KEY = 'drive-photos-displayer:token'
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID

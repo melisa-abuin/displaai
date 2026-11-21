@@ -1,4 +1,4 @@
-export type MediaKind = 'images' | 'gifs' | 'videos'
+import type { MediaKind } from './interfaces'
 
 export const MEDIA_KINDS: readonly {
   value: MediaKind

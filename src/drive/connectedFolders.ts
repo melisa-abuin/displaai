@@ -1,12 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import type { ConnectedFolder } from '../interfaces'
 
 const STORAGE_KEY = 'drive-photos:connected-folders'
-
-export interface ConnectedFolder {
-  id: string
-  /** Also show everything inside the folder's subfolders. */
-  recursive: boolean
-}
 
 const EMPTY: readonly ConnectedFolder[] = []
 

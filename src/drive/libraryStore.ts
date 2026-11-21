@@ -7,13 +7,16 @@ import {
   listAllPhotos,
   listChanges,
   photoTags,
-  type DriveFolder,
-  type IndexedFolder,
-  type IndexedPhoto,
-  type Library,
   THUMBNAIL_BATCH_SIZE,
 } from './api'
-import { mediaKindOf, type MediaKind } from '../mediaKind'
+import type {
+  DriveFolder,
+  Library,
+  IndexedPhoto,
+  IndexedFolder,
+  MediaKind,
+} from '../interfaces'
+import { mediaKindOf } from '../mediaKind'
 import { getMediaKinds, useMediaKinds } from '../settings'
 import { readAll, writeBatch } from './store'
 

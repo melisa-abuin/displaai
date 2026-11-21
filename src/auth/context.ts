@@ -1,12 +1,5 @@
 import { createContext, useContext } from 'react'
-
-export interface AuthState {
-  token: string | null
-  error: string | null
-  isConfigured: boolean
-  signIn: () => Promise<void>
-  signOut: () => Promise<void>
-}
+import type { AuthState } from '../interfaces'
 
 export const AuthContext = createContext<AuthState | null>(null)
 

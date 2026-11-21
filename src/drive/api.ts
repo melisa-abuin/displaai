@@ -1,71 +1,7 @@
+import type { DrivePhoto, IndexedPhoto, IndexedFolder } from '../interfaces'
+
 const API = 'https://www.googleapis.com/drive/v3'
 const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3'
-
-export interface DriveFolder {
-  id: string
-  name: string
-  parentId?: string
-  path: string
-  /** False for folders other people shared with you. */
-  ownedByMe: boolean
-  /** Images directly inside this folder (not in subfolders). */
-  photoCount: number
-  /** Images in this folder and all of its subfolders. */
-  totalCount: number
-}
-
-export interface DrivePhoto {
-  id: string
-  name: string
-  mimeType: string
-  /** Ids of the folders containing the photo; always present for photos from the local index. */
-  parents?: string[]
-  thumbnailLink?: string
-  /** When `thumbnailLink` was fetched (ms); the link expires after a while. */
-  thumbnailAt?: number
-  /** Present only when the image has EXIF data (GPS may be missing). */
-  imageMediaMetadata?: {
-    location?: { latitude: number; longitude: number; altitude?: number }
-    time?: string
-    width?: number
-    height?: number
-  }
-  createdTime?: string
-  /** Bytes, as a string (Drive's format). */
-  size?: string
-  /** Custom properties private to this app; tags are stored as 'tag.<hash>' keys holding the tag name. */
-  appProperties?: Record<string, string>
-}
-
-export interface TagCount {
-  name: string
-  count: number
-}
-
-export interface Library {
-  folders: DriveFolder[]
-  /** Every distinct tag used by any photo in the Drive. */
-  tags: TagCount[]
-}
-
-/** A photo as kept in the local index. */
-export interface IndexedPhoto extends DrivePhoto {
-  parents: string[]
-}
-
-/** A folder as kept in the local index. */
-export interface IndexedFolder {
-  id: string
-  name: string
-  parents?: string[]
-  ownedByMe: boolean
-}
-
-export interface PhotoPage {
-  /** The folder all the photos of this page are in. */
-  folderId?: string
-  files: DrivePhoto[]
-}
 
 class UnauthorizedError extends Error {
   constructor() {
@@ -293,19 +229,6 @@ export async function listChanges(
     removedIds: [...removed],
     newStartPageToken,
   }
-}
-
-export interface PhotoLocation {
-  id: string
-  name: string
-  latitude: number
-  longitude: number
-  thumbnailLink?: string
-  thumbnailAt?: number
-  /** The folder (album) the photo is in. */
-  parentId?: string
-  /** EXIF capture time, falling back to when the file was added. */
-  date?: string
 }
 
 export async function fetchPhotoBlob(

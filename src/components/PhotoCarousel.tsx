@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
-import {
-  thumbnailUrl,
-  type DriveFolder,
-  type PhotoLocation,
-} from '../drive/api'
+import { thumbnailUrl } from '../drive/api'
+import type { DriveFolder, PhotoLocation } from '../interfaces'
 import { useFreshThumbnails } from '../drive/libraryStore'
 import { formatNumber } from '../format'
 import { PhotoCard } from './PhotoCard'
