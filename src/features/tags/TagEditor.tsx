@@ -3,8 +3,7 @@ import { normalizeTag, photoTags } from '../../drive/api'
 import type { DrivePhoto, TagChange } from '../../interfaces'
 import { useTags, useUpdateTagsBulk } from '../../drive/hooks'
 import styles from './TagEditor.module.css'
-
-const MAX_SUGGESTIONS = 8
+import { MAX_SUGGESTIONS } from './constants'
 
 /**
  * Edits the tags of one or several photos. With several, a tag some photos

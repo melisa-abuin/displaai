@@ -1,10 +1,11 @@
 import type { IndexedPhoto, IndexedFolder } from '../interfaces'
-
-const DB_NAME = 'drive-photos-displayer'
-const DB_VERSION = 3
-const PHOTOS = 'photos'
-const FOLDERS = 'folders'
-const META = 'meta'
+import {
+  DB_NAME,
+  DB_VERSION,
+  FOLDERS_STORE,
+  META_STORE,
+  PHOTOS_STORE,
+} from './constants'
 
 export interface Snapshot {
   photos: IndexedPhoto[]
@@ -29,9 +30,9 @@ function open(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
     request.onupgradeneeded = () => {
       const db = request.result
-      db.createObjectStore(PHOTOS, { keyPath: 'id' })
-      db.createObjectStore(FOLDERS, { keyPath: 'id' })
-      db.createObjectStore(META)
+      db.createObjectStore(PHOTOS_STORE, { keyPath: 'id' })
+      db.createObjectStore(FOLDERS_STORE, { keyPath: 'id' })
+      db.createObjectStore(META_STORE)
     }
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
@@ -77,11 +78,16 @@ function result<T>(request: IDBRequest<T>): Promise<T> {
 
 export async function readAll(): Promise<Snapshot> {
   const db = await openDb()
-  const tx = db.transaction([PHOTOS, FOLDERS, META], 'readonly')
-  const metaStore = tx.objectStore(META)
+  const tx = db.transaction(
+    [PHOTOS_STORE, FOLDERS_STORE, META_STORE],
+    'readonly',
+  )
+  const metaStore = tx.objectStore(META_STORE)
   const [photos, folders, keys, values] = await Promise.all([
-    result(tx.objectStore(PHOTOS).getAll() as IDBRequest<IndexedPhoto[]>),
-    result(tx.objectStore(FOLDERS).getAll() as IDBRequest<IndexedFolder[]>),
+    result(tx.objectStore(PHOTOS_STORE).getAll() as IDBRequest<IndexedPhoto[]>),
+    result(
+      tx.objectStore(FOLDERS_STORE).getAll() as IDBRequest<IndexedFolder[]>,
+    ),
     result(metaStore.getAllKeys() as IDBRequest<string[]>),
     result(metaStore.getAll() as IDBRequest<string[]>),
   ])
@@ -95,10 +101,13 @@ export async function readAll(): Promise<Snapshot> {
 /** Applies the whole batch in one transaction, so the store is never half-updated. */
 export async function writeBatch(batch: Batch): Promise<void> {
   const db = await openDb()
-  const tx = db.transaction([PHOTOS, FOLDERS, META], 'readwrite')
-  const photos = tx.objectStore(PHOTOS)
-  const folders = tx.objectStore(FOLDERS)
-  const meta = tx.objectStore(META)
+  const tx = db.transaction(
+    [PHOTOS_STORE, FOLDERS_STORE, META_STORE],
+    'readwrite',
+  )
+  const photos = tx.objectStore(PHOTOS_STORE)
+  const folders = tx.objectStore(FOLDERS_STORE)
+  const meta = tx.objectStore(META_STORE)
   if (batch.clear) {
     photos.clear()
     folders.clear()

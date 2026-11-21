@@ -1,14 +1,6 @@
 import type { DrivePhoto, SortOrder } from '../interfaces'
 import { parseDate } from './format'
-
-export const DEFAULT_SORT: SortOrder = 'taken-desc'
-
-export const SORT_OPTIONS: readonly { value: SortOrder; label: string }[] = [
-  { value: 'taken-desc', label: 'Date taken: newest first' },
-  { value: 'taken-asc', label: 'Date taken: oldest first' },
-  { value: 'added-desc', label: 'Date added: newest first' },
-  { value: 'added-asc', label: 'Date added: oldest first' },
-]
+import { SORT_OPTIONS } from './constants'
 
 export function isSortOrder(value: unknown): value is SortOrder {
   return SORT_OPTIONS.some((option) => option.value === value)

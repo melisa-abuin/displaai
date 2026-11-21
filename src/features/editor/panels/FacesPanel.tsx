@@ -2,8 +2,7 @@ import type { FaceMode } from '../../../interfaces'
 import styles from '../PhotoEditor.module.css'
 import { Chips } from './controls'
 import type { PanelProps } from './types'
-
-const FACE_EMOJI = ['😎', '🥸', '🤡', '😺', '🐵', '👽', '🤖', '🙈']
+import { FACE_EMOJI } from '../constants'
 
 export function FacesPanel({
   state,

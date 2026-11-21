@@ -5,13 +5,11 @@ import { clearIndex } from '../drive/libraryStore'
 import { AuthContext } from './context'
 import { requestAccessToken, revokeAccessToken } from './gis'
 import type { AccessToken } from '../interfaces'
-
-const STORAGE_KEY = 'drive-photos-displayer:token'
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+import { CLIENT_ID, TOKEN_STORAGE_KEY } from './constants'
 
 function loadStoredToken(): AccessToken | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(TOKEN_STORAGE_KEY)
     if (!raw) return null
     const token = JSON.parse(raw) as AccessToken
     return token.expiresAt > Date.now() ? token : null
@@ -27,10 +25,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token) {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(TOKEN_STORAGE_KEY)
       return
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(token))
+    localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token))
     const timeout = setTimeout(
       () => setToken(null),
       Math.max(token.expiresAt - Date.now(), 0),

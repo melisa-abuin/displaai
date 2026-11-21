@@ -9,8 +9,7 @@ import { cycleTag, tagState } from '../../drive/tagFilter'
 import { newViewId } from './views'
 import { Button } from '../../ui/Button'
 import styles from './ViewManager.module.css'
-
-const NEW_VIEW = 'new'
+import { NEW_VIEW } from './constants'
 
 /** A folder enabled in Manage folders; depth is its nesting below the connected folder. */
 interface ViewFolderOption {

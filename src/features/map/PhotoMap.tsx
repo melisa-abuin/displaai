@@ -7,11 +7,7 @@ import { usePhotoLocations } from '../../drive/hooks'
 import { PhotoClusters } from './PhotoClusters'
 import './PhotoMap.css'
 import styles from './PhotoMap.module.css'
-
-// Web Mercator tiles end at about 85.05Â° latitude.
-const WORLD = latLngBounds([-85.0511, -180], [85.0511, 180])
-
-const DARK_QUERY = '(prefers-color-scheme: dark)'
+import { DARK_QUERY, WORLD } from './constants'
 
 function subscribeDark(listener: () => void) {
   const query = window.matchMedia?.(DARK_QUERY)

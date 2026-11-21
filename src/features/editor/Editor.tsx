@@ -4,8 +4,6 @@ import type { DrivePhoto, EditState, Overlay } from '../../interfaces'
 import { useFaces } from '../../vision/hooks'
 import { EditorStage } from './EditorStage'
 import {
-  FILTERS,
-  INITIAL_STATE,
   applyFaces,
   cropForRatio,
   croppedSize,
@@ -15,7 +13,7 @@ import {
   renderEdit,
 } from './edit'
 import { AdjustPanel } from './panels/AdjustPanel'
-import { CropPanel, RATIOS } from './panels/CropPanel'
+import { CropPanel } from './panels/CropPanel'
 import { FacesPanel } from './panels/FacesPanel'
 import { FiltersPanel } from './panels/FiltersPanel'
 import { FramePanel } from './panels/FramePanel'
@@ -24,23 +22,15 @@ import { SizePanel } from './panels/SizePanel'
 import { TextPanel } from './panels/TextPanel'
 import styles from './PhotoEditor.module.css'
 import { useSaveForm } from './useSaveForm'
-
-const PREVIEW_SIDE = 1400
-const THUMB_SIDE = 96
-
-type Tab =
-  'crop' | 'filters' | 'adjust' | 'text' | 'faces' | 'frame' | 'size' | 'save'
-
-const TABS: [Tab, string][] = [
-  ['crop', 'Crop'],
-  ['filters', 'Filters'],
-  ['adjust', 'Adjust'],
-  ['text', 'Text & stickers'],
-  ['faces', 'Faces'],
-  ['frame', 'Frame'],
-  ['size', 'Resize'],
-  ['save', 'Save'],
-]
+import {
+  FILTERS,
+  INITIAL_STATE,
+  PREVIEW_SIDE,
+  RATIOS,
+  TABS,
+  THUMB_SIDE,
+  type Tab,
+} from './constants'
 
 export function Editor({
   token,

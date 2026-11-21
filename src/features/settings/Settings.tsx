@@ -1,10 +1,11 @@
 import { formatNumber } from '../../lib/format'
-import { MEDIA_KINDS } from '../../lib/mediaKind'
+
 import { reloadApp } from '../../queryClient'
 import { useLocalAi, useMediaKinds, useTimeline } from './preferences'
 import { Button } from '../../ui/Button'
 import styles from './Settings.module.css'
 import { Switch } from '../../ui/Switch'
+import { MEDIA_KINDS } from '../../lib/constants'
 
 interface SettingsProps {
   onSignOut: () => void

@@ -6,7 +6,8 @@ import {
   useTrashPhoto,
 } from '../../drive/hooks'
 import type { DrivePhoto, EditState, IndexedPhoto } from '../../interfaces'
-import { FORMATS, applyFaces, canvasToBlob, fileStem, renderEdit } from './edit'
+import { applyFaces, canvasToBlob, fileStem, renderEdit } from './edit'
+import { FORMATS } from './constants'
 
 export type SaveMode = 'copy' | 'overwrite' | 'rename'
 

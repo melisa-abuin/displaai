@@ -1,7 +1,6 @@
 ﻿import { useCallback, useSyncExternalStore } from 'react'
 import type { CustomView } from '../../interfaces'
-
-const STORAGE_KEY = 'drive-photos:views'
+import { VIEWS_STORAGE_KEY } from './constants'
 
 const EMPTY: readonly CustomView[] = []
 
@@ -47,7 +46,7 @@ function parse(raw: string | null): readonly CustomView[] {
 function read(): readonly CustomView[] {
   let raw: string | null
   try {
-    raw = window.localStorage.getItem(STORAGE_KEY)
+    raw = window.localStorage.getItem(VIEWS_STORAGE_KEY)
   } catch {
     return cachedValue
   }
@@ -61,7 +60,7 @@ function read(): readonly CustomView[] {
 function write(views: readonly CustomView[]) {
   const raw = JSON.stringify(views)
   try {
-    window.localStorage.setItem(STORAGE_KEY, raw)
+    window.localStorage.setItem(VIEWS_STORAGE_KEY, raw)
   } catch {
     cachedRaw = raw
     cachedValue = views

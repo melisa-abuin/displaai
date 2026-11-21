@@ -1,9 +1,8 @@
 import { useRef } from 'react'
 import type { Crop } from '../../interfaces'
 import styles from './PhotoEditor.module.css'
+import { HANDLES, MIN_CROP_SIZE } from './constants'
 
-const MIN = 0.05
-const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'] as const
 type Handle = (typeof HANDLES)[number]
 
 const clamp = (value: number, min: number, max: number) =>
@@ -55,7 +54,7 @@ export function CropBox({
       const ay = dirY < 0 ? from.y + from.h : from.y
       const maxW = dirX < 0 ? ax : 1 - ax
       const maxH = dirY < 0 ? ay : 1 - ay
-      let w = clamp(dirX * (p.x - ax), MIN, maxW)
+      let w = clamp(dirX * (p.x - ax), MIN_CROP_SIZE, maxW)
       let h = (w * imageAspect) / ratio
       if (h > maxH) {
         h = maxH
@@ -65,18 +64,18 @@ export function CropBox({
     }
     let { x, y, w, h } = from
     if (handle.includes('w')) {
-      const next = clamp(p.x, 0, x + w - MIN)
+      const next = clamp(p.x, 0, x + w - MIN_CROP_SIZE)
       w = x + w - next
       x = next
     } else if (handle.includes('e')) {
-      w = clamp(p.x - x, MIN, 1 - x)
+      w = clamp(p.x - x, MIN_CROP_SIZE, 1 - x)
     }
     if (handle.includes('n')) {
-      const next = clamp(p.y, 0, y + h - MIN)
+      const next = clamp(p.y, 0, y + h - MIN_CROP_SIZE)
       h = y + h - next
       y = next
     } else if (handle.includes('s')) {
-      h = clamp(p.y - y, MIN, 1 - y)
+      h = clamp(p.y - y, MIN_CROP_SIZE, 1 - y)
     }
     return { x, y, w, h }
   }

@@ -1,12 +1,18 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { DEFAULT_MEDIA_KINDS, isMediaKind, MEDIA_KINDS } from '../../lib/mediaKind'
+import { isMediaKind } from '../../lib/mediaKind'
 import type { MediaKind, SortOrder } from '../../interfaces'
-import { DEFAULT_SORT, isSortOrder } from '../../lib/photoSort'
-
-const LOCAL_AI_KEY = 'drive-photos:local-ai'
-const SORT_KEY = 'drive-photos:sort'
-const MEDIA_KINDS_KEY = 'drive-photos:media-kinds'
-const TIMELINE_KEY = 'drive-photos:timeline'
+import { isSortOrder } from '../../lib/photoSort'
+import {
+  LOCAL_AI_KEY,
+  MEDIA_KINDS_KEY,
+  SORT_KEY,
+  TIMELINE_KEY,
+} from './constants'
+import {
+  DEFAULT_MEDIA_KINDS,
+  MEDIA_KINDS,
+  DEFAULT_SORT,
+} from '../../lib/constants'
 
 const listeners = new Set<() => void>()
 // Used when localStorage is unavailable, so settings still last for the session.

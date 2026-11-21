@@ -1,8 +1,7 @@
 import styles from '../PhotoEditor.module.css'
 import { Chips, Slider } from './controls'
 import type { PanelProps } from './types'
-
-const FRAME_COLORS = ['#ffffff', '#000000', '#f6a655', '#aa85f8', '#ff5d8f']
+import { FRAME_COLORS } from '../constants'
 
 export function FramePanel({ state, patch }: PanelProps) {
   return (

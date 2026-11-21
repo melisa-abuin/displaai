@@ -30,7 +30,7 @@ import {
   useLibraryState,
 } from './libraryStore'
 import { matchesFilters, NO_FILTERS } from './tagFilter'
-const SYNC_STALE_MS = 1000 * 60 * 15 // 15 minutes
+import { BULK_TAG_CONCURRENCY, SYNC_STALE_MS } from './constants'
 
 /** Folders of the Drive; keeps the local index in sync while mounted. */
 export function useFolders(token: string) {
@@ -147,8 +147,6 @@ export function useSaveEditedPhoto(token: string) {
     },
   })
 }
-
-const BULK_TAG_CONCURRENCY = 4
 
 /** Applies tag changes to several photos; every change is attempted even if some fail. */
 export function useUpdateTagsBulk(token: string) {

@@ -3,173 +3,17 @@ import type {
   Crop,
   Overlay,
   FaceMode,
-  Adjust,
   EditState,
   Region,
+  Tint,
 } from '../../interfaces'
-
-const FULL_CROP: Crop = { x: 0, y: 0, w: 1, h: 1 }
-
-const NO_ADJUST: Adjust = {
-  brightness: 0,
-  contrast: 0,
-  saturation: 0,
-  warmth: 0,
-  fade: 0,
-  glow: 0,
-  blur: 0,
-  vignette: 0,
-  grain: 0,
-}
-
-export const INITIAL_STATE: EditState = {
-  rotate: 0,
-  flipX: false,
-  flipY: false,
-  angle: 0,
-  crop: FULL_CROP,
-  width: null,
-  filter: 'none',
-  filterAmount: 100,
-  adjust: NO_ADJUST,
-  faces: 'none',
-  faceEmoji: '😎',
-  frame: { style: 'none', color: '#ffffff', size: 4 },
-  overlays: [],
-}
-
-interface Tint {
-  color: string
-  alpha: number
-  mode: GlobalCompositeOperation
-}
-
-export interface FilterPreset {
-  id: string
-  name: string
-  brightness?: number
-  contrast?: number
-  saturate?: number
-  sepia?: number
-  grayscale?: number
-  hue?: number
-  fade?: number
-  vignette?: number
-  grain?: number
-  glow?: number
-  tint?: Tint
-}
-
-export const FILTERS: FilterPreset[] = [
-  { id: 'none', name: 'Original' },
-  {
-    id: 'clarendon',
-    name: 'Clarendon',
-    contrast: 1.2,
-    saturate: 1.35,
-    brightness: 1.05,
-    tint: { color: '#7fbbe3', alpha: 0.18, mode: 'overlay' },
-  },
-  {
-    id: 'juno',
-    name: 'Juno',
-    contrast: 1.1,
-    saturate: 1.4,
-    sepia: 0.1,
-    tint: { color: '#ffa700', alpha: 0.12, mode: 'overlay' },
-  },
-  {
-    id: 'lark',
-    name: 'Lark',
-    brightness: 1.12,
-    contrast: 0.95,
-    saturate: 1.2,
-    tint: { color: '#c8e1ff', alpha: 0.18, mode: 'soft-light' },
-  },
-  {
-    id: 'gingham',
-    name: 'Gingham',
-    brightness: 1.05,
-    contrast: 0.9,
-    hue: -10,
-    sepia: 0.05,
-    fade: 28,
-  },
-  {
-    id: 'valencia',
-    name: 'Valencia',
-    contrast: 1.08,
-    brightness: 1.08,
-    sepia: 0.08,
-    tint: { color: '#ffe1b4', alpha: 0.25, mode: 'soft-light' },
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset',
-    saturate: 1.3,
-    hue: -8,
-    tint: { color: '#ff783c', alpha: 0.28, mode: 'overlay' },
-  },
-  {
-    id: 'frost',
-    name: 'Frost',
-    brightness: 1.05,
-    saturate: 0.9,
-    tint: { color: '#50a0ff', alpha: 0.28, mode: 'overlay' },
-  },
-  {
-    id: 'dreamy',
-    name: 'Dreamy',
-    brightness: 1.08,
-    contrast: 0.92,
-    saturate: 1.2,
-    fade: 14,
-    glow: 55,
-  },
-  { id: 'pop', name: 'Pop', contrast: 1.3, saturate: 1.7 },
-  {
-    id: 'cyber',
-    name: 'Cyber',
-    hue: 20,
-    saturate: 1.6,
-    contrast: 1.2,
-    tint: { color: '#ff00c8', alpha: 0.2, mode: 'soft-light' },
-  },
-  {
-    id: 'polaroid',
-    name: 'Polaroid',
-    sepia: 0.2,
-    contrast: 0.95,
-    brightness: 1.1,
-    saturate: 1.2,
-    fade: 22,
-    vignette: 22,
-  },
-  {
-    id: 'vintage',
-    name: 'Vintage',
-    sepia: 0.35,
-    contrast: 0.9,
-    saturate: 0.8,
-    brightness: 1.05,
-    fade: 30,
-    vignette: 30,
-    grain: 25,
-  },
-  { id: 'sepia', name: 'Sepia', sepia: 0.9, contrast: 1.05 },
-  { id: 'moon', name: 'Moon', grayscale: 1, contrast: 1.1, brightness: 1.1 },
-  {
-    id: 'noir',
-    name: 'Noir',
-    grayscale: 1,
-    contrast: 1.5,
-    brightness: 0.9,
-    vignette: 40,
-  },
-]
-
-export const MAX_SOURCE_SIDE = 4096
-const MAX_OUTPUT_SIDE = 8192
+import {
+  EMOJI_FONT,
+  FILTERS,
+  FULL_CROP,
+  MAX_OUTPUT_SIDE,
+  MAX_SOURCE_SIDE,
+} from './constants'
 
 /** Decodes the photo upright, scaled down to a size that is safe to edit. */
 export async function decodeForEditing(blob: Blob): Promise<HTMLCanvasElement> {
@@ -293,9 +137,6 @@ function effective(state: EditState): Effective {
     grain: a.grain + (preset.grain ?? 0) * t,
   }
 }
-
-const EMOJI_FONT =
-  '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
 
 /** Covers faces (fractions of the source) with a blur, pixelation or emoji. */
 export function applyFaces(
@@ -552,12 +393,6 @@ export function canvasToBlob(
     ),
   )
 }
-
-export const FORMATS = [
-  { type: 'image/jpeg', label: 'JPEG', ext: 'jpg' },
-  { type: 'image/png', label: 'PNG', ext: 'png' },
-  { type: 'image/webp', label: 'WebP', ext: 'webp' },
-] as const
 
 /** "holiday.heic" -> "holiday" */
 export function fileStem(name: string): string {

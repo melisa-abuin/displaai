@@ -18,7 +18,7 @@ import { useFreshThumbnails } from '../../drive/libraryStore'
 import { isEmptyFilter } from '../../drive/tagFilter'
 import { formatNumber } from '../../lib/format'
 import { mediaKindOf } from '../../lib/mediaKind'
-import { monthOf, SORT_OPTIONS, sortByDate } from '../../lib/photoSort'
+import { monthOf, sortByDate } from '../../lib/photoSort'
 import { useGallerySort, useTimeline } from '../settings/preferences'
 import { Button } from '../../ui/Button'
 import { Dropdown } from '../../ui/Dropdown'
@@ -27,10 +27,8 @@ import { LazyImage } from '../../ui/LazyImage'
 import { Lightbox } from '../lightbox/Lightbox'
 import { TagEditor } from '../tags/TagEditor'
 import { Timeline } from './Timeline'
-
-const MIN_TILE = 180
-const GAP = 8
-const DEFAULT_COLUMNS = 4
+import { COLLAGE_SIZE, DEFAULT_COLUMNS, GAP, MIN_TILE } from './constants'
+import { SORT_OPTIONS } from '../../lib/constants'
 
 interface PhotoEntry {
   key: string
@@ -94,8 +92,6 @@ function SectionHeader({
     </div>
   )
 }
-
-const COLLAGE_SIZE = 4
 
 /** Up to four of the selected photos as a mosaic, the last one showing how many more there are. */
 function Collage({ photos }: { photos: DrivePhoto[] }) {
@@ -174,11 +170,7 @@ function PhotoRow({
             aria-pressed={isSelecting ? isSelected : undefined}
           >
             {thumbnail ? (
-              <LazyImage
-                src={thumbnail}
-                alt=""
-                referrerPolicy="no-referrer"
-              />
+              <LazyImage src={thumbnail} alt="" referrerPolicy="no-referrer" />
             ) : (
               <span className={styles.noThumb}>{photo.name}</span>
             )}
@@ -187,7 +179,12 @@ function PhotoRow({
                 className={`${styles.videoBadge} ${isSelecting ? styles.videoBadgeSelecting : ''}`}
                 aria-hidden="true"
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M7 4v16l13-8z" />
                 </svg>
               </span>

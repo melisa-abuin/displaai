@@ -162,6 +162,28 @@ export interface Overlay {
 
 export type FaceMode = 'none' | 'blur' | 'pixelate' | 'emoji'
 
+export interface Tint {
+  color: string
+  alpha: number
+  mode: GlobalCompositeOperation
+}
+
+export interface FilterPreset {
+  id: string
+  name: string
+  brightness?: number
+  contrast?: number
+  saturate?: number
+  sepia?: number
+  grayscale?: number
+  hue?: number
+  fade?: number
+  vignette?: number
+  grain?: number
+  glow?: number
+  tint?: Tint
+}
+
 type FrameStyle = 'none' | 'solid' | 'polaroid'
 
 export interface Adjust {

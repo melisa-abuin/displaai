@@ -1,7 +1,13 @@
 ﻿import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import type { TagFilter } from '../interfaces'
-
-const NAVIGATE_EVENT = 'app:navigate'
+import {
+  EXCLUDE_PARAM,
+  FOLDERS_PATH,
+  MATCH_PARAM,
+  NAVIGATE_EVENT,
+  TAG_PARAM,
+  VIEWS_PATH,
+} from './constants'
 
 export type Route =
   | { name: 'gallery' }
@@ -13,9 +19,6 @@ export type Route =
   | { name: 'folders'; path: string[] }
   | { name: 'peek'; folderId: string }
   | { name: 'notFound' }
-
-const FOLDERS_PATH = '/settings/folders'
-const VIEWS_PATH = '/settings/views'
 
 export const paths = {
   gallery: '/',
@@ -134,9 +137,6 @@ export function usePathname() {
   return useSyncExternalStore(subscribe, getPathname)
 }
 
-const TAG_PARAM = 'tag'
-const EXCLUDE_PARAM = 'not'
-const MATCH_PARAM = 'match'
 const NO_TAGS: readonly string[] = []
 
 /** Updates the filter parameters in place, leaving the path and history length alone. */

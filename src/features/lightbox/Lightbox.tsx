@@ -20,17 +20,7 @@ import styles from './Lightbox.module.css'
 import { RegionBoxes } from './RegionBoxes'
 import { Switch } from '../../ui/Switch'
 import { TagEditor } from '../tags/TagEditor'
-
-const ICON = {
-  width: 24,
-  height: 24,
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-} as const
+import { ICON_PROPS } from '../../ui/constants'
 
 /** Where an element sits inside its parent, including any transform, kept current on resize. */
 function useRectInParent() {
@@ -300,7 +290,7 @@ export function Lightbox({
         disabled={!hasPrevious}
         onClick={onPrevious}
       >
-        <svg {...ICON} aria-hidden="true">
+        <svg {...ICON_PROPS} aria-hidden="true">
           <path d="m15 18-6-6 6-6" />
         </svg>
       </button>
@@ -311,7 +301,7 @@ export function Lightbox({
         disabled={!hasNext}
         onClick={onNext}
       >
-        <svg {...ICON} aria-hidden="true">
+        <svg {...ICON_PROPS} aria-hidden="true">
           <path d="m9 18 6-6-6-6" />
         </svg>
       </button>
@@ -483,7 +473,7 @@ export function Lightbox({
               setEditing(true)
             }}
           >
-            <svg {...ICON} aria-hidden="true">
+            <svg {...ICON_PROPS} aria-hidden="true">
               <path d="M21.17 6.81a2.83 2.83 0 0 0-4-4L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5Z" />
               <path d="m15 5 4 4" />
             </svg>
@@ -496,7 +486,7 @@ export function Lightbox({
           aria-expanded={panel === 'info'}
           onClick={() => togglePanel('info')}
         >
-          <svg {...ICON} aria-hidden="true">
+          <svg {...ICON_PROPS} aria-hidden="true">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 16v-4M12 8h.01" />
           </svg>
@@ -508,7 +498,7 @@ export function Lightbox({
           aria-expanded={panel === 'tags'}
           onClick={() => togglePanel('tags')}
         >
-          <svg {...ICON} aria-hidden="true">
+          <svg {...ICON_PROPS} aria-hidden="true">
             <path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42Z" />
             <circle cx="7.5" cy="7.5" r="1.5" />
           </svg>

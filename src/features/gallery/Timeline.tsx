@@ -1,19 +1,16 @@
 import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    type KeyboardEvent,
-    type PointerEvent,
-    type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+  type RefObject,
 } from 'react'
 import styles from './Timeline.module.css'
 import type { TimelineMonth } from '../../interfaces'
-
-const MIN_YEAR_GAP = 22
-const MIN_MONTH_GAP = 7
-const IDLE_MS = 1000
+import { IDLE_MS, MIN_MONTH_GAP, MIN_YEAR_GAP } from './constants'
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value))

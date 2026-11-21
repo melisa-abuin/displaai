@@ -7,7 +7,6 @@ import {
   listAllPhotos,
   listChanges,
   photoTags,
-  THUMBNAIL_BATCH_SIZE,
 } from './api'
 import type {
   DriveFolder,
@@ -19,14 +18,14 @@ import type {
 import { mediaKindOf } from '../lib/mediaKind'
 import { getMediaKinds, useMediaKinds } from '../features/settings/preferences'
 import { readAll, writeBatch } from './store'
-
-const TOKEN_KEY = 'startPageToken'
-// Indexes written before videos were included lack this and are rebuilt.
-const SCOPE_KEY = 'scope'
-const SCOPE = 'media-v1'
-// Drive's thumbnail links stop working after a while; refresh well before that.
-const THUMBNAIL_TTL_MS = 1000 * 60 * 30
-const THUMBNAIL_CONCURRENCY = 2
+import {
+  LIBRARY_SCOPE,
+  SCOPE_KEY,
+  START_PAGE_TOKEN_KEY,
+  THUMBNAIL_BATCH_SIZE,
+  THUMBNAIL_CONCURRENCY,
+  THUMBNAIL_TTL_MS,
+} from './constants'
 
 interface State {
   /** The index was read from IndexedDB (or the first full sync finished). */
@@ -163,14 +162,14 @@ export function loadIndex(): Promise<void> {
       const snapshot = await readAll()
       // A sync that finished first is newer than what was stored.
       if (
-        snapshot.meta[SCOPE_KEY] === SCOPE &&
+        snapshot.meta[SCOPE_KEY] === LIBRARY_SCOPE &&
         photos.size === 0 &&
         folders.size === 0 &&
         !startPageToken
       ) {
         for (const photo of snapshot.photos) photos.set(photo.id, photo)
         for (const folder of snapshot.folders) folders.set(folder.id, folder)
-        startPageToken = snapshot.meta[TOKEN_KEY]
+        startPageToken = snapshot.meta[START_PAGE_TOKEN_KEY]
       }
       setState({ ready: startPageToken !== undefined }, true)
     } catch (error) {
@@ -191,7 +190,7 @@ async function fullSync(token: string) {
     clear: true,
     putPhotos: allPhotos,
     putFolders: allFolders,
-    meta: { [TOKEN_KEY]: nextToken, [SCOPE_KEY]: SCOPE },
+    meta: { [START_PAGE_TOKEN_KEY]: nextToken, [SCOPE_KEY]: LIBRARY_SCOPE },
   })
   photos.clear()
   folders.clear()
@@ -210,7 +209,7 @@ async function incrementalSync(token: string, from: string) {
     deleteFolders,
     putPhotos: changes.photos,
     putFolders: changes.folders,
-    meta: { [TOKEN_KEY]: changes.newStartPageToken },
+    meta: { [START_PAGE_TOKEN_KEY]: changes.newStartPageToken },
   })
   for (const id of changes.removedIds) {
     photos.delete(id)

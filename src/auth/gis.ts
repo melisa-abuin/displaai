@@ -1,8 +1,5 @@
 import type { AccessToken } from '../interfaces'
-
-const GIS_SRC = 'https://accounts.google.com/gsi/client'
-// Full access is needed to replace the contents of an existing photo with its edited version.
-const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive'
+import { DRIVE_SCOPE, GIS_SRC } from './constants'
 
 let scriptPromise: Promise<void> | undefined
 

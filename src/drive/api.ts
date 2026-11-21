@@ -1,7 +1,16 @@
 import type { DrivePhoto, IndexedPhoto, IndexedFolder } from '../interfaces'
-
-const API = 'https://www.googleapis.com/drive/v3'
-const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3'
+import {
+  API,
+  BATCH_API,
+  FOLDER_FIELDS,
+  FOLDER_MIME,
+  MAX_TAG_BYTES,
+  MEDIA_QUERY,
+  PHOTO_FIELDS,
+  TAG_PREFIX,
+  THUMBNAIL_BATCH_SIZE,
+  UPLOAD_API,
+} from './constants'
 
 class UnauthorizedError extends Error {
   constructor() {
@@ -51,10 +60,6 @@ export async function getUserEmail(token: string): Promise<string | undefined> {
   return data.user?.emailAddress
 }
 
-// Videos are indexed too; what is shown is decided by the media types setting.
-const MEDIA_QUERY =
-  "(mimeType contains 'image/' or mimeType contains 'video/') and trashed = false"
-
 async function listAll<T>(
   token: string,
   params: Record<string, string>,
@@ -74,11 +79,6 @@ async function listAll<T>(
   return items
 }
 
-const FOLDER_MIME = 'application/vnd.google-apps.folder'
-const PHOTO_FIELDS =
-  'id, name, mimeType, parents, thumbnailLink, createdTime, size, appProperties, imageMediaMetadata(location, time, width, height)'
-const FOLDER_FIELDS = 'id, name, parents, ownedByMe'
-
 type RawPhoto = Omit<IndexedPhoto, 'parents'> & { parents?: string[] }
 type RawFolder = Omit<IndexedFolder, 'ownedByMe'> & { ownedByMe?: boolean }
 
@@ -87,10 +87,6 @@ const toPhoto = (file: RawPhoto): IndexedPhoto => ({
   parents: file.parents ?? [],
   thumbnailAt: Date.now(),
 })
-
-const BATCH_API = 'https://www.googleapis.com/batch/drive/v3'
-/** Drive's limit of calls per batch request. */
-export const THUMBNAIL_BATCH_SIZE = 100
 
 /**
  * Fetches the thumbnail links of up to {@link THUMBNAIL_BATCH_SIZE} files in a
@@ -354,13 +350,6 @@ export function isHeic(photo: Pick<DrivePhoto, 'mimeType' | 'name'>): boolean {
     /^image\/hei[cf]/i.test(photo.mimeType) || /\.hei[cf]$/i.test(photo.name)
   )
 }
-
-// Drive only allows [a-zA-Z0-9.!@$%^&*()-_/] in property keys, so the tag's
-// name lives in the value and the key is a hash of its lowercased name.
-const TAG_PREFIX = 'tag.'
-const TAG_KEY_LENGTH = TAG_PREFIX.length + 14
-// Drive limits an app property's key + value to 124 bytes.
-const MAX_TAG_BYTES = 124 - TAG_KEY_LENGTH
 
 // cyrb53: a fast, well-distributed 53-bit string hash.
 function hashString(input: string): string {

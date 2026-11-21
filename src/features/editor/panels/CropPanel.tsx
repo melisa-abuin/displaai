@@ -2,21 +2,7 @@ import { Button } from '../../../ui/Button'
 import styles from '../PhotoEditor.module.css'
 import { Chips, Slider } from './controls'
 import type { PanelProps } from './types'
-
-export const RATIOS: {
-  id: string
-  label: string
-  value: number | 'original' | null
-}[] = [
-  { id: 'free', label: 'Free', value: null },
-  { id: 'original', label: 'Original', value: 'original' },
-  { id: '1:1', label: '1:1', value: 1 },
-  { id: '4:5', label: '4:5', value: 4 / 5 },
-  { id: '9:16', label: '9:16', value: 9 / 16 },
-  { id: '16:9', label: '16:9', value: 16 / 9 },
-  { id: '3:2', label: '3:2', value: 3 / 2 },
-  { id: '2:3', label: '2:3', value: 2 / 3 },
-]
+import { RATIOS } from '../constants'
 
 export function CropPanel({
   state,

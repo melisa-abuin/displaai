@@ -2,25 +2,7 @@ import { Button } from '../../../ui/Button'
 import type { Overlay } from '../../../interfaces'
 import styles from '../PhotoEditor.module.css'
 import { Chips, Slider } from './controls'
-
-const STICKERS = [
-  '😀',
-  '😍',
-  '😎',
-  '🥳',
-  '🔥',
-  '❤️',
-  '✨',
-  '🎉',
-  '🌈',
-  '⭐',
-  '💯',
-  '👑',
-  '🐶',
-  '🐱',
-  '🌸',
-  '☀️',
-]
+import { STICKERS } from '../constants'
 
 export function TextPanel({
   overlays,

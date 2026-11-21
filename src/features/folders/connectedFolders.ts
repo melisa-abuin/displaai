@@ -1,7 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import type { ConnectedFolder } from '../../interfaces'
-
-const STORAGE_KEY = 'drive-photos:connected-folders'
+import { CONNECTED_FOLDERS_STORAGE_KEY } from './constants'
 
 const EMPTY: readonly ConnectedFolder[] = []
 
@@ -30,7 +29,7 @@ function parse(raw: string | null): readonly ConnectedFolder[] {
 function read(): readonly ConnectedFolder[] {
   let raw: string | null
   try {
-    raw = window.localStorage.getItem(STORAGE_KEY)
+    raw = window.localStorage.getItem(CONNECTED_FOLDERS_STORAGE_KEY)
   } catch {
     return cachedValue
   }
@@ -44,7 +43,7 @@ function read(): readonly ConnectedFolder[] {
 function write(entries: readonly ConnectedFolder[]) {
   const raw = JSON.stringify(entries)
   try {
-    window.localStorage.setItem(STORAGE_KEY, raw)
+    window.localStorage.setItem(CONNECTED_FOLDERS_STORAGE_KEY, raw)
   } catch {
     cachedRaw = raw
     cachedValue = entries

@@ -12,14 +12,13 @@ import type { DriveFolder, PhotoLocation } from '../../interfaces'
 import { PhotoCarousel } from './PhotoCarousel'
 import { PhotoCard } from './PhotoCard'
 import styles from './PhotoMap.module.css'
+import { MAX_ZOOM } from './constants'
 
 interface PointProps {
   photo: PhotoLocation
 }
 
 type Clusters = ReturnType<Supercluster<PointProps>['getClusters']>
-
-const MAX_ZOOM = 18
 
 function sizeFor(count: number) {
   if (count < 10) return 34

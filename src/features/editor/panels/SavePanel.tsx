@@ -1,9 +1,10 @@
 import { Button } from '../../../ui/Button'
 import type { DrivePhoto } from '../../../interfaces'
-import { FORMATS } from '../edit'
+
 import styles from '../PhotoEditor.module.css'
 import type { SaveForm } from '../useSaveForm'
 import { Chips, Slider } from './controls'
+import { FORMATS } from '../constants'
 
 export function SavePanel({
   photo,

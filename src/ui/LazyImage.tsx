@@ -1,24 +1,19 @@
-import { useEffect, useRef, useState, type ImgHTMLAttributes } from "react"
+import { useEffect, useRef, useState, type ImgHTMLAttributes } from 'react'
+import { LAZY_IMAGE_OBSERVER_OPTIONS } from './constants'
 
 interface LazyImageProps {
   src: string
   alt: string
-  referrerPolicy?: ImgHTMLAttributes<HTMLImageElement>["referrerPolicy"]
-}
-
-const options = {
-  root: null,
-  rootMargin: "0px",
-  threshold: 0.1
+  referrerPolicy?: ImgHTMLAttributes<HTMLImageElement>['referrerPolicy']
 }
 
 export function LazyImage({ src, alt, referrerPolicy }: LazyImageProps) {
   const ref = useRef<HTMLImageElement | null>(null)
   const [isVisible, setIsVisible] = useState(false)
-  
+
   useEffect(() => {
     const callback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           setIsVisible(true)
           observer.disconnect()
@@ -26,7 +21,10 @@ export function LazyImage({ src, alt, referrerPolicy }: LazyImageProps) {
       })
     }
 
-    const observer = new IntersectionObserver(callback, options)
+    const observer = new IntersectionObserver(
+      callback,
+      LAZY_IMAGE_OBSERVER_OPTIONS,
+    )
     if (ref.current) {
       observer.observe(ref.current)
     }

@@ -2,11 +2,12 @@ import type { Detection } from '@mediapipe/tasks-vision'
 import wasmLoaderPath from '@mediapipe/tasks-vision/vision_wasm_internal.js?url'
 import wasmBinaryPath from '@mediapipe/tasks-vision/vision_wasm_internal.wasm?url'
 import type { Region } from '../interfaces'
-
-const MODEL_BASE = 'https://storage.googleapis.com/mediapipe-models'
-const FACE_MODEL = `${MODEL_BASE}/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`
-const OBJECT_MODEL = `${MODEL_BASE}/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`
-const CLASSIFIER_MODEL = `${MODEL_BASE}/image_classifier/efficientnet_lite0/float32/1/efficientnet_lite0.tflite`
+import {
+  CLASSIFIER_MODEL,
+  FACE_MODEL,
+  MAX_SIDE,
+  OBJECT_MODEL,
+} from './constants'
 
 interface Label {
   name: string
@@ -82,9 +83,6 @@ function enqueue<T>(job: () => Promise<T>, signal?: AbortSignal): Promise<T> {
   queue = result.catch(() => undefined)
   return result
 }
-
-/** Analysed images are scaled down so large photos stay quick and light on memory. */
-const MAX_SIDE = 1280
 
 /** Browsers can't decode HEIC, so the fallback decoder is loaded only when needed. */
 export async function toBitmap(blob: Blob): Promise<ImageBitmap> {

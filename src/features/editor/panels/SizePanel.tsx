@@ -1,8 +1,7 @@
 import styles from '../PhotoEditor.module.css'
-import { MAX_SOURCE_SIDE } from '../edit'
-import type { PanelProps } from './types'
 
-const SIZE_PRESETS = [4096, 2048, 1080, 720, 480]
+import type { PanelProps } from './types'
+import { MAX_SOURCE_SIDE, SIZE_PRESETS } from '../constants'
 
 export function SizePanel({
   state,
