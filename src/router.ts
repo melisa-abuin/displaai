@@ -8,7 +8,7 @@ export type Route =
   | { name: 'album'; folderId: string }
   | { name: 'view'; viewId: string }
   | { name: 'views'; viewId?: string }
-  | { name: 'map'; folderId?: string }
+  | { name: 'map'; folderId?: string; viewId?: string }
   | { name: 'settings' }
   | { name: 'folders'; path: string[] }
   | { name: 'peek'; folderId: string }
@@ -24,6 +24,8 @@ export const paths = {
   map: '/map',
   /** The map showing only the photos of one connected folder. */
   folderMap: (folderId: string) => `/map/${encodeURIComponent(folderId)}`,
+  /** The map showing only the photos of one saved view. */
+  viewMap: (viewId: string) => `/map/views/${encodeURIComponent(viewId)}`,
   view: (viewId: string) => `/views/${encodeURIComponent(viewId)}`,
   views: VIEWS_PATH,
   editView: (viewId: string) => `/settings/views/${encodeURIComponent(viewId)}`,
@@ -40,6 +42,13 @@ export function parseRoute(pathname: string): Route {
   if (parts.length === 0) return { name: 'gallery' }
   if (parts.length === 1 && parts[0] === 'settings') return { name: 'settings' }
   if (parts.length === 1 && parts[0] === 'map') return { name: 'map' }
+  if (parts.length === 3 && parts[0] === 'map' && parts[1] === 'views') {
+    try {
+      return { name: 'map', viewId: decodeURIComponent(parts[2]) }
+    } catch {
+      return { name: 'notFound' }
+    }
+  }
   if (parts.length === 2 && parts[0] === 'map') {
     try {
       return { name: 'map', folderId: decodeURIComponent(parts[1]) }

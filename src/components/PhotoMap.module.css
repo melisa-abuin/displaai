@@ -11,6 +11,41 @@
   text-align: center;
 }
 
+/* Sits below Leaflet's zoom buttons (26px wide, 30px on touch screens). */
+.groupToggle {
+  position: absolute;
+  top: 71px;
+  left: 10px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--secondary-violet);
+  box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+:global(.leaflet-touch) .groupToggle {
+  top: 79px;
+  width: 30px;
+  height: 30px;
+}
+
+.groupToggle:hover {
+  background: #2c2638;
+}
+
+.groupToggle[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--primary-black);
+}
+
 .card {
   position: relative;
   width: 240px;
