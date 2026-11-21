@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './App.module.css'
 import { useAuth } from './auth/context'
 import { Button } from './components/Button'
@@ -18,9 +18,8 @@ import {
 import {
   useFolders,
   usePhotoCounts,
-  usePhotoLocations,
   useTags,
-  useUserEmail,
+  useUserEmail
 } from './drive/hooks'
 import { pruneFilter, type TagFilter } from './drive/tagFilter'
 import { useViews, type CustomView } from './drive/views'
@@ -226,13 +225,33 @@ function Viewer({ token }: { token: string }) {
     mapFolderId === null
       ? undefined
       : navItems?.find((item) => item.folder.id === mapFolderId)
+  const viewId =
+    route.name === 'view' || route.name === 'map' ? route.viewId : undefined
   const activeView =
-    route.name === 'view'
-      ? views.find((view) => view.id === route.viewId)
-      : undefined
+    viewId === undefined ? undefined : views.find((view) => view.id === viewId)
   const isGalleryRoute =
     route.name === 'gallery' || route.name === 'album' || route.name === 'view'
-  const needsFolders = isGalleryRoute || route.name === 'map'
+  const isMapRoute = route.name === 'map'
+  // The grid/map selector keeps its value on other pages, such as settings.
+  const [lastMode, setLastMode] = useState<'photos' | 'map'>(
+    isMapRoute ? 'map' : 'photos',
+  )
+  const mode = isMapRoute ? 'map' : isGalleryRoute ? 'photos' : lastMode
+  if (mode !== lastMode) setLastMode(mode)
+  const selectedAlbum = activeAlbum ?? mapAlbum
+  const goToFolder = (id: string | null, to: 'photos' | 'map') =>
+    navigate(
+      to === 'map'
+        ? id === null
+          ? paths.map
+          : paths.folderMap(id)
+        : id === null
+          ? paths.gallery
+          : paths.album(id),
+    )
+  const goToView = (id: string, to: 'photos' | 'map') =>
+    navigate(to === 'map' ? paths.viewMap(id) : paths.view(id))
+  const needsFolders = isGalleryRoute || isMapRoute
   const peekMissing = route.name === 'peek' && !!index && !peekFolder
   const foldersPath = route.name === 'folders' ? route.path : undefined
   const foldersUrl = foldersPath ? paths.foldersAt(foldersPath) : undefined
@@ -253,8 +272,8 @@ function Viewer({ token }: { token: string }) {
       navigate(paths.gallery, { replace: true })
     else if (mapFolderId !== null && navItems && !mapAlbum)
       navigate(paths.map, { replace: true })
-    else if (route.name === 'view' && !activeView)
-      navigate(paths.gallery, { replace: true })
+    else if (viewId !== undefined && !activeView)
+      navigate(isMapRoute ? paths.map : paths.gallery, { replace: true })
     else if (peekMissing) navigate(paths.folders, { replace: true })
     else if (foldersUrl && index && managerFolderId !== null) {
       // Fix stale or hand-edited folder paths.
@@ -269,6 +288,8 @@ function Viewer({ token }: { token: string }) {
     activeAlbum,
     mapFolderId,
     mapAlbum,
+    viewId,
+    isMapRoute,
     activeView,
     peekMissing,
     foldersUrl,
@@ -315,8 +336,6 @@ function Viewer({ token }: { token: string }) {
     })
   }, [views, index, allIds])
   const viewCounts = usePhotoCounts(viewSets)
-  // Photos with a location in the enabled folders, whatever the sidebar filter.
-  const locations = usePhotoLocations(allIds)
   const viewItems = useMemo(
     () =>
       viewSets.map(({ view }, i) => ({
@@ -347,9 +366,7 @@ function Viewer({ token }: { token: string }) {
     route.name === 'settings'
       ? 'Settings'
       : route.name === 'map'
-        ? mapAlbum
-          ? `Map: ${mapAlbum.folder.path}`
-          : 'Map'
+        ? `Map: ${activeView?.name ?? mapAlbum?.folder.path ?? 'All photos'}`
         : route.name === 'folders'
           ? 'Manage folders'
           : route.name === 'peek'
@@ -373,27 +390,28 @@ function Viewer({ token }: { token: string }) {
         allPhotosCount={allPhotosCount}
         isLoading={folders.isLoading}
         error={folders.error}
-        selectedId={activeAlbum?.folder.id ?? null}
-        onSelect={(id) => {
-          navigate(id === null ? paths.gallery : paths.album(id))
-        }}
+        selectedId={selectedAlbum?.folder.id ?? null}
+        onSelect={(id) => goToFolder(id, mode)}
         email={email.data}
-        isGalleryActive={isGalleryRoute && !activeView}
+        isBrowseActive={isGalleryRoute || isMapRoute}
         isSettingsOpen={
           route.name === 'settings' ||
           route.name === 'views' ||
           route.name === 'folders'
         }
         onOpenSettings={() => navigate(paths.settings)}
-        mapCount={locations.isLoading ? undefined : locations.data.length}
-        isMapActive={route.name === 'map'}
-        onOpenMap={() => navigate(paths.map)}
+        mode={mode}
+        onModeChange={(next) =>
+          activeView
+            ? goToView(activeView.id, next)
+            : goToFolder(selectedAlbum?.folder.id ?? null, next)
+        }
         tags={allTags}
         filter={activeFilter}
         onFilterChange={setSelectedFilter}
         views={viewItems}
         selectedViewId={activeView?.id ?? null}
-        onSelectView={(id) => navigate(paths.view(id))}
+        onSelectView={(id) => goToView(id, mode)}
       />
       <main className={styles.content}>
         <div className={styles.headingRow}>
@@ -424,16 +442,6 @@ function Viewer({ token }: { token: string }) {
           >
             {title}
           </h2>
-          {mapFolderId !== null && (
-            <Button
-              small
-              variant="outline"
-              className={styles.headingAction}
-              onClick={() => navigate(paths.map)}
-            >
-              See all
-            </Button>
-          )}
         </div>
         {route.name === 'settings' ? (
           <Settings
@@ -506,7 +514,7 @@ function Viewer({ token }: { token: string }) {
           )
         ) : albums && route.name === 'map' ? (
           <PhotoMap
-            folderIds={mapAlbum ? mapAlbum.ids : allIds}
+            folderIds={activeView ? viewIds : mapAlbum ? mapAlbum.ids : allIds}
             folders={index?.byId}
             filters={filters}
           />
@@ -524,11 +532,6 @@ function Viewer({ token }: { token: string }) {
             rootPath={activeAlbum?.folder.path}
             filters={filters}
             emptyMessage={activeView ? 'No photos in this view.' : undefined}
-            onShowOnMap={
-              activeAlbum && !activeView
-                ? () => navigate(paths.folderMap(activeAlbum.folder.id))
-                : undefined
-            }
           />
         ) : (
           <div className={styles.loader} role="status">

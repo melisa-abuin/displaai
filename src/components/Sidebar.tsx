@@ -84,7 +84,7 @@ function visibleAlbums(albums: SidebarAlbum[], expanded: ReadonlySet<string>) {
 interface SidebarProps {
   albums: SidebarAlbum[] | undefined
   allPhotosCount: number | undefined
-  isGalleryActive: boolean
+  isBrowseActive: boolean
   isLoading: boolean
   error: Error | null
   selectedId: string | null
@@ -92,10 +92,9 @@ interface SidebarProps {
   email: string | null | undefined
   isSettingsOpen: boolean
   onOpenSettings: () => void
-  isMapActive: boolean
-  /** Photos with a location; unset until the library has loaded. */
-  mapCount: number | undefined
-  onOpenMap: () => void
+  /** Whether the folders show as a photo grid or on the map. */
+  mode: 'photos' | 'map'
+  onModeChange: (mode: 'photos' | 'map') => void
   tags: TagCount[] | undefined
   filter: TagFilter
   onFilterChange: (filter: TagFilter) => void
@@ -107,7 +106,7 @@ interface SidebarProps {
 export function Sidebar({
   albums,
   allPhotosCount,
-  isGalleryActive,
+  isBrowseActive,
   isLoading,
   error,
   selectedId,
@@ -115,9 +114,8 @@ export function Sidebar({
   email,
   isSettingsOpen,
   onOpenSettings,
-  isMapActive,
-  mapCount,
-  onOpenMap,
+  mode,
+  onModeChange,
   tags,
   filter,
   onFilterChange,
@@ -157,7 +155,7 @@ export function Sidebar({
     setExpanded(next)
   }
 
-  const pickFolder = (id: string) => {
+  const pickFolder = (id: string | null) => {
     setDrawerOpen(false)
     onSelect(id)
   }
@@ -175,6 +173,27 @@ export function Sidebar({
         </p>
       )}
     </>
+  )
+
+  const allItem = (
+    <button
+      type="button"
+      className={styles.item}
+      aria-current={
+        isBrowseActive && selectedId === null && selectedViewId === null
+          ? 'true'
+          : undefined
+      }
+      onClick={() => pickFolder(null)}
+    >
+      <span className={styles.name}>All folders</span>
+      {allPhotosCount !== undefined && (
+        <>
+          {' '}
+          <span className={styles.count}>{formatNumber(allPhotosCount)}</span>
+        </>
+      )}
+    </button>
   )
 
   const folderList = (
@@ -220,7 +239,7 @@ export function Sidebar({
                 className={styles.item}
                 title={folder.path}
                 aria-current={
-                  isGalleryActive && selectedId === folder.id
+                  isBrowseActive && selectedId === folder.id
                     ? 'true'
                     : undefined
                 }
@@ -310,8 +329,6 @@ export function Sidebar({
   )
 
   if (isMobile) {
-    const isFolderActive =
-      selectedViewId !== null || (isGalleryActive && selectedId !== null)
     return (
       <>
         {isDrawerOpen && (
@@ -342,6 +359,7 @@ export function Sidebar({
                 </button>
               </div>
               <nav className={styles.nav}>
+                {allItem}
                 {status}
                 {folderList}
               </nav>
@@ -353,16 +371,14 @@ export function Sidebar({
           <button
             type="button"
             className={styles.tab}
-            aria-label="All photos"
-            title="All photos"
+            aria-label="Photos"
+            title="Photos"
             aria-current={
-              isGalleryActive && selectedId === null && selectedViewId === null
-                ? 'page'
-                : undefined
+              mode === 'photos' && !isSettingsOpen ? 'page' : undefined
             }
             onClick={() => {
               setDrawerOpen(false)
-              onSelect(null)
+              onModeChange('photos')
             }}
           >
             <svg {...ICON} aria-hidden="true">
@@ -374,30 +390,31 @@ export function Sidebar({
           <button
             type="button"
             className={styles.tab}
-            aria-label="Folders"
-            title="Folders"
-            aria-expanded={isDrawerOpen}
-            aria-current={isFolderActive ? 'page' : undefined}
-            onClick={() => setDrawerOpen(!isDrawerOpen)}
-          >
-            <svg {...ICON} aria-hidden="true">
-              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={styles.tab}
             aria-label="Map"
             title="Map"
-            aria-current={isMapActive ? 'page' : undefined}
+            aria-current={
+              mode === 'map' && !isSettingsOpen ? 'page' : undefined
+            }
             onClick={() => {
               setDrawerOpen(false)
-              onOpenMap()
+              onModeChange('map')
             }}
           >
             <svg {...ICON} aria-hidden="true">
               <path d="M14.1 5.9 9.9 3.8a2 2 0 0 0-1.8 0L3.6 6.1A1 1 0 0 0 3 7v12.4a1 1 0 0 0 1.4.9l3.7-1.9a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.3a1 1 0 0 0 .6-.9V4.6a1 1 0 0 0-1.4-.9l-3.7 1.9a2 2 0 0 1-1.8.3Z" />
               <path d="M15 5.8v15M9 3.2v15" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={styles.tab}
+            aria-label="Folders"
+            title="Folders"
+            aria-expanded={isDrawerOpen}
+            onClick={() => setDrawerOpen(!isDrawerOpen)}
+          >
+            <svg {...ICON} aria-hidden="true">
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
             </svg>
           </button>
           <button
@@ -431,42 +448,25 @@ export function Sidebar({
         />
         <h1 className={styles.title}>Displaai</h1>
       </div>
+      <div className={styles.mode} role="group" aria-label="View">
+        {(['photos', 'map'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={styles.modeOption}
+            aria-pressed={mode === value}
+            onClick={() => onModeChange(value)}
+          >
+            {value === 'photos' ? 'Photos' : 'Map'}
+          </button>
+        ))}
+      </div>
       <nav className={styles.nav}>
-        <button
-          type="button"
-          className={styles.item}
-          aria-current={
-            isGalleryActive && selectedId === null ? 'true' : undefined
-          }
-          onClick={() => onSelect(null)}
-        >
-          <span className={styles.name}>All photos</span>
-          {allPhotosCount !== undefined && (
-            <>
-              {' '}
-              <span className={styles.count}>
-                {formatNumber(allPhotosCount)}
-              </span>
-            </>
-          )}
-        </button>
+        {allItem}
         {status}
         {folderList}
-        <button
-          type="button"
-          className={styles.item}
-          aria-current={isMapActive ? 'true' : undefined}
-          onClick={onOpenMap}
-        >
-          <span className={styles.name}>Map</span>
-          {mapCount !== undefined && (
-            <>
-              {' '}
-              <span className={styles.count}>{formatNumber(mapCount)}</span>
-            </>
-          )}
-        </button>
       </nav>
+
       {tagFilters}
       <div className={styles.account}>
         <span className={styles.email} title={email ?? undefined}>

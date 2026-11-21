@@ -227,7 +227,6 @@ export function Gallery({
   rootPath,
   filters,
   emptyMessage,
-  onShowOnMap,
 }: {
   token: string
   folderIds: readonly string[]
@@ -240,8 +239,6 @@ export function Gallery({
   filters?: readonly TagFilter[]
   /** Shown when there are no photos and no filter is narrowing them. */
   emptyMessage?: string
-  /** When set, a toolbar button shows these photos on the map. */
-  onShowOnMap?: () => void
 }) {
   const { data, isLoading, error } = usePhotos(folderIds, grouped, filters)
   const [selected, setSelected] = useState<string | null>(null)
@@ -466,11 +463,6 @@ export function Gallery({
           </>
         ) : (
           <>
-            {onShowOnMap && (
-              <Button small variant="outline" onClick={onShowOnMap}>
-                See on map
-              </Button>
-            )}
             <Button
               small
               variant="outline"
