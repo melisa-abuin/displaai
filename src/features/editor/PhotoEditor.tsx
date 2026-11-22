@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { Button } from '../../ui/Button'
 import { fetchPhotoBlob } from '../../drive/api'
 import type { DrivePhoto } from '../../interfaces'
-import { decodeForEditing } from './edit'
-import { Editor } from './Editor'
+import { decodeForEditing } from './utils/edit'
+import { Editor } from './components/Editor'
 import styles from './PhotoEditor.module.css'
 
 export function PhotoEditor({

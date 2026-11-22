@@ -1,7 +1,7 @@
 import { useRef } from 'react'
-import type { Crop } from '../../interfaces'
-import styles from './PhotoEditor.module.css'
-import { HANDLES, MIN_CROP_SIZE } from './constants'
+import type { Crop } from '../../../interfaces'
+import styles from '../PhotoEditor.module.css'
+import { HANDLES, MIN_CROP_SIZE } from '../constants'
 
 type Handle = (typeof HANDLES)[number]
 

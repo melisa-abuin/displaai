@@ -1,7 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { Button } from '../../ui/Button'
-import type { DrivePhoto, EditState, Overlay } from '../../interfaces'
-import { useFaces } from '../../vision/hooks'
+import { Button } from '../../../ui/Button'
+import type { DrivePhoto, EditState, Overlay } from '../../../interfaces'
+import { useFaces } from '../../../vision/hooks'
 import { EditorStage } from './EditorStage'
 import {
   applyFaces,
@@ -11,17 +11,17 @@ import {
   orientedSize,
   outputSize,
   renderEdit,
-} from './edit'
-import { AdjustPanel } from './panels/AdjustPanel'
-import { CropPanel } from './panels/CropPanel'
-import { FacesPanel } from './panels/FacesPanel'
-import { FiltersPanel } from './panels/FiltersPanel'
-import { FramePanel } from './panels/FramePanel'
-import { SavePanel } from './panels/SavePanel'
-import { SizePanel } from './panels/SizePanel'
-import { TextPanel } from './panels/TextPanel'
-import styles from './PhotoEditor.module.css'
-import { useSaveForm } from './useSaveForm'
+} from '../utils/edit'
+import { AdjustPanel } from '../panels/AdjustPanel'
+import { CropPanel } from '../panels/CropPanel'
+import { FacesPanel } from '../panels/FacesPanel'
+import { FiltersPanel } from '../panels/FiltersPanel'
+import { FramePanel } from '../panels/FramePanel'
+import { SavePanel } from '../panels/SavePanel'
+import { SizePanel } from '../panels/SizePanel'
+import { TextPanel } from '../panels/TextPanel'
+import styles from '../PhotoEditor.module.css'
+import { useSaveForm } from '../hooks/useSaveForm'
 import {
   FILTERS,
   INITIAL_STATE,
@@ -30,7 +30,7 @@ import {
   TABS,
   THUMB_SIDE,
   type Tab,
-} from './constants'
+} from '../constants'
 
 export function Editor({
   token,

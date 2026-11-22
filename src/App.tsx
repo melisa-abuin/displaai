@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './App.module.css'
 import { useAuth } from './auth/context'
 import { Button } from './ui/Button'
@@ -8,19 +8,14 @@ import { PhotoMap } from './features/map/PhotoMap'
 import { Settings } from './features/settings/Settings'
 import { Sidebar } from './features/sidebar/Sidebar'
 import { ViewManager } from './features/views/ViewManager'
-import type { DriveFolder, TagFilter, CustomView } from './interfaces'
+import type { DriveFolder, TagFilter, CustomView, ViewMode } from './interfaces'
 import { useConnectedFolders } from './features/folders/connectedFolders'
 import {
   buildFolderIndex,
   descendantIds,
   folderChain,
 } from './drive/folderTree'
-import {
-  useFolders,
-  usePhotoCounts,
-  useTags,
-  useUserEmail
-} from './drive/hooks'
+import { useFolders, usePhotoCounts, useTags } from './drive/hooks'
 import { pruneFilter } from './drive/tagFilter'
 import { useViews } from './features/views/views'
 import {
@@ -139,7 +134,6 @@ function Viewer({ token }: { token: string }) {
   const navigate = useNavigate()
   const route = parseRoute(usePathname())
   const folders = useFolders(token)
-  const email = useUserEmail(token)
   const connected = useConnectedFolders()
   const [selectedFilter, setSelectedFilter] = useFilters()
   const { views, saveView, removeView } = useViews()
@@ -233,24 +227,47 @@ function Viewer({ token }: { token: string }) {
     route.name === 'gallery' || route.name === 'album' || route.name === 'view'
   const isMapRoute = route.name === 'map'
   // The grid/map selector keeps its value on other pages, such as settings.
-  const [lastMode, setLastMode] = useState<'photos' | 'map'>(
+  const [lastMode, setLastMode] = useState<ViewMode>(
     isMapRoute ? 'map' : 'photos',
   )
   const mode = isMapRoute ? 'map' : isGalleryRoute ? 'photos' : lastMode
   if (mode !== lastMode) setLastMode(mode)
-  const selectedAlbum = activeAlbum ?? mapAlbum
-  const goToFolder = (id: string | null, to: 'photos' | 'map') =>
-    navigate(
-      to === 'map'
-        ? id === null
-          ? paths.map
-          : paths.folderMap(id)
-        : id === null
-          ? paths.gallery
-          : paths.album(id),
-    )
-  const goToView = (id: string, to: 'photos' | 'map') =>
-    navigate(to === 'map' ? paths.viewMap(id) : paths.view(id))
+  const selectedAlbumId = (activeAlbum ?? mapAlbum)?.folder.id ?? null
+  const activeViewId = activeView?.id ?? null
+  const goToFolder = useCallback(
+    (id: string | null, to: ViewMode) =>
+      navigate(
+        to === 'map'
+          ? id === null
+            ? paths.map
+            : paths.folderMap(id)
+          : id === null
+            ? paths.gallery
+            : paths.album(id),
+      ),
+    [navigate],
+  )
+  const goToView = useCallback(
+    (id: string, to: ViewMode) =>
+      navigate(to === 'map' ? paths.viewMap(id) : paths.view(id)),
+    [navigate],
+  )
+  const selectFolder = useCallback(
+    (id: string | null) => goToFolder(id, mode),
+    [goToFolder, mode],
+  )
+  const selectView = useCallback(
+    (id: string) => goToView(id, mode),
+    [goToView, mode],
+  )
+  const changeMode = useCallback(
+    (next: ViewMode) =>
+      activeViewId !== null
+        ? goToView(activeViewId, next)
+        : goToFolder(selectedAlbumId, next),
+    [activeViewId, selectedAlbumId, goToView, goToFolder],
+  )
+  const openSettings = useCallback(() => navigate(paths.settings), [navigate])
   const needsFolders = isGalleryRoute || isMapRoute
   const peekMissing = route.name === 'peek' && !!index && !peekFolder
   const foldersPath = route.name === 'folders' ? route.path : undefined
@@ -386,32 +403,24 @@ function Viewer({ token }: { token: string }) {
   return (
     <div className={styles.layout}>
       <Sidebar
+        token={token}
         albums={navItems}
         allPhotosCount={allPhotosCount}
-        isLoading={folders.isLoading}
-        error={folders.error}
-        selectedId={selectedAlbum?.folder.id ?? null}
-        onSelect={(id) => goToFolder(id, mode)}
-        email={email.data}
+        tags={allTags}
+        views={viewItems}
         isBrowseActive={isGalleryRoute || isMapRoute}
         isSettingsOpen={
           route.name === 'settings' ||
           route.name === 'views' ||
           route.name === 'folders'
         }
-        onOpenSettings={() => navigate(paths.settings)}
+        selectedId={selectedAlbumId}
+        selectedViewId={activeViewId}
         mode={mode}
-        onModeChange={(next) =>
-          activeView
-            ? goToView(activeView.id, next)
-            : goToFolder(selectedAlbum?.folder.id ?? null, next)
-        }
-        tags={allTags}
-        filter={activeFilter}
-        onFilterChange={setSelectedFilter}
-        views={viewItems}
-        selectedViewId={activeView?.id ?? null}
-        onSelectView={(id) => goToView(id, mode)}
+        onSelect={selectFolder}
+        onSelectView={selectView}
+        onModeChange={changeMode}
+        onOpenSettings={openSettings}
       />
       <main className={styles.content}>
         <div className={styles.headingRow}>

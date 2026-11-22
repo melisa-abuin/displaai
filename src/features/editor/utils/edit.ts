@@ -1,4 +1,4 @@
-import { toBitmap } from '../../vision/vision'
+import { toBitmap } from '../../../vision/vision'
 import type {
   Crop,
   Overlay,
@@ -6,14 +6,14 @@ import type {
   EditState,
   Region,
   Tint,
-} from '../../interfaces'
+} from '../../../interfaces'
 import {
   EMOJI_FONT,
   FILTERS,
   FULL_CROP,
   MAX_OUTPUT_SIDE,
   MAX_SOURCE_SIDE,
-} from './constants'
+} from '../constants'
 
 /** Decodes the photo upright, scaled down to a size that is safe to edit. */
 export async function decodeForEditing(blob: Blob): Promise<HTMLCanvasElement> {

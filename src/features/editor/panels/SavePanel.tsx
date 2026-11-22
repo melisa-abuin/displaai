@@ -2,7 +2,7 @@ import { Button } from '../../../ui/Button'
 import type { DrivePhoto } from '../../../interfaces'
 
 import styles from '../PhotoEditor.module.css'
-import type { SaveForm } from '../useSaveForm'
+import type { SaveForm } from '../hooks/useSaveForm'
 import { Chips, Slider } from './controls'
 import { FORMATS } from '../constants'
 

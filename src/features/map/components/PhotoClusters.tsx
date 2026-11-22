@@ -8,11 +8,11 @@ import {
   useMapEvents,
 } from 'react-leaflet'
 import Supercluster from 'supercluster'
-import type { DriveFolder, PhotoLocation } from '../../interfaces'
+import type { DriveFolder, PhotoLocation } from '../../../interfaces'
 import { PhotoCarousel } from './PhotoCarousel'
 import { PhotoCard } from './PhotoCard'
-import styles from './PhotoMap.module.css'
-import { MAX_ZOOM } from './constants'
+import styles from '../PhotoMap.module.css'
+import { MAX_ZOOM } from '../constants'
 
 interface PointProps {
   photo: PhotoLocation

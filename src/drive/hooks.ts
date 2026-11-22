@@ -32,10 +32,19 @@ import {
 import { matchesFilters, NO_FILTERS } from './tagFilter'
 import { BULK_TAG_CONCURRENCY, SYNC_STALE_MS } from './constants'
 
+/** Whether the folder index is still loading, or failed to. */
+export function useLibraryStatus() {
+  const { ready, error } = useLibraryState()
+  return {
+    isLoading: !ready && !error,
+    error: ready ? null : error,
+  }
+}
+
 /** Folders of the Drive; keeps the local index in sync while mounted. */
 export function useFolders(token: string) {
   const library = useLibrary()
-  const { ready, error } = useLibraryState()
+  const status = useLibraryStatus()
 
   useEffect(() => {
     void loadIndex().then(() => syncIndex(token, SYNC_STALE_MS))
@@ -47,11 +56,7 @@ export function useFolders(token: string) {
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [token])
 
-  return {
-    data: library?.folders,
-    isLoading: !ready && !error,
-    error: ready ? null : error,
-  }
+  return { data: library?.folders, ...status }
 }
 
 /** Every distinct tag among the photos of the enabled folders. */

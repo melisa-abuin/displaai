@@ -16,7 +16,8 @@ import type {
   MediaKind,
 } from '../interfaces'
 import { mediaKindOf } from '../lib/mediaKind'
-import { getMediaKinds, useMediaKinds } from '../features/settings/preferences'
+import { useMediaKinds } from '../features/settings/hooks/useMediaKinds'
+import { getMediaKinds } from '../features/settings/utils/mediaKinds'
 import { readAll, writeBatch } from './store'
 import {
   LIBRARY_SCOPE,

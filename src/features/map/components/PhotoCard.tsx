@@ -1,8 +1,8 @@
-import { thumbnailUrl } from '../../drive/api'
-import type { DriveFolder, PhotoLocation } from '../../interfaces'
-import { useFreshThumbnails } from '../../drive/libraryStore'
-import { formatDate } from '../../lib/format'
-import styles from './PhotoMap.module.css'
+import { thumbnailUrl } from '../../../drive/api'
+import type { DriveFolder, PhotoLocation } from '../../../interfaces'
+import { useFreshThumbnails } from '../../../drive/libraryStore'
+import { formatDate } from '../../../lib/format'
+import styles from '../PhotoMap.module.css'
 
 export function PhotoCard({
   photo: indexedPhoto,

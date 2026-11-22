@@ -1,7 +1,7 @@
 import { useRef, type RefObject } from 'react'
-import type { Crop, Overlay } from '../../interfaces'
+import type { Crop, Overlay } from '../../../interfaces'
 import { CropBox } from './CropBox'
-import styles from './PhotoEditor.module.css'
+import styles from '../PhotoEditor.module.css'
 
 /** The live preview canvas plus the crop box and text-placement layers. */
 export function EditorStage({

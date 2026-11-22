@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { thumbnailUrl } from '../../drive/api'
-import type { DriveFolder, PhotoLocation } from '../../interfaces'
-import { useFreshThumbnails } from '../../drive/libraryStore'
-import { formatNumber } from '../../lib/format'
+import { thumbnailUrl } from '../../../drive/api'
+import type { DriveFolder, PhotoLocation } from '../../../interfaces'
+import { useFreshThumbnails } from '../../../drive/libraryStore'
+import { formatNumber } from '../../../lib/format'
 import { PhotoCard } from './PhotoCard'
-import styles from './PhotoMap.module.css'
+import styles from '../PhotoMap.module.css'
 
 /** One photo at a time, with arrows to step through the rest. */
 export function PhotoCarousel({

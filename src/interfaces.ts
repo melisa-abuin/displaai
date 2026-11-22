@@ -239,3 +239,19 @@ export interface TimelineMonth {
   /** Index of the month's heading in the list. */
   itemIndex: number
 }
+
+/** Whether the folders show as a photo grid or on the map. */
+export type ViewMode = 'photos' | 'map'
+
+export interface SidebarView {
+  id: string
+  name: string
+  /** Photos the view shows; unset until the library has loaded. */
+  count: number | undefined
+}
+
+export interface SidebarAlbum {
+  folder: DriveFolder
+  /** 0 for connected folders; subfolders are nested beneath them. */
+  depth: number
+}
