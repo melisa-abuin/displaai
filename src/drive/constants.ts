@@ -52,3 +52,6 @@ export const LIBRARY_SCOPE = 'media-v1'
 export const THUMBNAIL_TTL_MS = 1000 * 60 * 30
 
 export const THUMBNAIL_CONCURRENCY = 2
+
+/** How long a photo whose link refresh failed waits before it is tried again. */
+export const THUMBNAIL_RETRY_MS = 1000 * 15

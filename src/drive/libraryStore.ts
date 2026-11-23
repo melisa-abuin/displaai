@@ -25,6 +25,7 @@ import {
   START_PAGE_TOKEN_KEY,
   THUMBNAIL_BATCH_SIZE,
   THUMBNAIL_CONCURRENCY,
+  THUMBNAIL_RETRY_MS,
   THUMBNAIL_TTL_MS,
 } from './constants'
 
@@ -228,7 +229,7 @@ async function incrementalSync(token: string, from: string) {
 
 /** Brings the index up to date: a full listing the first time, only the changes afterwards. */
 export function syncIndex(token: string, staleMs = 0): Promise<void> {
-  activeToken = token
+  setActiveToken(token)
   if (syncing) return syncing
   if (Date.now() - lastSyncedAt < staleMs) return Promise.resolve()
   setState({ syncing: true, error: null })
@@ -266,7 +267,7 @@ export async function clearIndex(): Promise<void> {
   folders.clear()
   startPageToken = undefined
   lastSyncedAt = 0
-  activeToken = undefined
+  setActiveToken(undefined)
   thumbs.clear()
   setState({ ready: false, error: null }, true)
   await writeBatch({ clear: true })
@@ -318,6 +319,12 @@ function subscribeThumbs(listener: () => void) {
   }
 }
 
+function setActiveToken(token: string | undefined) {
+  if (activeToken === token) return
+  activeToken = token
+  for (const listener of thumbListeners) listener()
+}
+
 function currentThumb(photo: Thumbnailed) {
   const at = photo.thumbnailAt ?? 0
   const refreshed = thumbs.get(photo.id)
@@ -326,11 +333,35 @@ function currentThumb(photo: Thumbnailed) {
     : { link: photo.thumbnailLink, at }
 }
 
-async function refreshThumbnails(ids: string[]) {
+let queued: string[] = []
+let flushTimer: ReturnType<typeof setTimeout> | undefined
+
+/**
+ * Collects the ids asked for by every row in the same moment, so a long
+ * gallery costs a few batch requests instead of one per row (which Drive
+ * rate-limits, leaving tiles with expired links).
+ */
+function refreshThumbnails(ids: string[]) {
+  if (!activeToken) return
+  for (const id of ids) {
+    if (refreshing.has(id)) continue
+    refreshing.add(id)
+    queued.push(id)
+  }
+  flushTimer ??= setTimeout(() => {
+    flushTimer = undefined
+    const todo = queued
+    queued = []
+    void fetchThumbnails(todo)
+  })
+}
+
+async function fetchThumbnails(todo: string[]) {
   const token = activeToken
-  if (!token) return
-  const todo = ids.filter((id) => !refreshing.has(id))
-  for (const id of todo) refreshing.add(id)
+  if (!token) {
+    for (const id of todo) refreshing.delete(id)
+    return
+  }
   const batches: string[][] = []
   for (let i = 0; i < todo.length; i += THUMBNAIL_BATCH_SIZE)
     batches.push(todo.slice(i, i + THUMBNAIL_BATCH_SIZE))
@@ -346,15 +377,17 @@ async function refreshThumbnails(ids: string[]) {
         // Every photo of the batch counts as failed.
       }
       const at = Date.now()
+      let failed = false
       for (const id of batch) {
         refreshing.delete(id)
         if (!links.has(id)) {
-          // Not persisted, so it is retried after the next expiry. The old
-          // link stays, as it may still be served from the browser cache.
+          // Not persisted. The old link stays, as it may still be served from
+          // the browser cache, and the photo counts as stale again shortly.
+          failed = true
           const photo = photos.get(id)
           thumbs.set(id, {
             link: photo ? currentThumb(photo).link : thumbs.get(id)?.link,
-            at,
+            at: at - THUMBNAIL_TTL_MS + THUMBNAIL_RETRY_MS,
           })
           continue
         }
@@ -369,6 +402,11 @@ async function refreshThumbnails(ids: string[]) {
       }
       thumbVersion++
       for (const listener of thumbListeners) listener()
+      if (failed)
+        setTimeout(() => {
+          thumbVersion++
+          for (const listener of thumbListeners) listener()
+        }, THUMBNAIL_RETRY_MS)
     }
   }
   await Promise.all(
@@ -389,6 +427,9 @@ export function useFreshThumbnails<T extends Thumbnailed>(
   photos: readonly T[],
 ): T[] {
   useSyncExternalStore(subscribeThumbs, () => thumbVersion)
+  // The index can render before the first sync provides a token; once it is
+  // known the refresh must run again, or the expired links would stay unfetched.
+  const token = useSyncExternalStore(subscribeThumbs, () => activeToken)
   const now = Date.now()
   const stale: string[] = []
   const result = photos.map((photo) => {
@@ -402,8 +443,8 @@ export function useFreshThumbnails<T extends Thumbnailed>(
   })
   const key = stale.join(',')
   useEffect(() => {
-    if (key) void refreshThumbnails(key.split(','))
-  }, [key])
+    if (key && token) refreshThumbnails(key.split(','))
+  }, [key, token])
   return result
 }
 

@@ -4,9 +4,17 @@ import { LazyImage } from './LazyImage'
 
 type ObserverCallback = (entries: { isIntersecting: boolean }[]) => void
 
+function placeAt(top: number) {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    top,
+    bottom: top + 100,
+    left: 0,
+    right: 100,
+  } as DOMRect)
+}
+
 describe('LazyImage', () => {
   let trigger: ObserverCallback
-  const disconnect = vi.fn()
 
   beforeEach(() => {
     vi.stubGlobal(
@@ -16,17 +24,26 @@ describe('LazyImage', () => {
           trigger = callback
         }
         observe() {}
-        disconnect = disconnect
+        disconnect() {}
       },
     )
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
-    disconnect.mockClear()
+    vi.restoreAllMocks()
   })
 
-  it('does not load the image until it scrolls into view', () => {
+  it('loads an image that is on screen right away, with high priority', () => {
+    placeAt(10)
+    render(<LazyImage src="/photo.jpg" alt="A photo" />)
+    const image = screen.getByAltText('A photo')
+    expect(image).toHaveAttribute('src', '/photo.jpg')
+    expect(image).toHaveAttribute('fetchpriority', 'high')
+  })
+
+  it('waits for an image below the screen until it gets close', () => {
+    placeAt(window.innerHeight + 1000)
     render(<LazyImage src="/photo.jpg" alt="A photo" />)
     expect(screen.getByAltText('A photo')).not.toHaveAttribute('src')
 
@@ -35,6 +52,5 @@ describe('LazyImage', () => {
 
     act(() => trigger([{ isIntersecting: true }]))
     expect(screen.getByAltText('A photo')).toHaveAttribute('src', '/photo.jpg')
-    expect(disconnect).toHaveBeenCalled()
   })
 })
