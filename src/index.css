@@ -1,7 +1,8 @@
 :root {
   --primary: #aa85f8;
   --primary-black: #0d0d12;
-  --secondary: #f6a655;
+  --secondary: #314ec2;
+  --accent-secondary: #4268ff;
   --secondary-violet: #2a1f4d;
   color-scheme: light dark;
   font-family: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -27,6 +28,16 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+/* Zero specificity so any component class can still override link colors. */
+:where(a) {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+:where(a:hover) {
+  color: var(--accent-secondary);
 }
 
 body {

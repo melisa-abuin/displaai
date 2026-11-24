@@ -5,7 +5,7 @@ import { clearIndex } from '../drive/libraryStore'
 import { AuthContext } from './context'
 import { requestAccessToken, revokeAccessToken } from './gis'
 import type { AccessToken } from '../interfaces'
-import { CLIENT_ID, TOKEN_STORAGE_KEY } from './constants'
+import { CLIENT_ID, POPUP_CLOSED_ERROR, TOKEN_STORAGE_KEY } from './constants'
 
 function loadStoredToken(): AccessToken | null {
   try {
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setToken(await requestAccessToken(CLIENT_ID))
     } catch (e) {
+      if (e instanceof Error && e.message === POPUP_CLOSED_ERROR) return
       setError(e instanceof Error ? e.message : 'Sign-in failed')
     }
   }, [])

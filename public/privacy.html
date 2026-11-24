@@ -7,12 +7,13 @@
       name="description"
       content="Privacy policy of Displaai, a browser app to browse, map, tag and edit your Google Drive photos."
     />
-    <link rel="icon" type="image/png" sizes="256x256" href="favicon.png" />
+    <link rel="icon" type="image/png" sizes="143x143" href="logo.png" />
     <title>Privacy Policy &ndash; Displaai</title>
     <style>
       :root {
         color-scheme: light dark;
         --primary: #7c4dff;
+        --accent-secondary: #4268ff;
         font-family: 'Inter Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
         line-height: 1.6;
       }
@@ -20,6 +21,13 @@
         :root {
           --primary: #aa85f8;
         }
+      }
+      @font-face {
+        font-family: 'Pacifico';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('fonts/pacifico-latin-400-normal.woff2') format('woff2');
       }
       body {
         margin: 0 auto;
@@ -29,17 +37,18 @@
       header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
         margin-bottom: 24px;
       }
       header img {
-        width: 170px;
-        height: 104px;
+        width: 26px;
+        height: 26px;
       }
       header a {
         color: var(--primary);
-        font-size: 1.5rem;
-        font-weight: 700;
+        font-family: 'Pacifico', cursive;
+        font-size: 32px;
+        font-weight: 400;
         text-decoration: none;
       }
       h1 {
@@ -51,6 +60,10 @@
       }
       a {
         color: var(--primary);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent-secondary);
       }
       .updated {
         margin: 0 0 24px;
@@ -88,7 +101,7 @@
   </head>
   <body>
     <header>
-      <img src="logo.png" width="170" height="104" alt="" />
+      <img src="logo.png" width="26" height="26" alt="" />
       <a href="./">Displaai</a>
     </header>
 

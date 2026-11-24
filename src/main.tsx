@@ -1,4 +1,5 @@
 import '@fontsource-variable/inter'
+import '@fontsource/pacifico'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { StrictMode } from 'react'
