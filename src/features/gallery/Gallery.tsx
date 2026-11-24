@@ -14,7 +14,7 @@ import type {
   TimelineMonth,
 } from '../../interfaces'
 import { usePhotos } from '../../drive/hooks'
-import { useFreshThumbnails } from '../../drive/libraryStore'
+import { refetchThumbnail, useFreshThumbnails } from '../../drive/libraryStore'
 import { isEmptyFilter } from '../../drive/tagFilter'
 import { formatNumber } from '../../lib/format'
 import { mediaKindOf } from '../../lib/mediaKind'
@@ -171,7 +171,12 @@ function PhotoRow({
             aria-pressed={isSelecting ? isSelected : undefined}
           >
             {thumbnail ? (
-              <LazyImage src={thumbnail} alt="" referrerPolicy="no-referrer" />
+              <LazyImage
+                src={thumbnail}
+                alt=""
+                referrerPolicy="no-referrer"
+                onFail={() => refetchThumbnail(photo.id)}
+              />
             ) : (
               <span className={styles.noThumb}>{photo.name}</span>
             )}

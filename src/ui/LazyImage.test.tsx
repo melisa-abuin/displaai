@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LazyImage } from './LazyImage'
 
@@ -40,6 +40,15 @@ describe('LazyImage', () => {
     const image = screen.getByAltText('A photo')
     expect(image).toHaveAttribute('src', '/photo.jpg')
     expect(image).toHaveAttribute('fetchpriority', 'high')
+  })
+
+  it('reports the first failure once while it keeps retrying', () => {
+    placeAt(10)
+    const onFail = vi.fn()
+    render(<LazyImage src="/photo.jpg" alt="A photo" onFail={onFail} />)
+    fireEvent.error(screen.getByAltText('A photo'))
+    fireEvent.error(screen.getByAltText('A photo'))
+    expect(onFail).toHaveBeenCalledTimes(1)
   })
 
   it('waits for an image below the screen until it gets close', () => {

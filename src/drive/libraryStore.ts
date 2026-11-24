@@ -356,6 +356,11 @@ function refreshThumbnails(ids: string[]) {
   })
 }
 
+/** Asks Drive for a new thumbnail link, for a photo whose current one doesn't load. */
+export function refetchThumbnail(photoId: string) {
+  refreshThumbnails([photoId])
+}
+
 async function fetchThumbnails(todo: string[]) {
   const token = activeToken
   if (!token) {

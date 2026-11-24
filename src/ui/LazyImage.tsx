@@ -15,6 +15,8 @@ interface LazyImageProps {
   src: string
   alt: string
   referrerPolicy?: ImgHTMLAttributes<HTMLImageElement>['referrerPolicy']
+  /** Called once, the first time loading the image fails. */
+  onFail?: () => void
 }
 
 type Load = 'waiting' | 'near' | 'above-fold'
@@ -23,9 +25,15 @@ type Load = 'waiting' | 'near' | 'above-fold'
  * Images on screen when they mount load right away with high priority; the
  * others wait until they are close to the viewport.
  */
-export function LazyImage({ src, alt, referrerPolicy }: LazyImageProps) {
+export function LazyImage({
+  src,
+  alt,
+  referrerPolicy,
+  onFail,
+}: LazyImageProps) {
   const ref = useRef<HTMLImageElement | null>(null)
   const retryTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const failed = useRef(false)
   const [load, setLoad] = useState<Load>('waiting')
   const [attempt, setAttempt] = useState(0)
 
@@ -59,6 +67,10 @@ export function LazyImage({ src, alt, referrerPolicy }: LazyImageProps) {
   // A failed request (rate limit, flaky network) would leave a blank tile, since
   // an empty alt shows no broken-image icon.
   function retry() {
+    // The link itself may be bad, so the owner can start fetching a new one
+    // while the same URL is retried.
+    if (!failed.current) onFail?.()
+    failed.current = true
     if (attempt >= LAZY_IMAGE_MAX_RETRIES) return
     retryTimer.current = setTimeout(
       () => setAttempt(attempt + 1),
